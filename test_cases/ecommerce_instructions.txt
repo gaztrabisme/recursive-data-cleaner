@@ -1,0 +1,12 @@
+E-commerce Product Catalog Cleaning Instructions:
+
+- Normalize all prices to float format (no currency symbols)
+- Convert all dates to ISO 8601 format (YYYY-MM-DD)
+- Fix category spelling and normalize to Title Case
+- Standardize SKU format to uppercase with "SKU-" prefix
+- Convert all weights to kilograms as float
+- Ensure stock_quantity is a non-negative integer
+- Strip HTML tags from descriptions, decode HTML entities
+- Normalize brand names to Title Case
+- Trim whitespace and fix double spaces
+- Convert tags to arrays, remove duplicates, lowercase all

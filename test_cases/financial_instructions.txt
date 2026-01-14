@@ -1,0 +1,14 @@
+Financial Transaction Records Cleaning Instructions:
+
+- Normalize amounts to float (remove currency symbols, commas)
+- Convert all dates to ISO 8601 format (YYYY-MM-DD)
+- Standardize time to 24-hour format (HH:MM:SS)
+- Normalize currency codes to 3-letter uppercase (USD, EUR, GBP)
+- Standardize transaction_type to uppercase (DEBIT, CREDIT, TRANSFER)
+- Normalize status to lowercase (completed, pending, failed)
+- Clean merchant names: Title Case, trim whitespace
+- Mask account numbers consistently as ****XXXX (last 4 digits)
+- Standardize country codes to 2-letter ISO format (US, GB, CA)
+- Normalize fee to float, convert "N/A" to 0.0
+- Standardize reference numbers with "REF-" prefix
+- Clean descriptions: proper casing, fix whitespace, remove truncation markers
