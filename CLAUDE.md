@@ -1,5 +1,13 @@
 # CLAUDE.md - Recursive Docstring Data Cleaning Pipeline
 
+## Project Status
+
+| Version | Status | Date |
+|---------|--------|------|
+| v0.1.0 | **Implemented** | 2025-01-14 |
+
+**Current State**: First working version complete with 79 tests passing. Tested with Qwen3-Next-80B model on e-commerce, healthcare, and financial datasets.
+
 ## Project Overview
 
 A Python library that uses LLMs to incrementally build data cleaning solutions for massive datasets. The system processes data in chunks, identifies quality issues, generates Python functions to solve them one at a time, and maintains awareness of existing solutions through docstring feedback loops.
@@ -95,20 +103,41 @@ def normalize_phone_numbers(data):
 </cleaning_analysis>
 ```
 
-## The Lean Architecture (~300 lines total)
+## The Lean Architecture (~500 lines total)
 
-### File Structure
+### File Structure (Implemented)
 ```
 recursive_cleaner/
-    __init__.py          # Exports DataCleaner
-    cleaner.py           # Main class (~150 lines)
-    parsers.py           # Chunk text/csv/json (~80 lines)
-    errors.py            # 3 exception classes (~10 lines)
+    __init__.py          # Public exports
+    cleaner.py           # Main DataCleaner class (~115 lines)
+    context.py           # Docstring registry with FIFO eviction (~27 lines)
+    errors.py            # 4 exception classes (~18 lines)
+    output.py            # Function file generation (~150 lines)
+    parsers.py           # Chunk text/csv/json/jsonl (~80 lines)
+    prompt.py            # LLM prompt template (~50 lines)
+    response.py          # XML/markdown parsing (~80 lines)
+    types.py             # LLMBackend protocol (~12 lines)
+
+backends/
+    __init__.py          # Backend exports
+    mlx_backend.py       # MLX-LM backend for Apple Silicon
+
+tests/                   # 79 tests
+    test_cleaner.py      # DataCleaner tests
+    test_context.py      # Context management tests
+    test_integration.py  # End-to-end tests
+    test_output.py       # Output generation tests
+    test_parsers.py      # Parsing tests
+
+test_cases/              # Comprehensive test datasets
+    ecommerce_*.jsonl    # Product catalog data
+    healthcare_*.jsonl   # Patient records
+    financial_*.jsonl    # Transaction data
 
 pyproject.toml
 ```
 
-### Error Classes (10 lines)
+### Error Classes (18 lines)
 ```python
 class CleanerError(Exception):
     """Base error for the pipeline"""
@@ -118,6 +147,9 @@ class ParseError(CleanerError):
 
 class MaxIterationsError(CleanerError):
     """Chunk never marked clean - skip and continue"""
+
+class OutputValidationError(CleanerError):
+    """Generated output file has invalid Python syntax"""
 ```
 
 ### LLM Backend Protocol (5 lines)
@@ -300,6 +332,9 @@ That's it. No langchain, no frameworks, no abstractions.
 |------|----------|
 | Malformed XML | Retry with error appended to prompt (max 3) |
 | Invalid Python | Retry with syntax error in prompt (max 3) |
+| `__main__` imports | Reject during parsing, retry with error feedback |
+| Duplicate functions | Skip duplicates, keep first occurrence |
+| Invalid combined output | Fall back to writing only valid functions |
 | Chunk never "clean" | Skip after 5 iterations, log warning |
 | Empty chunk | Skip without LLM call |
 | Context too large | FIFO eviction, keep most recent functions |
