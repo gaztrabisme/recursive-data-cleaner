@@ -3,7 +3,8 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import Callable
+from pathlib import Path
+from typing import Callable, Literal
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -16,7 +17,7 @@ from .schema import format_schema_for_prompt, infer_schema
 from .types import LLMBackend
 from .validation import extract_sample_data, validate_function
 
-STATE_VERSION = "0.2.0"
+STATE_VERSION = "0.3.0"
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
@@ -46,6 +47,8 @@ class DataCleaner:
         validate_runtime: bool = True,
         schema_sample_size: int = 10,
         state_file: str | None = None,
+        mode: Literal["auto", "structured", "text"] = "auto",
+        chunk_overlap: int = 200,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -57,10 +60,13 @@ class DataCleaner:
         self.validate_runtime = validate_runtime
         self.schema_sample_size = schema_sample_size
         self.state_file = state_file
+        self.mode = mode
+        self.chunk_overlap = chunk_overlap
         self.functions: list[dict] = []  # List of {name, docstring, code}
         self._total_chunks: int = 0  # Set during run()
         self._schema_str: str = ""  # Formatted schema for prompts
         self._last_completed_chunk: int = -1  # -1 means no chunks completed yet
+        self._effective_mode: Literal["structured", "text"] = "structured"  # Resolved at run()
 
     def _emit(self, event_type: str, chunk_index: int = 0, **kwargs) -> None:
         """Emit a progress event to the callback, if set."""
@@ -155,9 +161,28 @@ class DataCleaner:
         instance._total_chunks = state.get("total_chunks", 0)
         return instance
 
+    def _detect_mode(self) -> Literal["structured", "text"]:
+        """Detect mode from file extension."""
+        suffix = Path(self.file_path).suffix.lower()
+        structured_extensions = {".jsonl", ".csv", ".json"}
+        if suffix in structured_extensions:
+            return "structured"
+        return "text"
+
     def run(self) -> None:
         """Run the cleaning pipeline."""
-        chunks = chunk_file(self.file_path, self.chunk_size)
+        # Resolve effective mode
+        if self.mode == "auto":
+            self._effective_mode = self._detect_mode()
+        else:
+            self._effective_mode = self.mode
+
+        chunks = chunk_file(
+            self.file_path,
+            self.chunk_size,
+            mode=self._effective_mode,
+            chunk_overlap=self.chunk_overlap,
+        )
 
         if not chunks:
             print("No data to process.")
@@ -166,9 +191,12 @@ class DataCleaner:
         # Try to load existing state
         resumed = self._load_state()
 
-        # Infer schema once at start
-        schema = infer_schema(self.file_path, self.schema_sample_size)
-        self._schema_str = format_schema_for_prompt(schema)
+        # Infer schema only for structured mode
+        if self._effective_mode == "structured":
+            schema = infer_schema(self.file_path, self.schema_sample_size)
+            self._schema_str = format_schema_for_prompt(schema)
+        else:
+            self._schema_str = ""  # No schema for text mode
 
         self._total_chunks = len(chunks)
 
@@ -196,7 +224,13 @@ class DataCleaner:
         for iteration in range(self.max_iterations):
             self._emit("iteration", chunk_index=chunk_idx, iteration=iteration)
             context = build_context(self.functions, self.context_budget)
-            prompt = build_prompt(self.instructions, context, chunk, self._schema_str)
+            prompt = build_prompt(
+                self.instructions,
+                context,
+                chunk,
+                self._schema_str,
+                mode=self._effective_mode,
+            )
 
             if error_feedback:
                 prompt += f"\n\nYour previous response had an error: {error_feedback}\nPlease fix and try again."
@@ -216,9 +250,12 @@ class DataCleaner:
             if result["code"]:
                 # Runtime validation if enabled
                 if self.validate_runtime:
-                    sample_data = extract_sample_data(chunk)
+                    sample_data = extract_sample_data(chunk, mode=self._effective_mode)
                     valid, error_msg = validate_function(
-                        result["code"], sample_data, result["name"]
+                        result["code"],
+                        sample_data,
+                        result["name"],
+                        mode=self._effective_mode,
                     )
                     if not valid:
                         error_feedback = f"Runtime validation failed: {error_msg}"

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "recursive-cleaner"
-version = "0.2.0"
+version = "0.3.0"
 description = "LLM-powered incremental data cleaning pipeline"
 requires-python = ">=3.10"
 dependencies = [

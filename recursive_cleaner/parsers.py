@@ -2,18 +2,35 @@
 
 import csv
 import json
+import re
 from io import StringIO
 from pathlib import Path
+from typing import Literal
+
+# Try to import vendored SentenceChunker, fall back to simple implementation
+try:
+    from .vendor import SentenceChunker
+
+    _HAS_SENTENCE_CHUNKER = True
+except ImportError:
+    _HAS_SENTENCE_CHUNKER = False
 
 
-def chunk_file(file_path: str, chunk_size: int = 50) -> list[str]:
+def chunk_file(
+    file_path: str,
+    chunk_size: int = 50,
+    mode: Literal["auto", "structured", "text"] = "auto",
+    chunk_overlap: int = 200,
+) -> list[str]:
     """
     Load and chunk a file based on its type.
 
     Args:
         file_path: Path to the file to chunk
         chunk_size: Number of items per chunk (rows for CSV/JSONL, items for JSON arrays)
-                   For text files, this is multiplied by 80 to get character count.
+                   For text mode, this is the character count per chunk.
+        mode: "auto" detects from extension, "structured" for data, "text" for prose
+        chunk_overlap: Character overlap between chunks (text mode only)
 
     Returns:
         List of string chunks suitable for LLM context
@@ -29,8 +46,11 @@ def chunk_file(file_path: str, chunk_size: int = 50) -> list[str]:
     if not content.strip():
         return []
 
-    if suffix == ".txt":
-        return _chunk_text(content, chunk_size * 80)
+    # Determine effective mode
+    effective_mode = _detect_mode(suffix) if mode == "auto" else mode
+
+    if effective_mode == "text":
+        return chunk_text_sentences(content, chunk_size, chunk_overlap)
     elif suffix == ".csv":
         return _chunk_csv(content, chunk_size)
     elif suffix == ".json":
@@ -38,12 +58,135 @@ def chunk_file(file_path: str, chunk_size: int = 50) -> list[str]:
     elif suffix == ".jsonl":
         return _chunk_jsonl(content, chunk_size)
     else:
-        # Default to text chunking for unknown types
+        # Fallback for structured mode with unknown extension
         return _chunk_text(content, chunk_size * 80)
 
 
+def _detect_mode(suffix: str) -> Literal["structured", "text"]:
+    """Detect mode from file extension."""
+    structured_extensions = {".jsonl", ".csv", ".json"}
+    if suffix in structured_extensions:
+        return "structured"
+    return "text"
+
+
+def chunk_text_sentences(
+    content: str, chunk_size: int, chunk_overlap: int = 200
+) -> list[str]:
+    """
+    Chunk text with sentence-awareness and overlap.
+
+    Uses vendored SentenceChunker if available, otherwise falls back to
+    paragraph-based chunking.
+
+    Args:
+        content: Text content to chunk
+        chunk_size: Maximum characters per chunk
+        chunk_overlap: Character overlap between chunks
+
+    Returns:
+        List of text chunks
+    """
+    # Ensure chunk_overlap is less than chunk_size
+    effective_overlap = min(chunk_overlap, chunk_size - 1) if chunk_size > 1 else 0
+
+    if _HAS_SENTENCE_CHUNKER:
+        chunker = SentenceChunker(
+            chunk_size=chunk_size,
+            chunk_overlap=effective_overlap,
+        )
+        chunks = chunker.chunk(content)
+        return [c.text for c in chunks if c.text.strip()]
+
+    # Fallback: paragraph-based chunking with overlap
+    return _chunk_text_paragraphs(content, chunk_size, effective_overlap)
+
+
+def _chunk_text_paragraphs(
+    content: str, chunk_size: int, chunk_overlap: int
+) -> list[str]:
+    """
+    Fallback paragraph-based chunking when SentenceChunker is unavailable.
+
+    Splits on paragraph boundaries (double newlines), then groups paragraphs
+    to fit within chunk_size while maintaining overlap.
+
+    Args:
+        content: Text content to chunk
+        chunk_size: Maximum characters per chunk
+        chunk_overlap: Character overlap between chunks
+
+    Returns:
+        List of text chunks with overlap
+    """
+    # Split on paragraph boundaries
+    paragraphs = re.split(r"\n\n+", content.strip())
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+    if not paragraphs:
+        return []
+
+    chunks = []
+    current_chunk_parts: list[str] = []
+    current_length = 0
+
+    for para in paragraphs:
+        para_len = len(para)
+
+        # If single paragraph exceeds chunk_size, split it further
+        if para_len > chunk_size:
+            # Flush current chunk first
+            if current_chunk_parts:
+                chunks.append("\n\n".join(current_chunk_parts))
+                current_chunk_parts = []
+                current_length = 0
+
+            # Split large paragraph by sentences
+            sentences = re.split(r"(?<=[.!?])\s+", para)
+            for sent in sentences:
+                if len(sent) > chunk_size:
+                    # Last resort: character split
+                    for i in range(0, len(sent), chunk_size - chunk_overlap):
+                        chunk_text = sent[i : i + chunk_size]
+                        if chunk_text.strip():
+                            chunks.append(chunk_text.strip())
+                else:
+                    if current_length + len(sent) + 1 > chunk_size and current_chunk_parts:
+                        chunks.append("\n\n".join(current_chunk_parts))
+                        # Keep overlap from last chunk
+                        overlap_text = "\n\n".join(current_chunk_parts)[-chunk_overlap:]
+                        current_chunk_parts = [overlap_text] if overlap_text.strip() else []
+                        current_length = len(overlap_text) if overlap_text.strip() else 0
+                    current_chunk_parts.append(sent)
+                    current_length += len(sent) + 2
+            continue
+
+        # Check if adding this paragraph exceeds limit
+        new_length = current_length + para_len + (2 if current_chunk_parts else 0)
+        if new_length > chunk_size and current_chunk_parts:
+            # Flush current chunk
+            chunks.append("\n\n".join(current_chunk_parts))
+            # Start new chunk with overlap
+            overlap_text = "\n\n".join(current_chunk_parts)[-chunk_overlap:]
+            if overlap_text.strip():
+                current_chunk_parts = [overlap_text]
+                current_length = len(overlap_text)
+            else:
+                current_chunk_parts = []
+                current_length = 0
+
+        current_chunk_parts.append(para)
+        current_length += para_len + 2
+
+    # Don't forget the last chunk
+    if current_chunk_parts:
+        chunks.append("\n\n".join(current_chunk_parts))
+
+    return chunks
+
+
 def _chunk_text(content: str, char_count: int) -> list[str]:
-    """Chunk text by character count."""
+    """Chunk text by character count (legacy, no overlap)."""
     chunks = []
     for i in range(0, len(content), char_count):
         chunk = content[i:i + char_count]

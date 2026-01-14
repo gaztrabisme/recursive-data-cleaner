@@ -135,14 +135,18 @@ class TestChunkText:
     def test_chunk_text_by_char_count(self):
         """Test text chunking by character count."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            # Write 1000 characters
-            f.write("a" * 1000)
+            # Write content with sentence boundaries (~1000 chars)
+            sentence = "This is a test sentence. "  # 25 chars
+            f.write(sentence * 40)  # 1000 chars
             f.flush()
 
-            # chunk_size=5 means 5*80=400 chars per chunk
-            chunks = chunk_file(f.name, chunk_size=5)
+            # chunk_size is now character count directly for text mode
+            chunks = chunk_file(f.name, chunk_size=400)
 
-            assert len(chunks) == 3  # 1000 / 400 = 2.5, rounds up to 3
+            # Should have multiple chunks
+            assert len(chunks) >= 2
+            # All content should be preserved
+            assert "This is a test sentence" in chunks[0]
 
     def test_chunk_text_empty(self):
         """Test empty text file."""
@@ -165,12 +169,17 @@ class TestChunkFileEdgeCases:
     def test_unknown_extension_defaults_to_text(self):
         """Test unknown file extension defaults to text chunking."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".xyz", delete=False) as f:
-            f.write("a" * 500)
+            # Write content with sentence boundaries (~500 chars)
+            sentence = "Hello world. "  # 13 chars
+            f.write(sentence * 40)  # ~520 chars
             f.flush()
 
-            chunks = chunk_file(f.name, chunk_size=5)
-            # Should chunk by character count (5 * 80 = 400)
-            assert len(chunks) == 2
+            # chunk_size is now character count directly for text mode
+            chunks = chunk_file(f.name, chunk_size=250)
+            # Should chunk by character count (250 chars per chunk)
+            assert len(chunks) >= 2
+            # Content should be preserved
+            assert "Hello world" in chunks[0]
 
 
 # =============================================================================

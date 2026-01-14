@@ -40,8 +40,12 @@ htmlcov/
 
 # Generated files
 cleaning_functions.py
+cleaning_functions_*.py
 test_data.jsonl
 test_cases/*_cleaning_functions.py
+samples/*.json
+samples/*.pdf
+run_mlx_tests.py
 
 # Cloned framework repos (for research only)
 docs/frameworks/
