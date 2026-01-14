@@ -4,9 +4,10 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v0.1.0 | **Implemented** | 2025-01-14 |
+| v0.2.0 | **Implemented** | 2025-01-14 |
+| v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: First working version complete with 79 tests passing. Tested with Qwen3-Next-80B model on e-commerce, healthcare, and financial datasets.
+**Current State**: v0.2.0 with Tier 1 features complete. 127 tests passing, 977 lines total. New features: runtime validation, schema inference, progress callbacks, incremental saves.
 
 ## Project Overview
 
@@ -37,10 +38,19 @@ cleaner = DataCleaner(
     - Fix typos in 'status' field (valid: active, pending, churned)
     - Remove duplicates by email
     - All dates to ISO 8601
-    """
+    """,
+    # v0.2.0 features
+    on_progress=lambda e: print(f"{e['type']}: chunk {e['chunk_index']}"),
+    state_file="cleaning_state.json",  # Resume on interrupt
+    validate_runtime=True,  # Test functions before accepting
+    schema_sample_size=10,  # Infer schema from first N records
 )
 
 cleaner.run()  # Outputs: cleaning_functions.py
+
+# Or resume from saved state
+cleaner = DataCleaner.resume("cleaning_state.json", my_ollama_client)
+cleaner.run()
 ```
 
 ## Core Concepts
@@ -103,36 +113,47 @@ def normalize_phone_numbers(data):
 </cleaning_analysis>
 ```
 
-## The Lean Architecture (~500 lines total)
+## The Lean Architecture (~977 lines total)
 
 ### File Structure (Implemented)
 ```
 recursive_cleaner/
-    __init__.py          # Public exports
-    cleaner.py           # Main DataCleaner class (~115 lines)
+    __init__.py          # Public exports (~31 lines)
+    cleaner.py           # Main DataCleaner class (~273 lines)
     context.py           # Docstring registry with FIFO eviction (~27 lines)
-    errors.py            # 4 exception classes (~18 lines)
+    errors.py            # 4 exception classes (~17 lines)
     output.py            # Function file generation (~150 lines)
-    parsers.py           # Chunk text/csv/json/jsonl (~80 lines)
-    prompt.py            # LLM prompt template (~50 lines)
-    response.py          # XML/markdown parsing (~80 lines)
-    types.py             # LLMBackend protocol (~12 lines)
+    parsers.py           # Chunk text/csv/json/jsonl (~110 lines)
+    prompt.py            # LLM prompt template (~56 lines)
+    response.py          # XML/markdown parsing (~113 lines)
+    schema.py            # Schema inference (~117 lines) [v0.2.0]
+    types.py             # LLMBackend protocol (~11 lines)
+    validation.py        # Runtime validation (~72 lines) [v0.2.0]
 
 backends/
     __init__.py          # Backend exports
     mlx_backend.py       # MLX-LM backend for Apple Silicon
 
-tests/                   # 79 tests
+tests/                   # 127 tests
+    test_callbacks.py    # Progress callback tests [v0.2.0]
     test_cleaner.py      # DataCleaner tests
     test_context.py      # Context management tests
+    test_incremental.py  # Incremental save tests [v0.2.0]
     test_integration.py  # End-to-end tests
     test_output.py       # Output generation tests
     test_parsers.py      # Parsing tests
+    test_schema.py       # Schema inference tests [v0.2.0]
+    test_validation.py   # Runtime validation tests [v0.2.0]
 
 test_cases/              # Comprehensive test datasets
     ecommerce_*.jsonl    # Product catalog data
     healthcare_*.jsonl   # Patient records
     financial_*.jsonl    # Transaction data
+
+docs/                    # Orchestrated dev docs [v0.2.0]
+    contracts/           # API and data contracts
+    handoffs/            # Phase handoff docs
+    research/            # Research findings
 
 pyproject.toml
 ```
@@ -343,7 +364,7 @@ That's it. No langchain, no frameworks, no abstractions.
 
 1. **Stateful operations** (deduplication, aggregations) only work within chunks, not globally
 2. **Function ordering** follows generation order, not dependency order
-3. **No runtime testing** of generated functions before output
+3. ~~**No runtime testing** of generated functions before output~~ → Fixed in v0.2.0
 
 ## Success Criteria
 

@@ -7,7 +7,7 @@ PROMPT_TEMPLATE = '''You are a data cleaning expert. Analyze data and generate P
 
 === EXISTING FUNCTIONS (DO NOT RECREATE) ===
 {context}
-
+{schema_section}
 === DATA CHUNK ===
 {chunk}
 
@@ -45,10 +45,12 @@ RULES:
 - Use ```python markdown blocks for code'''
 
 
-def build_prompt(instructions: str, context: str, chunk: str) -> str:
+def build_prompt(instructions: str, context: str, chunk: str, schema: str = "") -> str:
     """Build the full prompt for the LLM."""
+    schema_section = f"\n=== DATA SCHEMA ===\n{schema}\n\n" if schema else "\n"
     return PROMPT_TEMPLATE.format(
         instructions=instructions,
         context=context,
+        schema_section=schema_section,
         chunk=chunk
     )

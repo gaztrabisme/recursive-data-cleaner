@@ -12,6 +12,13 @@ A Python library that uses LLMs to incrementally build data cleaning solutions f
 - **Error Recovery**: Retries with error feedback on parse failures
 - **Backend Agnostic**: Works with any LLM that implements the simple `generate(prompt) -> str` interface
 
+### v0.2.0 Features
+
+- **Runtime Validation**: Tests generated functions on sample data before accepting them
+- **Schema Inference**: Detects data schema and includes it in prompts for better LLM context
+- **Progress Callbacks**: Optional callbacks for real-time progress updates
+- **Incremental Saves**: Save state after each chunk, resume on interruption
+
 ## Installation
 
 ```bash
@@ -48,10 +55,17 @@ cleaner = DataCleaner(
     - All dates to ISO 8601
     """,
     max_iterations=5,
+    # v0.2.0 options
+    on_progress=lambda e: print(f"{e['type']}: chunk {e['chunk_index']}"),
+    state_file="cleaning_state.json",  # Enable resume on interrupt
 )
 
 # Run and generate cleaning_functions.py
 cleaner.run()
+
+# Or resume from a previous run
+# cleaner = DataCleaner.resume("cleaning_state.json", backend)
+# cleaner.run()
 ```
 
 ## Output
@@ -94,7 +108,9 @@ recursive_cleaner/
 ├── parsers.py       # File chunking (JSONL, CSV, JSON, text)
 ├── prompt.py        # LLM prompt template
 ├── response.py      # XML/markdown response parsing
-└── types.py         # LLMBackend protocol
+├── schema.py        # Schema inference (v0.2.0)
+├── types.py         # LLMBackend protocol
+└── validation.py    # Runtime validation (v0.2.0)
 ```
 
 ## Configuration
@@ -104,6 +120,10 @@ recursive_cleaner/
 | `chunk_size` | 50 | Items per chunk for JSONL/CSV/JSON |
 | `max_iterations` | 5 | Max iterations per chunk |
 | `context_budget` | 8000 | Max characters for docstring context |
+| `validate_runtime` | True | Test functions on sample data before accepting |
+| `schema_sample_size` | 10 | Records to sample for schema inference |
+| `on_progress` | None | Callback for progress events |
+| `state_file` | None | Path to save/resume state (enables incremental saves) |
 
 ## Testing
 
@@ -111,12 +131,16 @@ recursive_cleaner/
 pytest tests/ -v
 ```
 
-79 tests covering:
+127 tests covering:
 - File parsing (JSONL, CSV, JSON, text)
 - Response parsing (XML, markdown code blocks)
 - Context management (FIFO eviction)
 - Error recovery (invalid XML, invalid Python)
 - Integration tests (full pipeline)
+- Runtime validation (v0.2.0)
+- Schema inference (v0.2.0)
+- Progress callbacks (v0.2.0)
+- Incremental saves (v0.2.0)
 
 ## Test Cases
 
@@ -128,7 +152,7 @@ The `test_cases/` directory contains comprehensive datasets:
 
 ## Philosophy
 
-- **Simplicity over extensibility**: ~500 lines that do one thing well
+- **Simplicity over extensibility**: ~977 lines that do one thing well
 - **stdlib over dependencies**: Only `tenacity` for retries
 - **Functions over classes**: Unless state genuinely helps
 - **Delete over abstract**: No interfaces for single implementations
