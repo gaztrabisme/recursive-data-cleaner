@@ -1,7 +1,9 @@
 """File chunking utilities for the recursive cleaner pipeline."""
 
 import csv
+import hashlib
 import json
+import random
 import re
 from io import StringIO
 from pathlib import Path
@@ -21,6 +23,8 @@ def chunk_file(
     chunk_size: int = 50,
     mode: Literal["auto", "structured", "text"] = "auto",
     chunk_overlap: int = 200,
+    sampling_strategy: Literal["sequential", "random", "stratified"] = "sequential",
+    stratify_field: str | None = None,
 ) -> list[str]:
     """
     Load and chunk a file based on its type.
@@ -31,9 +35,14 @@ def chunk_file(
                    For text mode, this is the character count per chunk.
         mode: "auto" detects from extension, "structured" for data, "text" for prose
         chunk_overlap: Character overlap between chunks (text mode only)
+        sampling_strategy: "sequential" (default), "random", or "stratified"
+        stratify_field: Field name for stratified sampling (JSONL only)
 
     Returns:
         List of string chunks suitable for LLM context
+
+    Raises:
+        ValueError: If non-sequential sampling requested for text mode
     """
     path = Path(file_path)
     suffix = path.suffix.lower()
@@ -49,6 +58,12 @@ def chunk_file(
     # Determine effective mode
     effective_mode = _detect_mode(suffix) if mode == "auto" else mode
 
+    # Text mode only supports sequential sampling
+    if effective_mode == "text" and sampling_strategy != "sequential":
+        raise ValueError(
+            f"Text mode only supports 'sequential' sampling, got '{sampling_strategy}'"
+        )
+
     if effective_mode == "text":
         return chunk_text_sentences(content, chunk_size, chunk_overlap)
     elif suffix == ".csv":
@@ -56,7 +71,7 @@ def chunk_file(
     elif suffix == ".json":
         return _chunk_json(content, chunk_size)
     elif suffix == ".jsonl":
-        return _chunk_jsonl(content, chunk_size)
+        return _chunk_jsonl(content, chunk_size, sampling_strategy, stratify_field)
     else:
         # Fallback for structured mode with unknown extension
         return _chunk_text(content, chunk_size * 80)
@@ -238,12 +253,25 @@ def _chunk_json(content: str, item_count: int) -> list[str]:
         return [json.dumps(data, indent=2)]
 
 
-def _chunk_jsonl(content: str, line_count: int) -> list[str]:
-    """Chunk JSONL by line count."""
+def _chunk_jsonl(
+    content: str,
+    line_count: int,
+    sampling_strategy: Literal["sequential", "random", "stratified"] = "sequential",
+    stratify_field: str | None = None,
+) -> list[str]:
+    """Chunk JSONL by line count with optional sampling."""
     lines = [line.strip() for line in content.strip().split("\n") if line.strip()]
 
     if not lines:
         return []
+
+    # Apply sampling strategy
+    if sampling_strategy == "random":
+        seed = _compute_seed(content)
+        lines = _shuffle_records(lines, seed)
+    elif sampling_strategy == "stratified" and stratify_field:
+        seed = _compute_seed(content)
+        lines = _stratified_sample(lines, stratify_field, seed)
 
     chunks = []
     for i in range(0, len(lines), line_count):
@@ -251,3 +279,47 @@ def _chunk_jsonl(content: str, line_count: int) -> list[str]:
         chunks.append("\n".join(chunk_lines))
 
     return chunks
+
+
+def _compute_seed(content: str) -> int:
+    """Compute deterministic seed from content hash."""
+    return int(hashlib.md5(content.encode("utf-8")).hexdigest()[:8], 16)
+
+
+def _shuffle_records(records: list, seed: int) -> list:
+    """Deterministically shuffle records."""
+    result = records.copy()
+    rng = random.Random(seed)
+    rng.shuffle(result)
+    return result
+
+
+def _stratified_sample(records: list, field: str, seed: int) -> list:
+    """Group by field, interleave proportionally."""
+    # Group records by field value
+    groups: dict[str, list] = {}
+    for record in records:
+        try:
+            data = json.loads(record)
+            key = str(data.get(field, "_missing_"))
+        except (json.JSONDecodeError, TypeError):
+            key = "_invalid_"
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(record)
+
+    # Shuffle within each group
+    rng = random.Random(seed)
+    for key in groups:
+        rng.shuffle(groups[key])
+
+    # Interleave from groups (round-robin)
+    result = []
+    group_lists = list(groups.values())
+    while any(group_lists):
+        for g in group_lists:
+            if g:
+                result.append(g.pop(0))
+        group_lists = [g for g in group_lists if g]
+
+    return result

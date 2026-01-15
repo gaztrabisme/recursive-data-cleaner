@@ -1,7 +1,42 @@
 """Runtime validation for generated cleaning functions."""
 
 import json
+import re
 from typing import Literal
+
+
+def split_holdout(
+    chunk: str, holdout_ratio: float, mode: Literal["structured", "text"] = "structured"
+) -> tuple[str, str]:
+    """
+    Split chunk into generation and holdout portions.
+
+    Args:
+        chunk: Raw chunk string (JSONL for structured, plain text for text mode)
+        holdout_ratio: Fraction to hold out (0.0-0.5)
+        mode: "structured" splits by JSONL records, "text" splits at sentence boundary
+
+    Returns:
+        (generation_data, holdout_data) - both as strings
+    """
+    if holdout_ratio <= 0:
+        return chunk, ""
+
+    if mode == "structured":
+        lines = [ln for ln in chunk.strip().split("\n") if ln.strip()]
+        if not lines:
+            return chunk, ""
+        holdout_count = max(1, int(len(lines) * holdout_ratio))
+        split_idx = len(lines) - holdout_count
+        return "\n".join(lines[:split_idx]), "\n".join(lines[split_idx:])
+    else:
+        # Text mode: split at sentence boundary
+        sentences = re.split(r"(?<=[.!?])\s+", chunk.strip())
+        if len(sentences) <= 1:
+            return chunk, ""
+        holdout_count = max(1, int(len(sentences) * holdout_ratio))
+        split_idx = len(sentences) - holdout_count
+        return " ".join(sentences[:split_idx]), " ".join(sentences[split_idx:])
 
 
 def validate_function(

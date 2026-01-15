@@ -10,12 +10,13 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .context import build_context
 from .errors import OutputValidationError, ParseError
+from .metrics import QualityMetrics, compare_quality, load_structured_data, measure_quality
 from .parsers import chunk_file
 from .prompt import build_prompt
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
 from .types import LLMBackend
-from .validation import extract_sample_data, validate_function
+from .validation import extract_sample_data, split_holdout, validate_function
 
 STATE_VERSION = "0.3.0"
 
@@ -49,6 +50,10 @@ class DataCleaner:
         state_file: str | None = None,
         mode: Literal["auto", "structured", "text"] = "auto",
         chunk_overlap: int = 200,
+        holdout_ratio: float = 0.2,
+        track_metrics: bool = False,
+        sampling_strategy: Literal["sequential", "random", "stratified"] = "sequential",
+        stratify_field: str | None = None,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -62,11 +67,18 @@ class DataCleaner:
         self.state_file = state_file
         self.mode = mode
         self.chunk_overlap = chunk_overlap
+        self.holdout_ratio = holdout_ratio
+        self.track_metrics = track_metrics
+        self.sampling_strategy = sampling_strategy
+        self.stratify_field = stratify_field
         self.functions: list[dict] = []  # List of {name, docstring, code}
         self._total_chunks: int = 0  # Set during run()
         self._schema_str: str = ""  # Formatted schema for prompts
         self._last_completed_chunk: int = -1  # -1 means no chunks completed yet
         self._effective_mode: Literal["structured", "text"] = "structured"  # Resolved at run()
+        # Quality metrics (populated when track_metrics=True)
+        self.metrics_before: QualityMetrics | None = None
+        self.metrics_after: QualityMetrics | None = None
 
     def _emit(self, event_type: str, chunk_index: int = 0, **kwargs) -> None:
         """Emit a progress event to the callback, if set."""
@@ -182,6 +194,8 @@ class DataCleaner:
             self.chunk_size,
             mode=self._effective_mode,
             chunk_overlap=self.chunk_overlap,
+            sampling_strategy=self.sampling_strategy,
+            stratify_field=self.stratify_field,
         )
 
         if not chunks:
@@ -195,6 +209,10 @@ class DataCleaner:
         if self._effective_mode == "structured":
             schema = infer_schema(self.file_path, self.schema_sample_size)
             self._schema_str = format_schema_for_prompt(schema)
+            # Measure initial quality metrics if tracking enabled
+            if self.track_metrics:
+                data = load_structured_data(self.file_path)
+                self.metrics_before = measure_quality(data)
         else:
             self._schema_str = ""  # No schema for text mode
 
@@ -221,13 +239,22 @@ class DataCleaner:
         self._emit("chunk_start", chunk_index=chunk_idx)
         error_feedback = ""
 
+        # Split chunk for holdout validation if enabled
+        use_holdout = self.validate_runtime and self.holdout_ratio > 0
+        if use_holdout:
+            gen_chunk, holdout_chunk = split_holdout(
+                chunk, self.holdout_ratio, mode=self._effective_mode
+            )
+        else:
+            gen_chunk, holdout_chunk = chunk, ""
+
         for iteration in range(self.max_iterations):
             self._emit("iteration", chunk_index=chunk_idx, iteration=iteration)
             context = build_context(self.functions, self.context_budget)
             prompt = build_prompt(
                 self.instructions,
                 context,
-                chunk,
+                gen_chunk,
                 self._schema_str,
                 mode=self._effective_mode,
             )
@@ -250,7 +277,15 @@ class DataCleaner:
             if result["code"]:
                 # Runtime validation if enabled
                 if self.validate_runtime:
-                    sample_data = extract_sample_data(chunk, mode=self._effective_mode)
+                    # Use holdout data if available, else sample from generation chunk
+                    if use_holdout and holdout_chunk:
+                        sample_data = extract_sample_data(
+                            holdout_chunk, mode=self._effective_mode
+                        )
+                    else:
+                        sample_data = extract_sample_data(
+                            gen_chunk, mode=self._effective_mode
+                        )
                     valid, error_msg = validate_function(
                         result["code"],
                         sample_data,
@@ -308,3 +343,27 @@ class DataCleaner:
                 write_cleaning_file(valid_functions)
             else:
                 print("  No valid functions to write.")
+
+    def get_improvement_report(self) -> dict | None:
+        """
+        Get a comparison report of before/after quality metrics.
+
+        Returns:
+            Dictionary with improvement statistics, or None if metrics
+            weren't tracked or after metrics aren't available yet.
+        """
+        if self.metrics_before is None:
+            return None
+        if self.metrics_after is None:
+            # Return partial report with just before metrics
+            return {
+                "status": "incomplete",
+                "metrics_before": {
+                    "null_count": self.metrics_before.null_count,
+                    "empty_string_count": self.metrics_before.empty_string_count,
+                    "unique_values": self.metrics_before.unique_values,
+                    "total_records": self.metrics_before.total_records,
+                },
+                "metrics_after": None,
+            }
+        return compare_quality(self.metrics_before, self.metrics_after)

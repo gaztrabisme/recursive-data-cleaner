@@ -3,6 +3,7 @@
 import ast
 from pathlib import Path
 
+from recursive_cleaner.dependencies import resolve_dependencies
 from recursive_cleaner.errors import OutputValidationError
 
 
@@ -107,6 +108,9 @@ def write_cleaning_file(
 
     # Deduplicate functions by name (keep first occurrence)
     functions = deduplicate_functions(functions)
+
+    # Resolve dependencies to order functions correctly (callees before callers)
+    functions = resolve_dependencies(functions)
 
     # Collect all imports (excluding problematic __main__ imports)
     all_imports = []

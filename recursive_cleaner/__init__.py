@@ -2,12 +2,14 @@
 
 from recursive_cleaner.cleaner import DataCleaner
 from recursive_cleaner.context import build_context
+from recursive_cleaner.dependencies import resolve_dependencies
 from recursive_cleaner.errors import (
     CleanerError,
     MaxIterationsError,
     OutputValidationError,
     ParseError,
 )
+from recursive_cleaner.metrics import QualityMetrics, compare_quality, measure_quality
 from recursive_cleaner.output import write_cleaning_file
 from recursive_cleaner.parsers import chunk_file
 from recursive_cleaner.prompt import build_prompt
@@ -28,4 +30,8 @@ __all__ = [
     "DataCleaner",
     "validate_function",
     "extract_sample_data",
+    "resolve_dependencies",
+    "QualityMetrics",
+    "measure_quality",
+    "compare_quality",
 ]
