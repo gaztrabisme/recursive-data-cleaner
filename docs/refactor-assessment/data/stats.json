@@ -1,0 +1,5070 @@
+{
+  "directory": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner",
+  "summary": {
+    "file_count": 67,
+    "total_lines": 16281,
+    "code_lines": 11076,
+    "blank_lines": 3301,
+    "comment_lines": 1904
+  },
+  "by_language": {
+    "python": {
+      "files": 39,
+      "lines": 9170
+    },
+    "json": {
+      "files": 1,
+      "lines": 0
+    },
+    "toml": {
+      "files": 1,
+      "lines": 17
+    },
+    "markdown": {
+      "files": 23,
+      "lines": 7054
+    },
+    "text": {
+      "files": 3,
+      "lines": 40
+    }
+  },
+  "by_directory": {
+    ".": {
+      "files": 6,
+      "lines": 1678
+    },
+    "test_cases": {
+      "files": 6,
+      "lines": 179
+    },
+    "backends": {
+      "files": 2,
+      "lines": 100
+    },
+    "tests": {
+      "files": 17,
+      "lines": 6305
+    },
+    "recursive_cleaner": {
+      "files": 16,
+      "lines": 2575
+    },
+    "docs": {
+      "files": 20,
+      "lines": 5444
+    }
+  },
+  "files_over_500_lines": [
+    {
+      "file": "tests/test_optimizer.py",
+      "lines": 1504,
+      "language": "python"
+    },
+    {
+      "file": "CLAUDE_ADVANCED.md",
+      "lines": 955,
+      "language": "markdown"
+    },
+    {
+      "file": "tests/test_integration.py",
+      "lines": 943,
+      "language": "python"
+    },
+    {
+      "file": "docs/langchain-analysis.md",
+      "lines": 640,
+      "language": "markdown"
+    },
+    {
+      "file": "docs/smolagents-analysis.md",
+      "lines": 545,
+      "language": "markdown"
+    },
+    {
+      "file": "docs/research/markitdown.md",
+      "lines": 513,
+      "language": "markdown"
+    },
+    {
+      "file": "docs/langgraph-analysis.md",
+      "lines": 507,
+      "language": "markdown"
+    }
+  ],
+  "files_over_500_count": 7,
+  "all_files": [
+    {
+      "file": "test_mlx_backend.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 51,
+        "code": 36,
+        "blank": 9,
+        "comment": 6
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 1,
+        "top_level_function_count": 1,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "main",
+            "line": 13,
+            "lines": 36,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/run_ecommerce_test.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 45,
+        "code": 35,
+        "blank": 7,
+        "comment": 3
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/run_healthcare_test.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 47,
+        "code": 37,
+        "blank": 7,
+        "comment": 3
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/run_financial_test.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 47,
+        "code": 37,
+        "blank": 7,
+        "comment": 3
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "backends/mlx_backend.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 95,
+        "code": 69,
+        "blank": 16,
+        "comment": 10
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 3,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "MLXBackend",
+            "line": 7,
+            "lines": 89,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 14,
+                "lines": 31,
+                "is_async": false
+              },
+              {
+                "name": "_ensure_loaded",
+                "line": 46,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 62,
+                "lines": 34,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "backends/__init__.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 5,
+        "code": 2,
+        "blank": 2,
+        "comment": 1
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_optimizer.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 1504,
+        "code": 1126,
+        "blank": 183,
+        "comment": 195
+      },
+      "python": {
+        "class_count": 15,
+        "function_count": 75,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "MockBackend",
+            "line": 25,
+            "lines": 13,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 28,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 33,
+                "lines": 5,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestExtractTags",
+            "line": 40,
+            "lines": 71,
+            "method_count": 10,
+            "methods": [
+              {
+                "name": "test_basic_extraction",
+                "line": 43,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_no_tags",
+                "line": 51,
+                "lines": 5,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_tags",
+                "line": 57,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_whitespace_handling",
+                "line": 64,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_case_normalization",
+                "line": 71,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_tags_mid_docstring",
+                "line": 78,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_docstring",
+                "line": 86,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_single_tag",
+                "line": 91,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_tags_with_trailing_commas",
+                "line": 98,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_tags_case_insensitive_keyword",
+                "line": 105,
+                "lines": 6,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestCalculateIdf",
+            "line": 113,
+            "lines": 26,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_basic_idf",
+                "line": 116,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_tags_list",
+                "line": 130,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_all_same_tags",
+                "line": 134,
+                "lines": 5,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestFallbackFromName",
+            "line": 141,
+            "lines": 26,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_phone_extraction",
+                "line": 144,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_date_extraction",
+                "line": 148,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_email_extraction",
+                "line": 152,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_no_domain_word",
+                "line": 156,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_first_match_wins",
+                "line": 160,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_case_insensitive",
+                "line": 164,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestRebalanceGroups",
+            "line": 169,
+            "lines": 44,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_merge_small_groups",
+                "line": 172,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_split_large_groups",
+                "line": 183,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_no_rebalance_needed",
+                "line": 194,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_all_orphans_creates_misc",
+                "line": 204,
+                "lines": 9,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestGroupBySalience",
+            "line": 215,
+            "lines": 120,
+            "method_count": 10,
+            "methods": [
+              {
+                "name": "test_basic_grouping",
+                "line": 218,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_idf_selects_rare_tag",
+                "line": 235,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_fallback_from_name",
+                "line": 247,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_rebalance_merges_small",
+                "line": 257,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_rebalance_splits_large",
+                "line": 271,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_functions_list",
+                "line": 285,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_all_same_tags",
+                "line": 289,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_no_tags_anywhere",
+                "line": 300,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_mixed_tagged_and_untagged",
+                "line": 312,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_preserves_function_data",
+                "line": 325,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestFormatFunctionsForReview",
+            "line": 337,
+            "lines": 33,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_basic_formatting",
+                "line": 340,
+                "lines": 19,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_list",
+                "line": 360,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_missing_fields",
+                "line": 365,
+                "lines": 5,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseConsolidationResponse",
+            "line": 372,
+            "lines": 141,
+            "method_count": 7,
+            "methods": [
+              {
+                "name": "test_basic_parsing",
+                "line": 375,
+                "lines": 39,
+                "is_async": false
+              },
+              {
+                "name": "test_multiple_merged_functions",
+                "line": 415,
+                "lines": 34,
+                "is_async": false
+              },
+              {
+                "name": "test_no_consolidation_result_raises",
+                "line": 450,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_xml_raises",
+                "line": 455,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_python_raises",
+                "line": 460,
+                "lines": 25,
+                "is_async": false
+              },
+              {
+                "name": "test_default_assessment_when_missing",
+                "line": 486,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_confidence_defaults_to_medium",
+                "line": 498,
+                "lines": 15,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestConsolidateGroup",
+            "line": 515,
+            "lines": 54,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_empty_functions_returns_empty",
+                "line": 518,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_calls_backend_with_prompt",
+                "line": 525,
+                "lines": 21,
+                "is_async": false
+              },
+              {
+                "name": "test_keeps_unchanged_functions",
+                "line": 547,
+                "lines": 22,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestConsolidateWithAgency",
+            "line": 571,
+            "lines": 167,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_terminates_on_complete_true",
+                "line": 574,
+                "lines": 20,
+                "is_async": false
+              },
+              {
+                "name": "test_respects_max_rounds",
+                "line": 595,
+                "lines": 31,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_input_returns_empty",
+                "line": 627,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_merged_functions_have_valid_syntax",
+                "line": 634,
+                "lines": 34,
+                "is_async": false
+              },
+              {
+                "name": "test_preserves_original_on_error",
+                "line": 669,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_multi_round_consolidation",
+                "line": 681,
+                "lines": 57,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestAgentAssessmentDataclass",
+            "line": 740,
+            "lines": 13,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_dataclass_fields",
+                "line": 743,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestConsolidationResultDataclass",
+            "line": 755,
+            "lines": 14,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_dataclass_fields",
+                "line": 758,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestDataCleanerIntegration",
+            "line": 771,
+            "lines": 368,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_optimize_disabled_by_default",
+                "line": 774,
+                "lines": 28,
+                "is_async": false
+              },
+              {
+                "name": "test_optimize_enabled_calls_optimizer",
+                "line": 803,
+                "lines": 77,
+                "is_async": false
+              },
+              {
+                "name": "test_optimize_skipped_below_threshold",
+                "line": 881,
+                "lines": 50,
+                "is_async": false
+              },
+              {
+                "name": "test_optimize_callbacks_fired",
+                "line": 932,
+                "lines": 92,
+                "is_async": false
+              },
+              {
+                "name": "test_optimize_reduces_function_count",
+                "line": 1025,
+                "lines": 78,
+                "is_async": false
+              },
+              {
+                "name": "test_optimize_state_serialization",
+                "line": 1104,
+                "lines": 35,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseSaturationResponse",
+            "line": 1141,
+            "lines": 96,
+            "method_count": 7,
+            "methods": [
+              {
+                "name": "test_basic_parsing",
+                "line": 1144,
+                "lines": 17,
+                "is_async": false
+              },
+              {
+                "name": "test_not_saturated",
+                "line": 1162,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_xml_raises",
+                "line": 1179,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_missing_element_raises",
+                "line": 1186,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_defaults_for_missing_fields",
+                "line": 1193,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_confidence_defaults_to_medium",
+                "line": 1208,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_recommendation_defaults_to_continue",
+                "line": 1223,
+                "lines": 14,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestEarlyTermination",
+            "line": 1239,
+            "lines": 266,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_saturation_check_disabled_by_default",
+                "line": 1242,
+                "lines": 31,
+                "is_async": false
+              },
+              {
+                "name": "test_saturation_check_at_interval",
+                "line": 1274,
+                "lines": 49,
+                "is_async": false
+              },
+              {
+                "name": "test_early_stop_on_saturated",
+                "line": 1324,
+                "lines": 46,
+                "is_async": false
+              },
+              {
+                "name": "test_continue_on_not_saturated",
+                "line": 1371,
+                "lines": 50,
+                "is_async": false
+              },
+              {
+                "name": "test_low_confidence_does_not_stop",
+                "line": 1422,
+                "lines": 48,
+                "is_async": false
+              },
+              {
+                "name": "test_state_includes_early_termination_params",
+                "line": 1471,
+                "lines": 34,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "tests/test_text_mode.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 469,
+        "code": 285,
+        "blank": 104,
+        "comment": 80
+      },
+      "python": {
+        "class_count": 8,
+        "function_count": 33,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 14,
+            "lines": 10,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 17,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 21,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestModeDetection",
+            "line": 62,
+            "lines": 28,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_detect_mode_txt_returns_text",
+                "line": 65,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_detect_mode_md_returns_text",
+                "line": 69,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_detect_mode_jsonl_returns_structured",
+                "line": 73,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_detect_mode_csv_returns_structured",
+                "line": 77,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_detect_mode_json_returns_structured",
+                "line": 81,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_detect_mode_unknown_returns_text",
+                "line": 85,
+                "lines": 5,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestDataCleanerModeDetection",
+            "line": 92,
+            "lines": 57,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_auto_mode_detects_txt_as_text",
+                "line": 95,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_auto_mode_detects_jsonl_as_structured",
+                "line": 111,
+                "lines": 21,
+                "is_async": false
+              },
+              {
+                "name": "test_mode_override_works",
+                "line": 133,
+                "lines": 16,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestTextChunking",
+            "line": 156,
+            "lines": 58,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_chunk_text_sentences_basic",
+                "line": 159,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_text_sentences_respects_size",
+                "line": 170,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_text_with_paragraphs",
+                "line": 180,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_file_text_mode",
+                "line": 187,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_file_passes_overlap",
+                "line": 197,
+                "lines": 17,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestTextPromptTemplate",
+            "line": 221,
+            "lines": 46,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_text_prompt_template_exists",
+                "line": 224,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_text_prompt_has_text_signature",
+                "line": 229,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "test_text_prompt_mentions_text_issues",
+                "line": 233,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_build_prompt_uses_text_template",
+                "line": 238,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_build_prompt_uses_structured_template",
+                "line": 253,
+                "lines": 14,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestTextModeValidation",
+            "line": 274,
+            "lines": 69,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_extract_sample_data_text_mode",
+                "line": 277,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_extract_sample_data_structured_mode",
+                "line": 285,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_validate_function_text_mode_valid",
+                "line": 293,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_validate_function_text_mode_checks_return_type",
+                "line": 306,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_validate_function_text_mode_catches_runtime_error",
+                "line": 319,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_validate_function_empty_text_passes",
+                "line": 332,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestSchemaSkippedForTextMode",
+            "line": 350,
+            "lines": 37,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_schema_empty_for_text_mode",
+                "line": 353,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_prompt_has_no_schema_for_text_mode",
+                "line": 369,
+                "lines": 18,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestTextModeIntegration",
+            "line": 394,
+            "lines": 76,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_text_mode_generates_function",
+                "line": 397,
+                "lines": 18,
+                "is_async": false
+              },
+              {
+                "name": "test_text_mode_function_has_correct_signature",
+                "line": 416,
+                "lines": 18,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_overlap_parameter",
+                "line": 435,
+                "lines": 18,
+                "is_async": false
+              },
+              {
+                "name": "test_text_mode_md_file",
+                "line": 454,
+                "lines": 16,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_callbacks.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 195,
+        "code": 134,
+        "blank": 39,
+        "comment": 22
+      },
+      "python": {
+        "class_count": 2,
+        "function_count": 10,
+        "top_level_function_count": 7,
+        "classes": [
+          {
+            "name": "MockBackend",
+            "line": 11,
+            "lines": 12,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "generate",
+                "line": 14,
+                "lines": 9,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "MockBackendWithFunction",
+            "line": 25,
+            "lines": 35,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 28,
+                "lines": 2,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 31,
+                "lines": 29,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "temp_jsonl_file",
+            "line": 63,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_callback_receives_correct_event_sequence",
+            "line": 75,
+            "lines": 22,
+            "is_async": false
+          },
+          {
+            "name": "test_callback_receives_correct_chunk_info",
+            "line": 99,
+            "lines": 21,
+            "is_async": false
+          },
+          {
+            "name": "test_function_generated_includes_function_name",
+            "line": 122,
+            "lines": 19,
+            "is_async": false
+          },
+          {
+            "name": "test_callback_exception_does_not_crash_pipeline",
+            "line": 143,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_no_callback_works_silently",
+            "line": 163,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "test_iteration_event_includes_iteration_number",
+            "line": 176,
+            "lines": 20,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_validation.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 220,
+        "code": 146,
+        "blank": 42,
+        "comment": 32
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 14,
+        "top_level_function_count": 12,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 7,
+            "lines": 10,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 10,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 14,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "test_validate_function_accepts_working_code",
+            "line": 21,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_rejects_key_error",
+            "line": 33,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_rejects_type_error",
+            "line": 45,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_rejects_attribute_error",
+            "line": 57,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_handles_empty_sample",
+            "line": 69,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_missing_function_name",
+            "line": 80,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_validate_function_syntax_error_in_code",
+            "line": 91,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_extract_sample_data_jsonl",
+            "line": 104,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_extract_sample_data_handles_invalid_lines",
+            "line": 113,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_extract_sample_data_empty_chunk",
+            "line": 122,
+            "lines": 4,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_retries_on_validation_failure",
+            "line": 178,
+            "lines": 23,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_validation_disabled",
+            "line": 203,
+            "lines": 18,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_dependencies.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 260,
+        "code": 177,
+        "blank": 41,
+        "comment": 42
+      },
+      "python": {
+        "class_count": 3,
+        "function_count": 19,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "TestDetectCalls",
+            "line": 11,
+            "lines": 73,
+            "method_count": 7,
+            "methods": [
+              {
+                "name": "test_detects_simple_call",
+                "line": 14,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_detects_multiple_calls",
+                "line": 24,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_ignores_unknown_functions",
+                "line": 36,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_handles_nested_calls",
+                "line": 47,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_handles_method_calls",
+                "line": 57,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_handles_invalid_syntax",
+                "line": 69,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_known_functions",
+                "line": 76,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestResolveDependencies",
+            "line": 86,
+            "lines": 102,
+            "method_count": 9,
+            "methods": [
+              {
+                "name": "test_simple_chain",
+                "line": 89,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_diamond_dependencies",
+                "line": 99,
+                "lines": 18,
+                "is_async": false
+              },
+              {
+                "name": "test_cycle_handling",
+                "line": 118,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_no_dependencies",
+                "line": 130,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_list",
+                "line": 141,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_single_function",
+                "line": 146,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_self_reference",
+                "line": 153,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_preserves_function_data",
+                "line": 162,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_complex_three_level_chain",
+                "line": 176,
+                "lines": 12,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestOutputIntegration",
+            "line": 190,
+            "lines": 71,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_clean_data_uses_resolved_order",
+                "line": 193,
+                "lines": 19,
+                "is_async": false
+              },
+              {
+                "name": "test_diamond_dependency_output",
+                "line": 213,
+                "lines": 28,
+                "is_async": false
+              },
+              {
+                "name": "test_cycle_still_produces_valid_output",
+                "line": 242,
+                "lines": 19,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_vendor_chunker.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 341,
+        "code": 207,
+        "blank": 71,
+        "comment": 63
+      },
+      "python": {
+        "class_count": 10,
+        "function_count": 29,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "TestChunkDataclass",
+            "line": 8,
+            "lines": 15,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_chunk_creation",
+                "line": 11,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_len",
+                "line": 19,
+                "lines": 4,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestSentenceChunkerInit",
+            "line": 25,
+            "lines": 53,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_default_parameters",
+                "line": 28,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_custom_parameters",
+                "line": 38,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_string_delim_converted_to_list",
+                "line": 55,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_chunk_size",
+                "line": 60,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_overlap_exceeds_chunk_size",
+                "line": 67,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_min_sentences",
+                "line": 74,
+                "lines": 4,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestBasicSentenceSplitting",
+            "line": 80,
+            "lines": 47,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_basic_sentence_splitting",
+                "line": 83,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_multiple_sentences_split",
+                "line": 94,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_input_returns_empty_list",
+                "line": 108,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_single_sentence_input",
+                "line": 116,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkOverlap",
+            "line": 129,
+            "lines": 31,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_overlap_works",
+                "line": 132,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_no_overlap_when_zero",
+                "line": 149,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestShortSentenceMerging",
+            "line": 162,
+            "lines": 26,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_short_sentences_merged",
+                "line": 165,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_all_short_sentences",
+                "line": 178,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestPositionTracking",
+            "line": 190,
+            "lines": 25,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_position_tracking_accuracy",
+                "line": 193,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_position_coverage",
+                "line": 204,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestConfigurableDelimiters",
+            "line": 217,
+            "lines": 53,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_custom_delimiters",
+                "line": 220,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_newline_delimiter",
+                "line": 229,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_include_delim_prev",
+                "line": 238,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_include_delim_next",
+                "line": 249,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_include_delim_none",
+                "line": 260,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestTokenCount",
+            "line": 272,
+            "lines": 11,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_token_count_equals_char_count",
+                "line": 275,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestEdgeCases",
+            "line": 285,
+            "lines": 39,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_very_long_sentence",
+                "line": 288,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_whitespace_only_between_sentences",
+                "line": 299,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_unicode_text",
+                "line": 307,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_special_characters",
+                "line": 316,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestMinSentencesPerChunk",
+            "line": 326,
+            "lines": 16,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_min_sentences_enforced",
+                "line": 329,
+                "lines": 13,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_metrics.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 334,
+        "code": 234,
+        "blank": 68,
+        "comment": 32
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 24,
+        "top_level_function_count": 22,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 8,
+            "lines": 10,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 11,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 15,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "test_measure_quality_counts_nulls",
+            "line": 22,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_counts_empty_strings",
+            "line": 34,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_tracks_unique_values_per_field",
+            "line": 45,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_total_records",
+            "line": 58,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_empty_data",
+            "line": 65,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_all_nulls",
+            "line": 74,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_handles_complex_values",
+            "line": 85,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "test_measure_quality_timestamp_set",
+            "line": 98,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_compare_quality_computes_null_reduction",
+            "line": 107,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_compare_quality_computes_empty_string_reduction",
+            "line": 117,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_compare_quality_handles_zero_before",
+            "line": 127,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_compare_quality_tracks_unique_value_changes",
+            "line": 136,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_load_structured_data_jsonl",
+            "line": 158,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_load_structured_data_json_array",
+            "line": 168,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_load_structured_data_json_object",
+            "line": 177,
+            "lines": 7,
+            "is_async": false
+          },
+          {
+            "name": "test_load_structured_data_unsupported_format",
+            "line": 186,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_track_metrics_populates_metrics_before",
+            "line": 206,
+            "lines": 19,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_track_metrics_false_no_metrics",
+            "line": 227,
+            "lines": 17,
+            "is_async": false
+          },
+          {
+            "name": "test_get_improvement_report_returns_none_when_not_tracking",
+            "line": 246,
+            "lines": 16,
+            "is_async": false
+          },
+          {
+            "name": "test_get_improvement_report_returns_partial_when_no_after",
+            "line": 264,
+            "lines": 21,
+            "is_async": false
+          },
+          {
+            "name": "test_get_improvement_report_with_both_metrics",
+            "line": 287,
+            "lines": 28,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_text_mode_no_metrics",
+            "line": 317,
+            "lines": 18,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_parsers.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 366,
+        "code": 223,
+        "blank": 88,
+        "comment": 55
+      },
+      "python": {
+        "class_count": 10,
+        "function_count": 24,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "TestChunkJsonl",
+            "line": 18,
+            "lines": 33,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_chunk_jsonl_basic",
+                "line": 21,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_jsonl_empty",
+                "line": 34,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_jsonl_single_line",
+                "line": 43,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkCsv",
+            "line": 53,
+            "lines": 35,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_chunk_csv_preserves_header",
+                "line": 56,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_csv_empty",
+                "line": 71,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_csv_header_only",
+                "line": 80,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkJson",
+            "line": 90,
+            "lines": 40,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_chunk_json_array",
+                "line": 93,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_json_object",
+                "line": 108,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_json_empty_array",
+                "line": 122,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkText",
+            "line": 132,
+            "lines": 27,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_chunk_text_by_char_count",
+                "line": 135,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_text_empty",
+                "line": 151,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkFileEdgeCases",
+            "line": 161,
+            "lines": 22,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_file_not_found",
+                "line": 164,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_unknown_extension_defaults_to_text",
+                "line": 169,
+                "lines": 14,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseValidResponse",
+            "line": 221,
+            "lines": 38,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_parse_valid_response",
+                "line": 224,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_parse_issues",
+                "line": 233,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_parse_clean_response",
+                "line": 243,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_parse_defaults_to_needs_more_work",
+                "line": 251,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestExtractPythonBlock",
+            "line": 261,
+            "lines": 30,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_extract_python_from_markdown",
+                "line": 264,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_extract_no_markdown_block",
+                "line": 275,
+                "lines": 5,
+                "is_async": false
+              },
+              {
+                "name": "test_extract_preserves_indentation",
+                "line": 281,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseRejectsInvalidPython",
+            "line": 293,
+            "lines": 24,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_parse_rejects_invalid_python",
+                "line": 296,
+                "lines": 21,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseRejectsInvalidXml",
+            "line": 319,
+            "lines": 20,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_parse_rejects_malformed_xml",
+                "line": 322,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_parse_rejects_missing_root_element",
+                "line": 331,
+                "lines": 8,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestParseRejectsMainImports",
+            "line": 341,
+            "lines": 26,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "test_parse_rejects_main_import",
+                "line": 344,
+                "lines": 23,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/__init__.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 1,
+        "code": 0,
+        "blank": 0,
+        "comment": 1
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_output.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 204,
+        "code": 126,
+        "blank": 44,
+        "comment": 34
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 11,
+        "top_level_function_count": 11,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "test_extract_imports",
+            "line": 15,
+            "lines": 12,
+            "is_async": false
+          },
+          {
+            "name": "test_remove_imports_from_code",
+            "line": 29,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_deduplicate_imports",
+            "line": 41,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_generate_clean_data_empty",
+            "line": 49,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_generate_clean_data_with_functions",
+            "line": 56,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_empty",
+            "line": 63,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_with_functions",
+            "line": 74,
+            "lines": 43,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_deduplicates_imports",
+            "line": 119,
+            "lines": 13,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_deduplicates_functions",
+            "line": 134,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_filters_main_imports",
+            "line": 154,
+            "lines": 25,
+            "is_async": false
+          },
+          {
+            "name": "test_write_cleaning_file_raises_on_invalid_combined_output",
+            "line": 181,
+            "lines": 24,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_schema.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 267,
+        "code": 168,
+        "blank": 71,
+        "comment": 28
+      },
+      "python": {
+        "class_count": 6,
+        "function_count": 19,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "TestInferSchemaJsonl",
+            "line": 11,
+            "lines": 63,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_infer_jsonl_basic",
+                "line": 14,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_jsonl_nullable_fields",
+                "line": 29,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_jsonl_samples",
+                "line": 41,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_jsonl_mixed_types",
+                "line": 53,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_jsonl_nested_types",
+                "line": 64,
+                "lines": 10,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestInferSchemaCsv",
+            "line": 76,
+            "lines": 30,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_infer_csv_basic",
+                "line": 79,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_csv_headers_as_fields",
+                "line": 94,
+                "lines": 12,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestInferSchemaJson",
+            "line": 108,
+            "lines": 42,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_infer_json_array",
+                "line": 111,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_json_object",
+                "line": 127,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_json_empty_array",
+                "line": 141,
+                "lines": 9,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestInferSchemaText",
+            "line": 152,
+            "lines": 26,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_infer_text_returns_empty",
+                "line": 155,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_unknown_extension_returns_empty",
+                "line": 169,
+                "lines": 9,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestInferSchemaEdgeCases",
+            "line": 180,
+            "lines": 30,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_infer_nonexistent_file",
+                "line": 183,
+                "lines": 5,
+                "is_async": false
+              },
+              {
+                "name": "test_infer_empty_file",
+                "line": 189,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_sample_size_limits_records",
+                "line": 199,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestFormatSchemaForPrompt",
+            "line": 212,
+            "lines": 56,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_format_basic_schema",
+                "line": 215,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_format_nullable_field",
+                "line": 232,
+                "lines": 13,
+                "is_async": false
+              },
+              {
+                "name": "test_format_empty_schema",
+                "line": 246,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_format_includes_sample_values",
+                "line": 254,
+                "lines": 14,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_cleaner.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 156,
+        "code": 104,
+        "blank": 35,
+        "comment": 17
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 8,
+        "top_level_function_count": 6,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 7,
+            "lines": 10,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 10,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 14,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "test_build_prompt_includes_all_parts",
+            "line": 49,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_data_cleaner_generates_function",
+            "line": 61,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_data_cleaner_stops_when_clean",
+            "line": 81,
+            "lines": 16,
+            "is_async": false
+          },
+          {
+            "name": "test_data_cleaner_retries_on_parse_error",
+            "line": 99,
+            "lines": 19,
+            "is_async": false
+          },
+          {
+            "name": "test_data_cleaner_respects_max_iterations",
+            "line": 120,
+            "lines": 19,
+            "is_async": false
+          },
+          {
+            "name": "test_data_cleaner_empty_file",
+            "line": 141,
+            "lines": 16,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_holdout.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 304,
+        "code": 196,
+        "blank": 66,
+        "comment": 42
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 20,
+        "top_level_function_count": 18,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 8,
+            "lines": 10,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 11,
+                "lines": 3,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 15,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "test_split_holdout_structured_basic",
+            "line": 22,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_structured_larger_ratio",
+            "line": 32,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_structured_zero_ratio",
+            "line": 43,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_structured_minimum_one_record",
+            "line": 51,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_structured_empty_chunk",
+            "line": 61,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_structured_single_record",
+            "line": 68,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_basic",
+            "line": 81,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_larger_ratio",
+            "line": 91,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_zero_ratio",
+            "line": 101,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_single_sentence",
+            "line": 109,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_question_marks",
+            "line": 117,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_split_holdout_text_exclamation_marks",
+            "line": 125,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_enabled_by_default",
+            "line": 164,
+            "lines": 14,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_disabled_with_zero_ratio",
+            "line": 180,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_separates_generation_from_validation",
+            "line": 200,
+            "lines": 21,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_disabled_when_validation_off",
+            "line": 223,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_validation_uses_holdout_data",
+            "line": 243,
+            "lines": 40,
+            "is_async": false
+          },
+          {
+            "name": "test_cleaner_holdout_text_mode",
+            "line": 285,
+            "lines": 20,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_incremental.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 351,
+        "code": 251,
+        "blank": 63,
+        "comment": 37
+      },
+      "python": {
+        "class_count": 2,
+        "function_count": 17,
+        "top_level_function_count": 14,
+        "classes": [
+          {
+            "name": "MockBackend",
+            "line": 12,
+            "lines": 12,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "generate",
+                "line": 15,
+                "lines": 9,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "MockBackendWithFunction",
+            "line": 26,
+            "lines": 35,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 29,
+                "lines": 2,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 32,
+                "lines": 29,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "temp_jsonl_file",
+            "line": 64,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "temp_multi_chunk_file",
+            "line": 77,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "temp_state_file",
+            "line": 91,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_state_file_created_after_processing",
+            "line": 103,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "test_state_file_contains_expected_structure",
+            "line": 116,
+            "lines": 23,
+            "is_async": false
+          },
+          {
+            "name": "test_resume_skips_completed_chunks",
+            "line": 141,
+            "lines": 40,
+            "is_async": false
+          },
+          {
+            "name": "test_interrupted_run_plus_resume_produces_same_functions",
+            "line": 183,
+            "lines": 43,
+            "is_async": false
+          },
+          {
+            "name": "test_invalid_state_file_raises_clear_error",
+            "line": 228,
+            "lines": 17,
+            "is_async": false
+          },
+          {
+            "name": "test_mismatched_file_path_raises_error",
+            "line": 247,
+            "lines": 27,
+            "is_async": false
+          },
+          {
+            "name": "test_resume_classmethod_loads_state",
+            "line": 276,
+            "lines": 26,
+            "is_async": false
+          },
+          {
+            "name": "test_resume_nonexistent_file_raises_error",
+            "line": 304,
+            "lines": 4,
+            "is_async": false
+          },
+          {
+            "name": "test_resume_invalid_json_raises_error",
+            "line": 310,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "test_no_state_file_works_normally",
+            "line": 321,
+            "lines": 12,
+            "is_async": false
+          },
+          {
+            "name": "test_state_file_updated_after_each_chunk",
+            "line": 335,
+            "lines": 17,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_context.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 68,
+        "code": 43,
+        "blank": 14,
+        "comment": 11
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 7,
+        "top_level_function_count": 7,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "test_build_context_empty",
+            "line": 5,
+            "lines": 4,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_single_function",
+            "line": 11,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_multiple_functions",
+            "line": 19,
+            "lines": 14,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_respects_budget",
+            "line": 35,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_keeps_most_recent",
+            "line": 42,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_exact_budget",
+            "line": 52,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "test_build_context_budget_too_small",
+            "line": 64,
+            "lines": 5,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "tests/test_integration.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 943,
+        "code": 669,
+        "blank": 186,
+        "comment": 88
+      },
+      "python": {
+        "class_count": 10,
+        "function_count": 33,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "MockLLM",
+            "line": 10,
+            "lines": 15,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 13,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "generate",
+                "line": 18,
+                "lines": 7,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestEndToEnd",
+            "line": 116,
+            "lines": 65,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_full_pipeline_creates_valid_file",
+                "line": 119,
+                "lines": 33,
+                "is_async": false
+              },
+              {
+                "name": "test_pipeline_with_no_functions_needed",
+                "line": 153,
+                "lines": 28,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestEmptyChunkHandling",
+            "line": 183,
+            "lines": 68,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_empty_file_no_llm_calls",
+                "line": 186,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_file_with_only_whitespace",
+                "line": 202,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_json_array",
+                "line": 219,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_jsonl_with_empty_lines",
+                "line": 235,
+                "lines": 16,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestMaxIterations",
+            "line": 253,
+            "lines": 81,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_stops_at_max_iterations",
+                "line": 256,
+                "lines": 27,
+                "is_async": false
+              },
+              {
+                "name": "test_max_iterations_warning_logged",
+                "line": 284,
+                "lines": 25,
+                "is_async": false
+              },
+              {
+                "name": "test_different_max_iterations_values",
+                "line": 310,
+                "lines": 24,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestErrorRecovery",
+            "line": 336,
+            "lines": 136,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_recovers_from_invalid_xml",
+                "line": 339,
+                "lines": 25,
+                "is_async": false
+              },
+              {
+                "name": "test_recovers_from_invalid_python",
+                "line": 365,
+                "lines": 25,
+                "is_async": false
+              },
+              {
+                "name": "test_multiple_errors_then_success",
+                "line": 391,
+                "lines": 27,
+                "is_async": false
+              },
+              {
+                "name": "test_error_feedback_cleared_on_success",
+                "line": 419,
+                "lines": 28,
+                "is_async": false
+              },
+              {
+                "name": "test_exhausts_max_iterations_with_continuous_errors",
+                "line": 448,
+                "lines": 24,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestMultipleChunks",
+            "line": 474,
+            "lines": 69,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_processes_all_chunks",
+                "line": 477,
+                "lines": 34,
+                "is_async": false
+              },
+              {
+                "name": "test_chunks_process_sequentially",
+                "line": 512,
+                "lines": 31,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestContextAccumulation",
+            "line": 545,
+            "lines": 86,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_context_includes_previous_functions",
+                "line": 548,
+                "lines": 27,
+                "is_async": false
+              },
+              {
+                "name": "test_context_builds_across_chunks",
+                "line": 576,
+                "lines": 28,
+                "is_async": false
+              },
+              {
+                "name": "test_context_budget_limits_functions",
+                "line": 605,
+                "lines": 26,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestFileTypes",
+            "line": 633,
+            "lines": 94,
+            "method_count": 4,
+            "methods": [
+              {
+                "name": "test_csv_file_processing",
+                "line": 636,
+                "lines": 24,
+                "is_async": false
+              },
+              {
+                "name": "test_json_array_processing",
+                "line": 661,
+                "lines": 21,
+                "is_async": false
+              },
+              {
+                "name": "test_json_object_single_chunk",
+                "line": 683,
+                "lines": 21,
+                "is_async": false
+              },
+              {
+                "name": "test_text_file_processing",
+                "line": 705,
+                "lines": 22,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestOutputFileGeneration",
+            "line": 729,
+            "lines": 106,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_output_file_has_all_functions",
+                "line": 732,
+                "lines": 33,
+                "is_async": false
+              },
+              {
+                "name": "test_output_file_is_valid_python",
+                "line": 766,
+                "lines": 32,
+                "is_async": false
+              },
+              {
+                "name": "test_clean_data_calls_functions_in_order",
+                "line": 799,
+                "lines": 36,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestEdgeCases",
+            "line": 837,
+            "lines": 107,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_file_not_found_raises_error",
+                "line": 840,
+                "lines": 12,
+                "is_async": false
+              },
+              {
+                "name": "test_handles_unicode_content",
+                "line": 853,
+                "lines": 22,
+                "is_async": false
+              },
+              {
+                "name": "test_very_large_chunk_size",
+                "line": 876,
+                "lines": 22,
+                "is_async": false
+              },
+              {
+                "name": "test_chunk_size_one",
+                "line": 899,
+                "lines": 22,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_instructions",
+                "line": 922,
+                "lines": 22,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "tests/test_sampling.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 322,
+        "code": 235,
+        "blank": 44,
+        "comment": 43
+      },
+      "python": {
+        "class_count": 5,
+        "function_count": 25,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "TestComputeSeed",
+            "line": 17,
+            "lines": 20,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "test_deterministic_same_content",
+                "line": 20,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_different_content_different_seed",
+                "line": 27,
+                "lines": 5,
+                "is_async": false
+              },
+              {
+                "name": "test_returns_int",
+                "line": 33,
+                "lines": 4,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestShuffleRecords",
+            "line": 39,
+            "lines": 42,
+            "method_count": 6,
+            "methods": [
+              {
+                "name": "test_deterministic_shuffle",
+                "line": 42,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_different_seed_different_order",
+                "line": 50,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "test_preserves_all_records",
+                "line": 58,
+                "lines": 6,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_list",
+                "line": 65,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_single_item",
+                "line": 70,
+                "lines": 4,
+                "is_async": false
+              },
+              {
+                "name": "test_does_not_modify_original",
+                "line": 75,
+                "lines": 6,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestStratifiedSample",
+            "line": 83,
+            "lines": 63,
+            "method_count": 5,
+            "methods": [
+              {
+                "name": "test_balances_categories",
+                "line": 86,
+                "lines": 15,
+                "is_async": false
+              },
+              {
+                "name": "test_preserves_all_records",
+                "line": 102,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_missing_field_grouped_together",
+                "line": 113,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_invalid_json_grouped_together",
+                "line": 123,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_deterministic_with_same_seed",
+                "line": 135,
+                "lines": 11,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestChunkFileWithSampling",
+            "line": 148,
+            "lines": 139,
+            "method_count": 9,
+            "methods": [
+              {
+                "name": "test_sequential_preserves_order",
+                "line": 151,
+                "lines": 16,
+                "is_async": false
+              },
+              {
+                "name": "test_random_shuffles_records",
+                "line": 168,
+                "lines": 11,
+                "is_async": false
+              },
+              {
+                "name": "test_random_is_deterministic",
+                "line": 180,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_stratified_balances_chunks",
+                "line": 191,
+                "lines": 34,
+                "is_async": false
+              },
+              {
+                "name": "test_text_mode_rejects_random",
+                "line": 226,
+                "lines": 9,
+                "is_async": false
+              },
+              {
+                "name": "test_text_mode_rejects_stratified",
+                "line": 236,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_text_mode_allows_sequential",
+                "line": 251,
+                "lines": 10,
+                "is_async": false
+              },
+              {
+                "name": "test_empty_data_returns_empty",
+                "line": 262,
+                "lines": 8,
+                "is_async": false
+              },
+              {
+                "name": "test_stratified_without_field_falls_back",
+                "line": 271,
+                "lines": 16,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "TestDataCleanerSamplingParams",
+            "line": 289,
+            "lines": 34,
+            "method_count": 2,
+            "methods": [
+              {
+                "name": "test_default_sampling_strategy",
+                "line": 292,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "test_custom_sampling_params",
+                "line": 307,
+                "lines": 16,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/metrics.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 163,
+        "code": 119,
+        "blank": 27,
+        "comment": 17
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 4,
+        "top_level_function_count": 3,
+        "classes": [
+          {
+            "name": "QualityMetrics",
+            "line": 10,
+            "lines": 12,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "__post_init__",
+                "line": 19,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "measure_quality",
+            "line": 24,
+            "lines": 54,
+            "is_async": false
+          },
+          {
+            "name": "compare_quality",
+            "line": 80,
+            "lines": 48,
+            "is_async": false
+          },
+          {
+            "name": "load_structured_data",
+            "line": 130,
+            "lines": 34,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/__init__.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 45,
+        "code": 42,
+        "blank": 2,
+        "comment": 1
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/response.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 292,
+        "code": 200,
+        "blank": 58,
+        "comment": 34
+      },
+      "python": {
+        "class_count": 3,
+        "function_count": 5,
+        "top_level_function_count": 5,
+        "classes": [
+          {
+            "name": "AgentAssessment",
+            "line": 12,
+            "lines": 6,
+            "method_count": 0,
+            "methods": []
+          },
+          {
+            "name": "SaturationAssessment",
+            "line": 21,
+            "lines": 7,
+            "method_count": 0,
+            "methods": []
+          },
+          {
+            "name": "ConsolidationResult",
+            "line": 31,
+            "lines": 6,
+            "method_count": 0,
+            "methods": []
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "parse_response",
+            "line": 39,
+            "lines": 73,
+            "is_async": false
+          },
+          {
+            "name": "_parse_issues",
+            "line": 114,
+            "lines": 13,
+            "is_async": false
+          },
+          {
+            "name": "extract_python_block",
+            "line": 129,
+            "lines": 14,
+            "is_async": false
+          },
+          {
+            "name": "parse_consolidation_response",
+            "line": 145,
+            "lines": 93,
+            "is_async": false
+          },
+          {
+            "name": "parse_saturation_response",
+            "line": 240,
+            "lines": 53,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/parsers.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 325,
+        "code": 225,
+        "blank": 64,
+        "comment": 36
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 11,
+        "top_level_function_count": 11,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "chunk_file",
+            "line": 21,
+            "lines": 57,
+            "is_async": false
+          },
+          {
+            "name": "_detect_mode",
+            "line": 80,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "chunk_text_sentences",
+            "line": 88,
+            "lines": 30,
+            "is_async": false
+          },
+          {
+            "name": "_chunk_text_paragraphs",
+            "line": 120,
+            "lines": 81,
+            "is_async": false
+          },
+          {
+            "name": "_chunk_text",
+            "line": 203,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "_chunk_csv",
+            "line": 213,
+            "lines": 24,
+            "is_async": false
+          },
+          {
+            "name": "_chunk_json",
+            "line": 239,
+            "lines": 15,
+            "is_async": false
+          },
+          {
+            "name": "_chunk_jsonl",
+            "line": 256,
+            "lines": 26,
+            "is_async": false
+          },
+          {
+            "name": "_compute_seed",
+            "line": 284,
+            "lines": 3,
+            "is_async": false
+          },
+          {
+            "name": "_shuffle_records",
+            "line": 289,
+            "lines": 6,
+            "is_async": false
+          },
+          {
+            "name": "_stratified_sample",
+            "line": 297,
+            "lines": 29,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/types.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 11,
+        "code": 4,
+        "blank": 4,
+        "comment": 3
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 1,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "LLMBackend",
+            "line": 6,
+            "lines": 6,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "generate",
+                "line": 9,
+                "lines": 3,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/cleaner.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 487,
+        "code": 385,
+        "blank": 57,
+        "comment": 45
+      },
+      "python": {
+        "class_count": 1,
+        "function_count": 13,
+        "top_level_function_count": 1,
+        "classes": [
+          {
+            "name": "DataCleaner",
+            "line": 30,
+            "lines": 458,
+            "method_count": 12,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 39,
+                "lines": 54,
+                "is_async": false
+              },
+              {
+                "name": "_emit",
+                "line": 94,
+                "lines": 14,
+                "is_async": false
+              },
+              {
+                "name": "_optimize_functions",
+                "line": 109,
+                "lines": 37,
+                "is_async": false
+              },
+              {
+                "name": "_check_saturation",
+                "line": 147,
+                "lines": 43,
+                "is_async": false
+              },
+              {
+                "name": "_save_state",
+                "line": 191,
+                "lines": 22,
+                "is_async": false
+              },
+              {
+                "name": "_load_state",
+                "line": 214,
+                "lines": 21,
+                "is_async": false
+              },
+              {
+                "name": "resume",
+                "line": 237,
+                "lines": 39,
+                "is_async": false
+              },
+              {
+                "name": "_detect_mode",
+                "line": 277,
+                "lines": 7,
+                "is_async": false
+              },
+              {
+                "name": "run",
+                "line": 285,
+                "lines": 67,
+                "is_async": false
+              },
+              {
+                "name": "_process_chunk",
+                "line": 353,
+                "lines": 88,
+                "is_async": false
+              },
+              {
+                "name": "_write_output",
+                "line": 442,
+                "lines": 22,
+                "is_async": false
+              },
+              {
+                "name": "get_improvement_report",
+                "line": 465,
+                "lines": 23,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": [
+          {
+            "name": "call_llm",
+            "line": 25,
+            "lines": 3,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/context.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 27,
+        "code": 17,
+        "blank": 7,
+        "comment": 3
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 1,
+        "top_level_function_count": 1,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "build_context",
+            "line": 4,
+            "lines": 24,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/optimizer.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 336,
+        "code": 218,
+        "blank": 73,
+        "comment": 45
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 8,
+        "top_level_function_count": 8,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "extract_tags",
+            "line": 21,
+            "lines": 29,
+            "is_async": false
+          },
+          {
+            "name": "_calculate_idf",
+            "line": 52,
+            "lines": 22,
+            "is_async": false
+          },
+          {
+            "name": "_fallback_from_name",
+            "line": 76,
+            "lines": 16,
+            "is_async": false
+          },
+          {
+            "name": "_rebalance_groups",
+            "line": 94,
+            "lines": 66,
+            "is_async": false
+          },
+          {
+            "name": "group_by_salience",
+            "line": 162,
+            "lines": 42,
+            "is_async": false
+          },
+          {
+            "name": "format_functions_for_review",
+            "line": 206,
+            "lines": 24,
+            "is_async": false
+          },
+          {
+            "name": "consolidate_group",
+            "line": 232,
+            "lines": 56,
+            "is_async": false
+          },
+          {
+            "name": "consolidate_with_agency",
+            "line": 290,
+            "lines": 47,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/errors.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 17,
+        "code": 4,
+        "blank": 8,
+        "comment": 5
+      },
+      "python": {
+        "class_count": 4,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "CleanerError",
+            "line": 4,
+            "lines": 2,
+            "method_count": 0,
+            "methods": []
+          },
+          {
+            "name": "ParseError",
+            "line": 8,
+            "lines": 2,
+            "method_count": 0,
+            "methods": []
+          },
+          {
+            "name": "MaxIterationsError",
+            "line": 12,
+            "lines": 2,
+            "method_count": 0,
+            "methods": []
+          },
+          {
+            "name": "OutputValidationError",
+            "line": 16,
+            "lines": 2,
+            "method_count": 0,
+            "methods": []
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/prompt.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 218,
+        "code": 173,
+        "blank": 36,
+        "comment": 9
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 1,
+        "top_level_function_count": 1,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "build_prompt",
+            "line": 185,
+            "lines": 34,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/output.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 154,
+        "code": 99,
+        "blank": 31,
+        "comment": 24
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 6,
+        "top_level_function_count": 6,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "extract_imports",
+            "line": 10,
+            "lines": 8,
+            "is_async": false
+          },
+          {
+            "name": "remove_imports_from_code",
+            "line": 20,
+            "lines": 11,
+            "is_async": false
+          },
+          {
+            "name": "deduplicate_imports",
+            "line": 33,
+            "lines": 9,
+            "is_async": false
+          },
+          {
+            "name": "generate_clean_data_function",
+            "line": 44,
+            "lines": 21,
+            "is_async": false
+          },
+          {
+            "name": "deduplicate_functions",
+            "line": 67,
+            "lines": 19,
+            "is_async": false
+          },
+          {
+            "name": "write_cleaning_file",
+            "line": 88,
+            "lines": 67,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/dependencies.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 59,
+        "code": 39,
+        "blank": 12,
+        "comment": 8
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 2,
+        "top_level_function_count": 2,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "detect_calls",
+            "line": 6,
+            "lines": 13,
+            "is_async": false
+          },
+          {
+            "name": "resolve_dependencies",
+            "line": 21,
+            "lines": 39,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/schema.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 117,
+        "code": 85,
+        "blank": 23,
+        "comment": 9
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 7,
+        "top_level_function_count": 7,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "infer_schema",
+            "line": 9,
+            "lines": 29,
+            "is_async": false
+          },
+          {
+            "name": "_infer_jsonl",
+            "line": 40,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "_infer_csv",
+            "line": 47,
+            "lines": 5,
+            "is_async": false
+          },
+          {
+            "name": "_infer_json",
+            "line": 54,
+            "lines": 10,
+            "is_async": false
+          },
+          {
+            "name": "_infer_from_records",
+            "line": 66,
+            "lines": 18,
+            "is_async": false
+          },
+          {
+            "name": "_infer_type",
+            "line": 86,
+            "lines": 16,
+            "is_async": false
+          },
+          {
+            "name": "format_schema_for_prompt",
+            "line": 104,
+            "lines": 14,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/validation.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 133,
+        "code": 98,
+        "blank": 19,
+        "comment": 16
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 3,
+        "top_level_function_count": 3,
+        "classes": [],
+        "top_level_functions": [
+          {
+            "name": "split_holdout",
+            "line": 8,
+            "lines": 32,
+            "is_async": false
+          },
+          {
+            "name": "validate_function",
+            "line": 42,
+            "lines": 57,
+            "is_async": false
+          },
+          {
+            "name": "extract_sample_data",
+            "line": 101,
+            "lines": 33,
+            "is_async": false
+          }
+        ]
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/vendor/chunker.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 187,
+        "code": 137,
+        "blank": 34,
+        "comment": 16
+      },
+      "python": {
+        "class_count": 2,
+        "function_count": 4,
+        "top_level_function_count": 0,
+        "classes": [
+          {
+            "name": "Chunk",
+            "line": 36,
+            "lines": 10,
+            "method_count": 1,
+            "methods": [
+              {
+                "name": "__len__",
+                "line": 44,
+                "lines": 2,
+                "is_async": false
+              }
+            ]
+          },
+          {
+            "name": "SentenceChunker",
+            "line": 48,
+            "lines": 140,
+            "method_count": 3,
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 60,
+                "lines": 23,
+                "is_async": false
+              },
+              {
+                "name": "_split_into_sentences",
+                "line": 84,
+                "lines": 34,
+                "is_async": false
+              },
+              {
+                "name": "chunk",
+                "line": 119,
+                "lines": 69,
+                "is_async": false
+              }
+            ]
+          }
+        ],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "recursive_cleaner/vendor/__init__.py",
+      "language": "python",
+      "extension": ".py",
+      "lines": {
+        "total": 4,
+        "code": 2,
+        "blank": 1,
+        "comment": 1
+      },
+      "python": {
+        "class_count": 0,
+        "function_count": 0,
+        "top_level_function_count": 0,
+        "classes": [],
+        "top_level_functions": []
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/refactor-assessment/data/stats.json",
+      "language": "json",
+      "extension": ".json",
+      "lines": {
+        "total": 0,
+        "code": 0,
+        "blank": 0,
+        "comment": 0
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "pyproject.toml",
+      "language": "toml",
+      "extension": ".toml",
+      "lines": {
+        "total": 17,
+        "code": 15,
+        "blank": 2,
+        "comment": 0
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "CLAUDE_ADVANCED.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 955,
+        "code": 679,
+        "blank": 202,
+        "comment": 74
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "TODO.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 112,
+        "code": 64,
+        "blank": 29,
+        "comment": 19
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "README.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 163,
+        "code": 102,
+        "blank": 37,
+        "comment": 24
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "CLAUDE.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 380,
+        "code": 264,
+        "blank": 76,
+        "comment": 40
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/implementation-plan-v05.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 190,
+        "code": 124,
+        "blank": 53,
+        "comment": 13
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/implementation-plan-v04.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 148,
+        "code": 99,
+        "blank": 38,
+        "comment": 11
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/smolagents-analysis.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 545,
+        "code": 356,
+        "blank": 116,
+        "comment": 73
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "docs/langchain-analysis.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 640,
+        "code": 425,
+        "blank": 162,
+        "comment": 53
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "docs/langgraph-analysis.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 507,
+        "code": 346,
+        "blank": 114,
+        "comment": 47
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "docs/other-frameworks-analysis.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 386,
+        "code": 242,
+        "blank": 101,
+        "comment": 43
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/implementation-plan.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 184,
+        "code": 124,
+        "blank": 49,
+        "comment": 11
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/workflow-state.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 35,
+        "code": 22,
+        "blank": 6,
+        "comment": 7
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/implementation-plan-v03.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 95,
+        "code": 60,
+        "blank": 27,
+        "comment": 8
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/mlx-lm-guide.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 425,
+        "code": 276,
+        "blank": 104,
+        "comment": 45
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/research/markitdown.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 513,
+        "code": 315,
+        "blank": 126,
+        "comment": 72
+      },
+      "exceeds_500_lines": true
+    },
+    {
+      "file": "docs/research/chonkie.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 367,
+        "code": 233,
+        "blank": 88,
+        "comment": 46
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/research/chonkie-extraction.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 357,
+        "code": 240,
+        "blank": 81,
+        "comment": 36
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/success-criteria.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 114,
+        "code": 67,
+        "blank": 24,
+        "comment": 23
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/api-contract.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 209,
+        "code": 134,
+        "blank": 40,
+        "comment": 35
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/data-schema.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 101,
+        "code": 68,
+        "blank": 20,
+        "comment": 13
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/tier2-contract.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 178,
+        "code": 104,
+        "blank": 41,
+        "comment": 33
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/text-mode-contract.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 178,
+        "code": 124,
+        "blank": 36,
+        "comment": 18
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "docs/contracts/two-pass-contract.md",
+      "language": "markdown",
+      "extension": ".md",
+      "lines": {
+        "total": 272,
+        "code": 169,
+        "blank": 63,
+        "comment": 40
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/healthcare_instructions.txt",
+      "language": "text",
+      "extension": ".txt",
+      "lines": {
+        "total": 14,
+        "code": 13,
+        "blank": 1,
+        "comment": 0
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/ecommerce_instructions.txt",
+      "language": "text",
+      "extension": ".txt",
+      "lines": {
+        "total": 12,
+        "code": 11,
+        "blank": 1,
+        "comment": 0
+      },
+      "exceeds_500_lines": false
+    },
+    {
+      "file": "test_cases/financial_instructions.txt",
+      "language": "text",
+      "extension": ".txt",
+      "lines": {
+        "total": 14,
+        "code": 13,
+        "blank": 1,
+        "comment": 0
+      },
+      "exceeds_500_lines": false
+    }
+  ],
+  "directory_tree": {
+    "name": "Recursive-Data-Cleaner",
+    "type": "directory",
+    "children": {
+      "test_mlx_backend.py": {
+        "name": "test_mlx_backend.py",
+        "type": "file",
+        "lines": 51,
+        "language": "python"
+      },
+      "test_cases": {
+        "name": "test_cases",
+        "type": "directory",
+        "children": {
+          "run_ecommerce_test.py": {
+            "name": "run_ecommerce_test.py",
+            "type": "file",
+            "lines": 45,
+            "language": "python"
+          },
+          "run_healthcare_test.py": {
+            "name": "run_healthcare_test.py",
+            "type": "file",
+            "lines": 47,
+            "language": "python"
+          },
+          "run_financial_test.py": {
+            "name": "run_financial_test.py",
+            "type": "file",
+            "lines": 47,
+            "language": "python"
+          },
+          "healthcare_instructions.txt": {
+            "name": "healthcare_instructions.txt",
+            "type": "file",
+            "lines": 14,
+            "language": "text"
+          },
+          "ecommerce_instructions.txt": {
+            "name": "ecommerce_instructions.txt",
+            "type": "file",
+            "lines": 12,
+            "language": "text"
+          },
+          "financial_instructions.txt": {
+            "name": "financial_instructions.txt",
+            "type": "file",
+            "lines": 14,
+            "language": "text"
+          }
+        },
+        "stats": {
+          "files": 6,
+          "lines": 179,
+          "lines_python": 139,
+          "lines_text": 40
+        }
+      },
+      "backends": {
+        "name": "backends",
+        "type": "directory",
+        "children": {
+          "mlx_backend.py": {
+            "name": "mlx_backend.py",
+            "type": "file",
+            "lines": 95,
+            "language": "python"
+          },
+          "__init__.py": {
+            "name": "__init__.py",
+            "type": "file",
+            "lines": 5,
+            "language": "python"
+          }
+        },
+        "stats": {
+          "files": 2,
+          "lines": 100,
+          "lines_python": 100
+        }
+      },
+      "tests": {
+        "name": "tests",
+        "type": "directory",
+        "children": {
+          "test_optimizer.py": {
+            "name": "test_optimizer.py",
+            "type": "file",
+            "lines": 1504,
+            "language": "python"
+          },
+          "test_text_mode.py": {
+            "name": "test_text_mode.py",
+            "type": "file",
+            "lines": 469,
+            "language": "python"
+          },
+          "test_callbacks.py": {
+            "name": "test_callbacks.py",
+            "type": "file",
+            "lines": 195,
+            "language": "python"
+          },
+          "test_validation.py": {
+            "name": "test_validation.py",
+            "type": "file",
+            "lines": 220,
+            "language": "python"
+          },
+          "test_dependencies.py": {
+            "name": "test_dependencies.py",
+            "type": "file",
+            "lines": 260,
+            "language": "python"
+          },
+          "test_vendor_chunker.py": {
+            "name": "test_vendor_chunker.py",
+            "type": "file",
+            "lines": 341,
+            "language": "python"
+          },
+          "test_metrics.py": {
+            "name": "test_metrics.py",
+            "type": "file",
+            "lines": 334,
+            "language": "python"
+          },
+          "test_parsers.py": {
+            "name": "test_parsers.py",
+            "type": "file",
+            "lines": 366,
+            "language": "python"
+          },
+          "__init__.py": {
+            "name": "__init__.py",
+            "type": "file",
+            "lines": 1,
+            "language": "python"
+          },
+          "test_output.py": {
+            "name": "test_output.py",
+            "type": "file",
+            "lines": 204,
+            "language": "python"
+          },
+          "test_schema.py": {
+            "name": "test_schema.py",
+            "type": "file",
+            "lines": 267,
+            "language": "python"
+          },
+          "test_cleaner.py": {
+            "name": "test_cleaner.py",
+            "type": "file",
+            "lines": 156,
+            "language": "python"
+          },
+          "test_holdout.py": {
+            "name": "test_holdout.py",
+            "type": "file",
+            "lines": 304,
+            "language": "python"
+          },
+          "test_incremental.py": {
+            "name": "test_incremental.py",
+            "type": "file",
+            "lines": 351,
+            "language": "python"
+          },
+          "test_context.py": {
+            "name": "test_context.py",
+            "type": "file",
+            "lines": 68,
+            "language": "python"
+          },
+          "test_integration.py": {
+            "name": "test_integration.py",
+            "type": "file",
+            "lines": 943,
+            "language": "python"
+          },
+          "test_sampling.py": {
+            "name": "test_sampling.py",
+            "type": "file",
+            "lines": 322,
+            "language": "python"
+          }
+        },
+        "stats": {
+          "files": 17,
+          "lines": 6305,
+          "lines_python": 6305
+        }
+      },
+      "recursive_cleaner": {
+        "name": "recursive_cleaner",
+        "type": "directory",
+        "children": {
+          "metrics.py": {
+            "name": "metrics.py",
+            "type": "file",
+            "lines": 163,
+            "language": "python"
+          },
+          "__init__.py": {
+            "name": "__init__.py",
+            "type": "file",
+            "lines": 45,
+            "language": "python"
+          },
+          "response.py": {
+            "name": "response.py",
+            "type": "file",
+            "lines": 292,
+            "language": "python"
+          },
+          "parsers.py": {
+            "name": "parsers.py",
+            "type": "file",
+            "lines": 325,
+            "language": "python"
+          },
+          "types.py": {
+            "name": "types.py",
+            "type": "file",
+            "lines": 11,
+            "language": "python"
+          },
+          "cleaner.py": {
+            "name": "cleaner.py",
+            "type": "file",
+            "lines": 487,
+            "language": "python"
+          },
+          "context.py": {
+            "name": "context.py",
+            "type": "file",
+            "lines": 27,
+            "language": "python"
+          },
+          "optimizer.py": {
+            "name": "optimizer.py",
+            "type": "file",
+            "lines": 336,
+            "language": "python"
+          },
+          "errors.py": {
+            "name": "errors.py",
+            "type": "file",
+            "lines": 17,
+            "language": "python"
+          },
+          "prompt.py": {
+            "name": "prompt.py",
+            "type": "file",
+            "lines": 218,
+            "language": "python"
+          },
+          "output.py": {
+            "name": "output.py",
+            "type": "file",
+            "lines": 154,
+            "language": "python"
+          },
+          "dependencies.py": {
+            "name": "dependencies.py",
+            "type": "file",
+            "lines": 59,
+            "language": "python"
+          },
+          "schema.py": {
+            "name": "schema.py",
+            "type": "file",
+            "lines": 117,
+            "language": "python"
+          },
+          "validation.py": {
+            "name": "validation.py",
+            "type": "file",
+            "lines": 133,
+            "language": "python"
+          },
+          "vendor": {
+            "name": "vendor",
+            "type": "directory",
+            "children": {
+              "chunker.py": {
+                "name": "chunker.py",
+                "type": "file",
+                "lines": 187,
+                "language": "python"
+              },
+              "__init__.py": {
+                "name": "__init__.py",
+                "type": "file",
+                "lines": 4,
+                "language": "python"
+              }
+            },
+            "stats": {
+              "files": 2,
+              "lines": 191,
+              "lines_python": 191
+            }
+          }
+        },
+        "stats": {
+          "files": 16,
+          "lines": 2575,
+          "lines_python": 2575
+        }
+      },
+      "docs": {
+        "name": "docs",
+        "type": "directory",
+        "children": {
+          "refactor-assessment": {
+            "name": "refactor-assessment",
+            "type": "directory",
+            "children": {
+              "data": {
+                "name": "data",
+                "type": "directory",
+                "children": {
+                  "stats.json": {
+                    "name": "stats.json",
+                    "type": "file",
+                    "lines": 0,
+                    "language": "json"
+                  }
+                },
+                "stats": {
+                  "files": 1,
+                  "lines": 0,
+                  "lines_json": 0
+                }
+              }
+            },
+            "stats": {
+              "files": 1,
+              "lines": 0,
+              "lines_json": 0
+            }
+          },
+          "implementation-plan-v05.md": {
+            "name": "implementation-plan-v05.md",
+            "type": "file",
+            "lines": 190,
+            "language": "markdown"
+          },
+          "implementation-plan-v04.md": {
+            "name": "implementation-plan-v04.md",
+            "type": "file",
+            "lines": 148,
+            "language": "markdown"
+          },
+          "smolagents-analysis.md": {
+            "name": "smolagents-analysis.md",
+            "type": "file",
+            "lines": 545,
+            "language": "markdown"
+          },
+          "langchain-analysis.md": {
+            "name": "langchain-analysis.md",
+            "type": "file",
+            "lines": 640,
+            "language": "markdown"
+          },
+          "langgraph-analysis.md": {
+            "name": "langgraph-analysis.md",
+            "type": "file",
+            "lines": 507,
+            "language": "markdown"
+          },
+          "other-frameworks-analysis.md": {
+            "name": "other-frameworks-analysis.md",
+            "type": "file",
+            "lines": 386,
+            "language": "markdown"
+          },
+          "implementation-plan.md": {
+            "name": "implementation-plan.md",
+            "type": "file",
+            "lines": 184,
+            "language": "markdown"
+          },
+          "workflow-state.md": {
+            "name": "workflow-state.md",
+            "type": "file",
+            "lines": 35,
+            "language": "markdown"
+          },
+          "implementation-plan-v03.md": {
+            "name": "implementation-plan-v03.md",
+            "type": "file",
+            "lines": 95,
+            "language": "markdown"
+          },
+          "mlx-lm-guide.md": {
+            "name": "mlx-lm-guide.md",
+            "type": "file",
+            "lines": 425,
+            "language": "markdown"
+          },
+          "research": {
+            "name": "research",
+            "type": "directory",
+            "children": {
+              "markitdown.md": {
+                "name": "markitdown.md",
+                "type": "file",
+                "lines": 513,
+                "language": "markdown"
+              },
+              "chonkie.md": {
+                "name": "chonkie.md",
+                "type": "file",
+                "lines": 367,
+                "language": "markdown"
+              },
+              "chonkie-extraction.md": {
+                "name": "chonkie-extraction.md",
+                "type": "file",
+                "lines": 357,
+                "language": "markdown"
+              }
+            },
+            "stats": {
+              "files": 3,
+              "lines": 1237,
+              "lines_markdown": 1237
+            }
+          },
+          "contracts": {
+            "name": "contracts",
+            "type": "directory",
+            "children": {
+              "success-criteria.md": {
+                "name": "success-criteria.md",
+                "type": "file",
+                "lines": 114,
+                "language": "markdown"
+              },
+              "api-contract.md": {
+                "name": "api-contract.md",
+                "type": "file",
+                "lines": 209,
+                "language": "markdown"
+              },
+              "data-schema.md": {
+                "name": "data-schema.md",
+                "type": "file",
+                "lines": 101,
+                "language": "markdown"
+              },
+              "tier2-contract.md": {
+                "name": "tier2-contract.md",
+                "type": "file",
+                "lines": 178,
+                "language": "markdown"
+              },
+              "text-mode-contract.md": {
+                "name": "text-mode-contract.md",
+                "type": "file",
+                "lines": 178,
+                "language": "markdown"
+              },
+              "two-pass-contract.md": {
+                "name": "two-pass-contract.md",
+                "type": "file",
+                "lines": 272,
+                "language": "markdown"
+              }
+            },
+            "stats": {
+              "files": 6,
+              "lines": 1052,
+              "lines_markdown": 1052
+            }
+          }
+        },
+        "stats": {
+          "files": 20,
+          "lines": 5444,
+          "lines_json": 0,
+          "lines_markdown": 5444
+        }
+      },
+      "pyproject.toml": {
+        "name": "pyproject.toml",
+        "type": "file",
+        "lines": 17,
+        "language": "toml"
+      },
+      "CLAUDE_ADVANCED.md": {
+        "name": "CLAUDE_ADVANCED.md",
+        "type": "file",
+        "lines": 955,
+        "language": "markdown"
+      },
+      "TODO.md": {
+        "name": "TODO.md",
+        "type": "file",
+        "lines": 112,
+        "language": "markdown"
+      },
+      "README.md": {
+        "name": "README.md",
+        "type": "file",
+        "lines": 163,
+        "language": "markdown"
+      },
+      "CLAUDE.md": {
+        "name": "CLAUDE.md",
+        "type": "file",
+        "lines": 380,
+        "language": "markdown"
+      }
+    },
+    "stats": {
+      "files": 67,
+      "lines": 16281,
+      "lines_python": 9170,
+      "lines_json": 0,
+      "lines_toml": 17,
+      "lines_markdown": 7054,
+      "lines_text": 40
+    }
+  }
+}

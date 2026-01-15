@@ -1,0 +1,368 @@
+{
+  "directory": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner",
+  "file_count": 39,
+  "module_count": 39,
+  "modules": {
+    "test_mlx_backend": "test_mlx_backend.py",
+    "test_cases.run_ecommerce_test": "test_cases/run_ecommerce_test.py",
+    "test_cases.run_healthcare_test": "test_cases/run_healthcare_test.py",
+    "test_cases.run_financial_test": "test_cases/run_financial_test.py",
+    "backends.mlx_backend": "backends/mlx_backend.py",
+    "backends": "backends/__init__.py",
+    "tests.test_optimizer": "tests/test_optimizer.py",
+    "tests.test_text_mode": "tests/test_text_mode.py",
+    "tests.test_callbacks": "tests/test_callbacks.py",
+    "tests.test_validation": "tests/test_validation.py",
+    "tests.test_dependencies": "tests/test_dependencies.py",
+    "tests.test_vendor_chunker": "tests/test_vendor_chunker.py",
+    "tests.test_metrics": "tests/test_metrics.py",
+    "tests.test_parsers": "tests/test_parsers.py",
+    "tests": "tests/__init__.py",
+    "tests.test_output": "tests/test_output.py",
+    "tests.test_schema": "tests/test_schema.py",
+    "tests.test_cleaner": "tests/test_cleaner.py",
+    "tests.test_holdout": "tests/test_holdout.py",
+    "tests.test_incremental": "tests/test_incremental.py",
+    "tests.test_context": "tests/test_context.py",
+    "tests.test_integration": "tests/test_integration.py",
+    "tests.test_sampling": "tests/test_sampling.py",
+    "recursive_cleaner.metrics": "recursive_cleaner/metrics.py",
+    "recursive_cleaner": "recursive_cleaner/__init__.py",
+    "recursive_cleaner.response": "recursive_cleaner/response.py",
+    "recursive_cleaner.parsers": "recursive_cleaner/parsers.py",
+    "recursive_cleaner.types": "recursive_cleaner/types.py",
+    "recursive_cleaner.cleaner": "recursive_cleaner/cleaner.py",
+    "recursive_cleaner.context": "recursive_cleaner/context.py",
+    "recursive_cleaner.optimizer": "recursive_cleaner/optimizer.py",
+    "recursive_cleaner.errors": "recursive_cleaner/errors.py",
+    "recursive_cleaner.prompt": "recursive_cleaner/prompt.py",
+    "recursive_cleaner.output": "recursive_cleaner/output.py",
+    "recursive_cleaner.dependencies": "recursive_cleaner/dependencies.py",
+    "recursive_cleaner.schema": "recursive_cleaner/schema.py",
+    "recursive_cleaner.validation": "recursive_cleaner/validation.py",
+    "recursive_cleaner.vendor.chunker": "recursive_cleaner/vendor/chunker.py",
+    "recursive_cleaner.vendor": "recursive_cleaner/vendor/__init__.py"
+  },
+  "imports": {
+    "test_mlx_backend": [
+      "backends",
+      "recursive_cleaner"
+    ],
+    "test_cases.run_ecommerce_test": [
+      "backends",
+      "recursive_cleaner"
+    ],
+    "test_cases.run_healthcare_test": [
+      "backends",
+      "recursive_cleaner"
+    ],
+    "test_cases.run_financial_test": [
+      "backends",
+      "recursive_cleaner"
+    ],
+    "backends": [
+      "backends.mlx_backend"
+    ],
+    "tests.test_optimizer": [
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.errors",
+      "recursive_cleaner.optimizer",
+      "recursive_cleaner.response"
+    ],
+    "tests.test_text_mode": [
+      "recursive_cleaner",
+      "recursive_cleaner.prompt",
+      "recursive_cleaner.validation"
+    ],
+    "tests.test_callbacks": [
+      "recursive_cleaner.cleaner"
+    ],
+    "tests.test_validation": [
+      "recursive_cleaner"
+    ],
+    "tests.test_dependencies": [
+      "recursive_cleaner.dependencies",
+      "recursive_cleaner.output"
+    ],
+    "tests.test_vendor_chunker": [
+      "recursive_cleaner.vendor"
+    ],
+    "tests.test_metrics": [
+      "recursive_cleaner",
+      "recursive_cleaner.metrics"
+    ],
+    "tests.test_parsers": [
+      "recursive_cleaner",
+      "recursive_cleaner.errors"
+    ],
+    "tests.test_output": [
+      "recursive_cleaner.errors",
+      "recursive_cleaner.output"
+    ],
+    "tests.test_schema": [
+      "recursive_cleaner.schema"
+    ],
+    "tests.test_cleaner": [
+      "recursive_cleaner"
+    ],
+    "tests.test_holdout": [
+      "recursive_cleaner",
+      "recursive_cleaner.validation"
+    ],
+    "tests.test_incremental": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.schema"
+    ],
+    "tests.test_context": [
+      "recursive_cleaner"
+    ],
+    "tests.test_integration": [
+      "recursive_cleaner"
+    ],
+    "tests.test_sampling": [
+      "recursive_cleaner"
+    ],
+    "recursive_cleaner": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.context",
+      "recursive_cleaner.dependencies",
+      "recursive_cleaner.errors",
+      "recursive_cleaner.metrics",
+      "recursive_cleaner.optimizer",
+      "recursive_cleaner.output",
+      "recursive_cleaner.prompt",
+      "recursive_cleaner.response",
+      "recursive_cleaner.validation"
+    ],
+    "recursive_cleaner.response": [
+      "recursive_cleaner.errors"
+    ],
+    "recursive_cleaner.parsers": [
+      "recursive_cleaner.vendor"
+    ],
+    "recursive_cleaner.cleaner": [
+      "recursive_cleaner.context",
+      "recursive_cleaner.errors",
+      "recursive_cleaner.metrics",
+      "recursive_cleaner.optimizer",
+      "recursive_cleaner.output",
+      "recursive_cleaner.parsers",
+      "recursive_cleaner.prompt",
+      "recursive_cleaner.response",
+      "recursive_cleaner.schema",
+      "recursive_cleaner.types",
+      "recursive_cleaner.validation"
+    ],
+    "recursive_cleaner.optimizer": [
+      "recursive_cleaner.prompt",
+      "recursive_cleaner.response",
+      "recursive_cleaner.types"
+    ],
+    "recursive_cleaner.output": [
+      "recursive_cleaner.dependencies",
+      "recursive_cleaner.errors"
+    ],
+    "recursive_cleaner.vendor": [
+      "recursive_cleaner.vendor.chunker"
+    ]
+  },
+  "imported_by": {
+    "backends": [
+      "test_cases.run_ecommerce_test",
+      "test_cases.run_financial_test",
+      "test_cases.run_healthcare_test",
+      "test_mlx_backend"
+    ],
+    "recursive_cleaner": [
+      "recursive_cleaner",
+      "test_cases.run_ecommerce_test",
+      "test_cases.run_financial_test",
+      "test_cases.run_healthcare_test",
+      "test_mlx_backend",
+      "tests.test_cleaner",
+      "tests.test_context",
+      "tests.test_holdout",
+      "tests.test_incremental",
+      "tests.test_integration",
+      "tests.test_metrics",
+      "tests.test_parsers",
+      "tests.test_sampling",
+      "tests.test_text_mode",
+      "tests.test_validation"
+    ],
+    "backends.mlx_backend": [
+      "backends"
+    ],
+    "recursive_cleaner.optimizer": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "tests.test_optimizer"
+    ],
+    "recursive_cleaner.response": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.optimizer",
+      "tests.test_optimizer"
+    ],
+    "recursive_cleaner.errors": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.output",
+      "recursive_cleaner.response",
+      "tests.test_optimizer",
+      "tests.test_output",
+      "tests.test_parsers"
+    ],
+    "recursive_cleaner.cleaner": [
+      "recursive_cleaner",
+      "tests.test_callbacks",
+      "tests.test_incremental",
+      "tests.test_optimizer"
+    ],
+    "recursive_cleaner.validation": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "tests.test_holdout",
+      "tests.test_text_mode"
+    ],
+    "recursive_cleaner.prompt": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.optimizer",
+      "tests.test_text_mode"
+    ],
+    "recursive_cleaner.dependencies": [
+      "recursive_cleaner",
+      "recursive_cleaner.output",
+      "tests.test_dependencies"
+    ],
+    "recursive_cleaner.output": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "tests.test_dependencies",
+      "tests.test_output"
+    ],
+    "recursive_cleaner.vendor": [
+      "recursive_cleaner.parsers",
+      "tests.test_vendor_chunker"
+    ],
+    "recursive_cleaner.metrics": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner",
+      "tests.test_metrics"
+    ],
+    "recursive_cleaner.schema": [
+      "recursive_cleaner.cleaner",
+      "tests.test_incremental",
+      "tests.test_schema"
+    ],
+    "recursive_cleaner.context": [
+      "recursive_cleaner",
+      "recursive_cleaner.cleaner"
+    ],
+    "recursive_cleaner.parsers": [
+      "recursive_cleaner.cleaner"
+    ],
+    "recursive_cleaner.types": [
+      "recursive_cleaner.cleaner",
+      "recursive_cleaner.optimizer"
+    ],
+    "recursive_cleaner.vendor.chunker": [
+      "recursive_cleaner.vendor"
+    ]
+  },
+  "external_dependencies": [
+    "ast",
+    "bisect",
+    "collections",
+    "csv",
+    "dataclasses",
+    "datetime",
+    "hashlib",
+    "io",
+    "itertools",
+    "json",
+    "math",
+    "mlx_lm",
+    "os",
+    "pathlib",
+    "pytest",
+    "random",
+    "re",
+    "sys",
+    "tempfile",
+    "tenacity",
+    "typing",
+    "xml"
+  ],
+  "analysis": {
+    "circular_dependencies": [
+      [
+        "recursive_cleaner",
+        "recursive_cleaner"
+      ]
+    ],
+    "orphan_modules": [
+      "test_mlx_backend",
+      "test_cases.run_ecommerce_test",
+      "test_cases.run_healthcare_test",
+      "test_cases.run_financial_test",
+      "tests.test_optimizer",
+      "tests.test_text_mode",
+      "tests.test_callbacks",
+      "tests.test_validation",
+      "tests.test_dependencies",
+      "tests.test_vendor_chunker",
+      "tests.test_metrics",
+      "tests.test_parsers",
+      "tests",
+      "tests.test_output",
+      "tests.test_schema",
+      "tests.test_cleaner",
+      "tests.test_holdout",
+      "tests.test_incremental",
+      "tests.test_context",
+      "tests.test_integration",
+      "tests.test_sampling"
+    ],
+    "hotspots": [
+      {
+        "module": "recursive_cleaner",
+        "imported_by_count": 15,
+        "importers": [
+          "recursive_cleaner",
+          "test_cases.run_ecommerce_test",
+          "test_cases.run_financial_test",
+          "test_cases.run_healthcare_test",
+          "test_mlx_backend",
+          "tests.test_cleaner",
+          "tests.test_context",
+          "tests.test_holdout",
+          "tests.test_incremental",
+          "tests.test_integration",
+          "tests.test_metrics",
+          "tests.test_parsers",
+          "tests.test_sampling",
+          "tests.test_text_mode",
+          "tests.test_validation"
+        ]
+      },
+      {
+        "module": "recursive_cleaner.errors",
+        "imported_by_count": 7,
+        "importers": [
+          "recursive_cleaner",
+          "recursive_cleaner.cleaner",
+          "recursive_cleaner.output",
+          "recursive_cleaner.response",
+          "tests.test_optimizer",
+          "tests.test_output",
+          "tests.test_parsers"
+        ]
+      }
+    ]
+  },
+  "caveat": "Static analysis only. Dynamic imports, plugins, and external consumers not detected."
+}

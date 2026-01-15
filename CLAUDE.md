@@ -4,10 +4,20 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v0.2.0 | **Implemented** | 2025-01-14 |
+| v0.5.0 | **Implemented** | 2025-01-15 |
+| v0.4.0 | Implemented | 2025-01-15 |
+| v0.3.0 | Implemented | 2025-01-14 |
+| v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v0.2.0 with Tier 1 features complete. 127 tests passing, 977 lines total. New features: runtime validation, schema inference, progress callbacks, incremental saves.
+**Current State**: v0.5.0 complete. 344 tests passing, 2,575 lines total.
+
+### Version History
+- **v0.5.0**: Two-pass optimization with LLM agency (consolidation, early termination)
+- **v0.4.0**: Holdout validation, dependency resolution, smart sampling, quality metrics
+- **v0.3.0**: Text mode with vendored sentence-aware chunker
+- **v0.2.0**: Runtime validation, schema inference, callbacks, incremental saves
+- **v0.1.0**: Core pipeline
 
 ## Project Overview
 
@@ -39,14 +49,25 @@ cleaner = DataCleaner(
     - Remove duplicates by email
     - All dates to ISO 8601
     """,
-    # v0.2.0 features
-    on_progress=lambda e: print(f"{e['type']}: chunk {e['chunk_index']}"),
+    # Validation & schema (v0.2.0)
+    on_progress=lambda e: print(f"{e['type']}: {e.get('chunk_index', '')}"),
     state_file="cleaning_state.json",  # Resume on interrupt
     validate_runtime=True,  # Test functions before accepting
     schema_sample_size=10,  # Infer schema from first N records
+    # Sampling & metrics (v0.4.0)
+    holdout_ratio=0.2,  # Test on hidden 20% of each chunk
+    sampling_strategy="stratified",  # "sequential", "random", or "stratified"
+    stratify_field="status",  # Field for stratified sampling
+    track_metrics=True,  # Measure before/after quality
+    # Optimization (v0.5.0)
+    optimize=True,  # Consolidate redundant functions after generation
+    early_termination=True,  # Stop when patterns saturate
 )
 
 cleaner.run()  # Outputs: cleaning_functions.py
+
+# Check improvement metrics
+print(cleaner.get_improvement_report())
 
 # Or resume from saved state
 cleaner = DataCleaner.resume("cleaning_state.json", my_ollama_client)
@@ -113,47 +134,60 @@ def normalize_phone_numbers(data):
 </cleaning_analysis>
 ```
 
-## The Lean Architecture (~977 lines total)
+## The Lean Architecture (~2,575 lines total)
 
 ### File Structure (Implemented)
 ```
 recursive_cleaner/
-    __init__.py          # Public exports (~31 lines)
-    cleaner.py           # Main DataCleaner class (~273 lines)
+    __init__.py          # Public exports (~45 lines)
+    cleaner.py           # Main DataCleaner class (~487 lines)
     context.py           # Docstring registry with FIFO eviction (~27 lines)
+    dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
     errors.py            # 4 exception classes (~17 lines)
-    output.py            # Function file generation (~150 lines)
-    parsers.py           # Chunk text/csv/json/jsonl (~110 lines)
-    prompt.py            # LLM prompt template (~56 lines)
-    response.py          # XML/markdown parsing (~113 lines)
+    metrics.py           # Quality metrics before/after (~163 lines) [v0.4.0]
+    optimizer.py         # Two-pass consolidation with LLM agency (~336 lines) [v0.5.0]
+    output.py            # Function file generation (~154 lines)
+    parsers.py           # Chunk text/csv/json/jsonl with sampling (~325 lines)
+    prompt.py            # LLM prompt templates (~218 lines)
+    response.py          # XML/markdown parsing + agency dataclasses (~292 lines)
     schema.py            # Schema inference (~117 lines) [v0.2.0]
     types.py             # LLMBackend protocol (~11 lines)
-    validation.py        # Runtime validation (~72 lines) [v0.2.0]
+    validation.py        # Runtime validation + holdout (~133 lines)
+    vendor/
+        __init__.py      # Vendor exports (~4 lines)
+        chunker.py       # Vendored sentence-aware chunker (~187 lines) [v0.3.0]
 
 backends/
     __init__.py          # Backend exports
     mlx_backend.py       # MLX-LM backend for Apple Silicon
 
-tests/                   # 127 tests
-    test_callbacks.py    # Progress callback tests [v0.2.0]
+tests/                   # 344 tests
+    test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
     test_context.py      # Context management tests
-    test_incremental.py  # Incremental save tests [v0.2.0]
+    test_dependencies.py # Dependency resolution tests [v0.4.0]
+    test_holdout.py      # Holdout validation tests [v0.4.0]
+    test_incremental.py  # Incremental save tests
     test_integration.py  # End-to-end tests
+    test_metrics.py      # Quality metrics tests [v0.4.0]
+    test_optimizer.py    # Two-pass optimization tests [v0.5.0]
     test_output.py       # Output generation tests
     test_parsers.py      # Parsing tests
-    test_schema.py       # Schema inference tests [v0.2.0]
-    test_validation.py   # Runtime validation tests [v0.2.0]
+    test_sampling.py     # Sampling strategy tests [v0.4.0]
+    test_schema.py       # Schema inference tests
+    test_text_mode.py    # Text mode tests [v0.3.0]
+    test_validation.py   # Runtime validation tests
+    test_vendor_chunker.py  # Vendored chunker tests [v0.3.0]
 
 test_cases/              # Comprehensive test datasets
     ecommerce_*.jsonl    # Product catalog data
     healthcare_*.jsonl   # Patient records
     financial_*.jsonl    # Transaction data
 
-docs/                    # Orchestrated dev docs [v0.2.0]
+docs/                    # Orchestrated dev docs
     contracts/           # API and data contracts
-    handoffs/            # Phase handoff docs
     research/            # Research findings
+    refactor-assessment/ # Codebase health reports
 
 pyproject.toml
 ```
@@ -363,8 +397,21 @@ That's it. No langchain, no frameworks, no abstractions.
 ## Known Limitations
 
 1. **Stateful operations** (deduplication, aggregations) only work within chunks, not globally
-2. **Function ordering** follows generation order, not dependency order
-3. ~~**No runtime testing** of generated functions before output~~ → Fixed in v0.2.0
+2. ~~**Function ordering** follows generation order, not dependency order~~ → Fixed in v0.4.0 (dependency resolution)
+3. ~~**No runtime testing** of generated functions before output~~ → Fixed in v0.2.0 (runtime validation)
+4. ~~**Redundant functions** when similar issues appear in different chunks~~ → Fixed in v0.5.0 (two-pass consolidation)
+
+## LLM Agency (v0.5.0)
+
+The LLM now has agency over key decisions:
+
+| Decision Point | LLM Decides |
+|----------------|-------------|
+| Chunk cleanliness | `chunk_status: clean/needs_more_work` |
+| Consolidation complete | `complete: true/false` in self-assessment |
+| Pattern saturation | `saturated: true/false` for early termination |
+
+This follows the wu wei principle: let the model that understands the data make decisions about the data.
 
 ## Success Criteria
 
