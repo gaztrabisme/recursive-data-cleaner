@@ -10,6 +10,11 @@ from recursive_cleaner.errors import (
     ParseError,
 )
 from recursive_cleaner.metrics import QualityMetrics, compare_quality, measure_quality
+from recursive_cleaner.optimizer import (
+    consolidate_with_agency,
+    extract_tags,
+    group_by_salience,
+)
 from recursive_cleaner.output import write_cleaning_file
 from recursive_cleaner.parsers import chunk_file
 from recursive_cleaner.prompt import build_prompt
@@ -34,4 +39,7 @@ __all__ = [
     "QualityMetrics",
     "measure_quality",
     "compare_quality",
+    "extract_tags",
+    "group_by_salience",
+    "consolidate_with_agency",
 ]

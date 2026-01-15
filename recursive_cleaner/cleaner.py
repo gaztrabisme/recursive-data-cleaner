@@ -18,7 +18,7 @@ from .schema import format_schema_for_prompt, infer_schema
 from .types import LLMBackend
 from .validation import extract_sample_data, split_holdout, validate_function
 
-STATE_VERSION = "0.3.0"
+STATE_VERSION = "0.5.0"
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
@@ -54,6 +54,10 @@ class DataCleaner:
         track_metrics: bool = False,
         sampling_strategy: Literal["sequential", "random", "stratified"] = "sequential",
         stratify_field: str | None = None,
+        optimize: bool = False,
+        optimize_threshold: int = 10,
+        early_termination: bool = False,
+        saturation_check_interval: int = 20,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -71,7 +75,14 @@ class DataCleaner:
         self.track_metrics = track_metrics
         self.sampling_strategy = sampling_strategy
         self.stratify_field = stratify_field
+        self.optimize = optimize
+        self.optimize_threshold = optimize_threshold
+        self.early_termination = early_termination
+        self.saturation_check_interval = saturation_check_interval
         self.functions: list[dict] = []  # List of {name, docstring, code}
+        # Track recent function generation for saturation check
+        self._recent_new_function_count = 0
+        self._last_check_function_count = 0
         self._total_chunks: int = 0  # Set during run()
         self._schema_str: str = ""  # Formatted schema for prompts
         self._last_completed_chunk: int = -1  # -1 means no chunks completed yet
@@ -95,6 +106,88 @@ class DataCleaner:
         except Exception as e:
             print(f"  Warning: callback error: {e}")
 
+    def _optimize_functions(self) -> None:
+        """
+        Run two-pass optimization on generated functions.
+
+        1. Group functions by salience (IDF)
+        2. Consolidate each group with agency
+        3. Replace self.functions with optimized result
+        """
+        from .optimizer import consolidate_with_agency, group_by_salience
+
+        self._emit(
+            "optimize_start",
+            function_count=len(self.functions),
+        )
+
+        # Group by IDF
+        groups = group_by_salience(self.functions)
+
+        optimized = []
+        for group_name, group_funcs in groups.items():
+            self._emit(
+                "optimize_group",
+                group=group_name,
+                count=len(group_funcs),
+            )
+
+            # Consolidate with agency
+            consolidated = consolidate_with_agency(group_funcs, self.backend)
+            optimized.extend(consolidated)
+
+        self._emit(
+            "optimize_complete",
+            original=len(self.functions),
+            final=len(optimized),
+        )
+
+        self.functions = optimized
+
+    def _check_saturation(self, chunks_processed: int) -> bool:
+        """
+        Ask LLM if pattern discovery has saturated.
+
+        Returns True if should stop early, False to continue.
+        """
+        from .prompt import SATURATION_CHECK_TEMPLATE
+        from .response import parse_saturation_response
+
+        # Build function summaries (name + first line of docstring)
+        summaries = []
+        for f in self.functions:
+            first_line = f["docstring"].split("\n")[0] if f["docstring"] else ""
+            summaries.append(f"- {f['name']}: {first_line}")
+
+        prompt = SATURATION_CHECK_TEMPLATE.format(
+            count=len(self.functions),
+            function_summaries="\n".join(summaries) or "(none)",
+            total_chunks=chunks_processed,
+            recent_window=self.saturation_check_interval,
+            recent_new_functions=self._recent_new_function_count,
+        )
+
+        try:
+            response = call_llm(self.backend, prompt)
+            assessment = parse_saturation_response(response)
+        except Exception as e:
+            print(f"  Warning: saturation check failed: {e}")
+            return False  # Continue on error
+
+        self._emit(
+            "saturation_check",
+            chunk_index=chunks_processed - 1,
+            saturated=assessment.saturated,
+            confidence=assessment.confidence,
+            recommendation=assessment.recommendation,
+        )
+
+        # Reset counter for next interval
+        self._recent_new_function_count = 0
+
+        # Only stop if saturated with high or medium confidence
+        return assessment.saturated and assessment.confidence != "low"
+
     def _save_state(self) -> None:
         """Save current state to JSON file with atomic write."""
         if self.state_file is None:
@@ -108,6 +201,10 @@ class DataCleaner:
             "total_chunks": self._total_chunks,
             "functions": self.functions,
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "optimize": self.optimize,
+            "optimize_threshold": self.optimize_threshold,
+            "early_termination": self.early_termination,
+            "saturation_check_interval": self.saturation_check_interval,
         }
         tmp_path = self.state_file + ".tmp"
         with open(tmp_path, "w") as f:
@@ -166,6 +263,10 @@ class DataCleaner:
             chunk_size=state.get("chunk_size", 50),
             instructions=state.get("instructions", ""),
             state_file=state_file,
+            optimize=state.get("optimize", False),
+            optimize_threshold=state.get("optimize_threshold", 10),
+            early_termination=state.get("early_termination", False),
+            saturation_check_interval=state.get("saturation_check_interval", 20),
         )
         # Restore state
         instance.functions = state.get("functions", [])
@@ -229,6 +330,21 @@ class DataCleaner:
             # Mark chunk as completed and save state
             self._last_completed_chunk = i
             self._save_state()
+
+            # Check for early termination (saturation detection)
+            if (
+                self.early_termination
+                and i > 0
+                and (i + 1) % self.saturation_check_interval == 0
+            ):
+                if self._check_saturation(i + 1):
+                    self._emit("early_termination", chunk_index=i)
+                    print(f"Early termination: pattern discovery saturated at chunk {i + 1}")
+                    break
+
+        # Two-pass optimization (if enabled and enough functions)
+        if self.optimize and len(self.functions) >= self.optimize_threshold:
+            self._optimize_functions()
 
         self._write_output()
         self._emit("complete", chunk_index=self._total_chunks - 1)
@@ -308,6 +424,8 @@ class DataCleaner:
                     "docstring": result["docstring"],
                     "code": result["code"],
                 })
+                # Track for saturation check
+                self._recent_new_function_count += 1
                 self._emit(
                     "function_generated",
                     chunk_index=chunk_idx,

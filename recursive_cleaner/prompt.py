@@ -2,6 +2,81 @@
 
 from typing import Literal
 
+SATURATION_CHECK_TEMPLATE = '''You are assessing whether data cleaning pattern discovery has saturated.
+
+=== CLEANING FUNCTIONS GENERATED SO FAR ({count}) ===
+{function_summaries}
+
+=== RECENT ACTIVITY ===
+Chunks processed: {total_chunks}
+Functions from last {recent_window} chunks: {recent_new_functions}
+
+=== TASK ===
+Assess whether we've likely seen all major data quality patterns, or if processing more chunks would discover new issues.
+
+=== OUTPUT FORMAT ===
+<saturation_assessment>
+  <saturated>true|false</saturated>
+  <confidence>high|medium|low</confidence>
+  <reasoning>
+    Explanation of why patterns are/aren't saturated
+  </reasoning>
+  <recommendation>stop|continue</recommendation>
+</saturation_assessment>
+
+Consider:
+- If recent chunks produced few/no new functions, patterns may be saturated
+- If functions cover diverse issues (dates, phones, emails, etc.), likely saturated
+- If all functions target same issue type, more variety may exist
+'''
+
+CONSOLIDATION_TEMPLATE = '''You are reviewing cleaning functions for consolidation.
+
+=== FUNCTIONS TO REVIEW ({count} functions) ===
+{functions}
+
+=== TASK ===
+1. Identify functions that handle the SAME type of data quality issue
+2. Merge redundant functions into fewer, more general ones
+3. Keep functions that are truly unique
+
+=== OUTPUT FORMAT ===
+<consolidation_result>
+  <merged_functions>
+    <function>
+      <name>merged_function_name</name>
+      <original_names>func1, func2</original_names>
+      <docstring>
+      Combined description covering all cases.
+      Tags: tag1, tag2
+      </docstring>
+      <code>
+```python
+def merged_function_name(record):
+    ...
+```
+      </code>
+    </function>
+  </merged_functions>
+
+  <kept_unchanged>
+    <function_name>unique_func1</function_name>
+  </kept_unchanged>
+
+  <self_assessment>
+    <complete>true|false</complete>
+    <remaining_issues>Description of any remaining redundancy, or "none"</remaining_issues>
+    <confidence>high|medium|low</confidence>
+  </self_assessment>
+</consolidation_result>
+
+RULES:
+- Merged function must handle ALL cases from originals
+- If unsure whether to merge, keep separate
+- Always include self_assessment
+- <complete>true</complete> means no more consolidation needed
+'''
+
 # Renamed from PROMPT_TEMPLATE to be explicit about structured mode
 STRUCTURED_PROMPT_TEMPLATE = '''You are a data cleaning expert. Analyze data and generate Python functions to fix issues.
 
@@ -27,7 +102,10 @@ STRUCTURED_PROMPT_TEMPLATE = '''You are a data cleaning expert. Analyze data and
 
   <function_to_generate>
     <name>function_name</name>
-    <docstring>What it does, edge cases handled</docstring>
+    <docstring>
+What it does, edge cases handled.
+Tags: domain, action, detail
+    </docstring>
     <code>
 ```python
 def function_name(data):
@@ -45,7 +123,10 @@ RULES:
 - If all issues solved: <chunk_status>clean</chunk_status>, omit <function_to_generate>
 - Include imports inside the function or document needed imports in docstring
 - Function must be idempotent (safe to run multiple times)
-- Use ```python markdown blocks for code'''
+- Use ```python markdown blocks for code
+- Include 2-5 tags in the docstring describing what the function handles
+- Format: "Tags: tag1, tag2, tag3" on its own line at end of docstring
+- Use lowercase single words: domain terms (date, phone, email) and action terms (normalize, validate, fix)'''
 
 # Backward compatibility alias
 PROMPT_TEMPLATE = STRUCTURED_PROMPT_TEMPLATE
@@ -74,7 +155,10 @@ TEXT_PROMPT_TEMPLATE = '''You are a text cleaning expert. Analyze text and gener
 
   <function_to_generate>
     <name>function_name</name>
-    <docstring>What it does, edge cases handled</docstring>
+    <docstring>
+What it does, edge cases handled.
+Tags: domain, action, detail
+    </docstring>
     <code>
 ```python
 def function_name(text: str) -> str:
@@ -92,7 +176,10 @@ RULES:
 - Function takes text string, returns cleaned text string
 - If all issues solved: <chunk_status>clean</chunk_status>, omit <function_to_generate>
 - Function must be idempotent (safe to run multiple times)
-- Use ```python markdown blocks for code'''
+- Use ```python markdown blocks for code
+- Include 2-5 tags in the docstring describing what the function handles
+- Format: "Tags: tag1, tag2, tag3" on its own line at end of docstring
+- Use lowercase single words: domain terms (date, phone, email) and action terms (normalize, validate, fix)'''
 
 
 def build_prompt(
