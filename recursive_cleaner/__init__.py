@@ -19,7 +19,7 @@ from recursive_cleaner.output import write_cleaning_file
 from recursive_cleaner.parsers import chunk_file
 from recursive_cleaner.prompt import build_prompt
 from recursive_cleaner.response import extract_python_block, parse_response
-from recursive_cleaner.validation import extract_sample_data, validate_function
+from recursive_cleaner.validation import check_code_safety, extract_sample_data, validate_function
 
 __all__ = [
     "CleanerError",
@@ -35,6 +35,7 @@ __all__ = [
     "DataCleaner",
     "validate_function",
     "extract_sample_data",
+    "check_code_safety",
     "resolve_dependencies",
     "QualityMetrics",
     "measure_quality",

@@ -1,8 +1,77 @@
 """Runtime validation for generated cleaning functions."""
 
+import ast
 import json
 import re
 from typing import Literal
+
+# Modules that could access filesystem, run commands, or exfiltrate data
+DANGEROUS_IMPORTS = frozenset({
+    "os",
+    "subprocess",
+    "sys",
+    "shutil",
+    "pathlib",
+    "socket",
+    "urllib",
+    "requests",
+    "httplib",
+    "ftplib",
+    "smtplib",
+    "pickle",
+})
+
+# Built-in functions that allow arbitrary code execution
+DANGEROUS_CALLS = frozenset({
+    "eval",
+    "exec",
+    "compile",
+    "__import__",
+    "open",  # Data cleaning functions receive data as args, shouldn't need file I/O
+})
+
+
+def check_code_safety(code: str) -> tuple[bool, str | None]:
+    """
+    Check if generated code contains dangerous patterns.
+
+    Catches common LLM mistakes like importing os or using eval().
+    Not a security sandbox - won't catch obfuscated/adversarial code.
+
+    Args:
+        code: Python source code to check
+
+    Returns:
+        (True, None) if code appears safe
+        (False, error_message) if dangerous pattern detected
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as e:
+        return False, f"Syntax error: {e}"
+
+    for node in ast.walk(tree):
+        # Check: import os, import subprocess, etc.
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                module = alias.name.split(".")[0]
+                if module in DANGEROUS_IMPORTS:
+                    return False, f"Dangerous import: {alias.name}"
+
+        # Check: from os import path, from subprocess import run, etc.
+        if isinstance(node, ast.ImportFrom):
+            if node.module:
+                module = node.module.split(".")[0]
+                if module in DANGEROUS_IMPORTS:
+                    return False, f"Dangerous import: from {node.module}"
+
+        # Check: eval(...), exec(...), open(...), etc.
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                if node.func.id in DANGEROUS_CALLS:
+                    return False, f"Dangerous function call: {node.func.id}()"
+
+    return True, None
 
 
 def split_holdout(

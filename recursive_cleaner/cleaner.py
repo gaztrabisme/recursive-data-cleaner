@@ -16,7 +16,7 @@ from .prompt import build_prompt
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
 from .types import LLMBackend
-from .validation import extract_sample_data, split_holdout, validate_function
+from .validation import check_code_safety, extract_sample_data, split_holdout, validate_function
 
 STATE_VERSION = "0.5.0"
 
@@ -391,6 +391,19 @@ class DataCleaner:
                 return
 
             if result["code"]:
+                # Safety check: reject dangerous patterns before execution
+                safe, safety_error = check_code_safety(result["code"])
+                if not safe:
+                    error_feedback = f"Code safety check failed: {safety_error}. Data cleaning functions should not access filesystem, network, or use eval/exec."
+                    self._emit(
+                        "safety_failed",
+                        chunk_index=chunk_idx,
+                        function_name=result["name"],
+                        error=safety_error,
+                    )
+                    print(f"  Safety check failed: {safety_error}")
+                    continue
+
                 # Runtime validation if enabled
                 if self.validate_runtime:
                     # Use holdout data if available, else sample from generation chunk

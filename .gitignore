@@ -37,6 +37,7 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+samples/
 
 # Generated files
 cleaning_functions.py
