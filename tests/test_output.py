@@ -6,7 +6,7 @@ from pathlib import Path
 from recursive_cleaner.output import (
     extract_imports,
     remove_imports_from_code,
-    deduplicate_imports,
+    consolidate_imports,
     generate_clean_data_function,
     write_cleaning_file,
 )
@@ -38,12 +38,71 @@ def foo():
     assert 'def foo():' in result
 
 
-def test_deduplicate_imports():
+def test_consolidate_imports_deduplicates():
     """Remove duplicate imports."""
     imports = ['import re', 'import json', 'import re', 'from typing import List']
-    result = deduplicate_imports(imports)
+    result = consolidate_imports(imports)
     assert result.count('import re') == 1
     assert len(result) == 3
+
+
+def test_consolidate_imports_merges_from_imports():
+    """Merge from imports from same module."""
+    imports = [
+        'from typing import List',
+        'from typing import Dict',
+        'from typing import Optional',
+    ]
+    result = consolidate_imports(imports)
+    assert len(result) == 1
+    assert 'from typing import' in result[0]
+    assert 'Dict' in result[0]
+    assert 'List' in result[0]
+    assert 'Optional' in result[0]
+
+
+def test_consolidate_imports_keeps_different_forms():
+    """Keep both import x and from x import y."""
+    imports = [
+        'import json',
+        'from json import dumps',
+    ]
+    result = consolidate_imports(imports)
+    assert len(result) == 2
+    assert 'import json' in result
+    assert 'from json import dumps' in result
+
+
+def test_consolidate_imports_sorts_alphabetically():
+    """Imports are sorted alphabetically."""
+    imports = [
+        'import re',
+        'import json',
+        'import ast',
+        'from typing import Dict',
+        'from collections import OrderedDict',
+    ]
+    result = consolidate_imports(imports)
+    # Regular imports come first, sorted
+    assert result[0] == 'import ast'
+    assert result[1] == 'import json'
+    assert result[2] == 'import re'
+    # From imports come after, sorted by module
+    assert 'from collections' in result[3]
+    assert 'from typing' in result[4]
+
+
+def test_consolidate_imports_handles_aliased_imports():
+    """Handle 'import x as y' and 'from x import y as z'."""
+    imports = [
+        'from typing import List as L',
+        'from typing import Dict',
+    ]
+    result = consolidate_imports(imports)
+    assert len(result) == 1
+    # Both should be in the merged import
+    assert 'Dict' in result[0]
+    assert 'List as L' in result[0]
 
 
 def test_generate_clean_data_empty():

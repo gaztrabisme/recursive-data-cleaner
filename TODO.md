@@ -1,98 +1,102 @@
 # TODO - Recursive Data Cleaner Roadmap
 
-## Current Version: v0.5.0
+## Current Version: v0.6.0
 
-344 tests passing, 2,575 lines. All planned tiers complete.
-
-## Known Limitations
-
-1. **Stateful ops within chunks only** - Deduplication, aggregations don't work globally
-2. ~~**No runtime testing**~~ → Fixed in v0.2.0
-3. ~~**Generation order = execution order**~~ → Fixed in v0.4.0
-4. ~~**Redundant functions**~~ → Fixed in v0.5.0
+392 tests passing, 2,967 lines. Tier 4 complete.
 
 ---
 
-## Tier 1: Low-Hanging Fruit ✅ COMPLETE (v0.2.0)
+## Completed Work
 
-### Runtime Validation ✅
-- [x] Test generated functions on sample data before accepting
-- [x] Use `exec()` + `try/except` to catch `KeyError`, `TypeError`, etc.
-- [x] Reject functions that fail at runtime, retry with error feedback
-- **Implemented**: `recursive_cleaner/validation.py`
-
-### Type/Schema Inference ✅
-- [x] Sample first N records to detect field names and types
-- [x] Add detected schema to prompt under `=== DATA SCHEMA ===` section
-- [x] Helps LLM generate more accurate functions
-- **Implemented**: `recursive_cleaner/schema.py`
-
-### Progress Callbacks ✅
-- [x] Add optional `on_progress` callback to `DataCleaner`
-- [x] Report: chunk index, iteration, function generated, status
-- [x] Useful for 500MB files that take hours
-- **Implemented**: `_emit()` method in `cleaner.py`
-
-### Incremental Saves ✅
-- [x] Save state (functions list) between chunks
-- [x] Add `state_file` parameter and `resume()` classmethod
-- [x] JSON serialization with atomic writes
-- **Implemented**: `_save_state()`, `_load_state()`, `resume()` in `cleaner.py`
+| Version | Features |
+|---------|----------|
+| v0.1.0 | Core pipeline, chunking, docstring registry |
+| v0.2.0 | Runtime validation, schema inference, callbacks, incremental saves |
+| v0.3.0 | Text mode with sentence-aware chunking |
+| v0.4.0 | Holdout validation, dependency resolution, smart sampling, quality metrics |
+| v0.5.0 | Two-pass optimization, early termination, LLM agency |
+| v0.5.1 | Dangerous code detection (AST-based security) |
+| v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |
 
 ---
 
-## Tier 2: Meaningful Enhancements ✅ COMPLETE (v0.4.0)
+## Patterns That Worked
 
-### Validation Holdout ✅
-- [x] Split each chunk: 80% for generation, 20% for testing
-- [x] Run generated function on holdout data before accepting
-- [x] Catch edge cases the LLM missed in training portion
-- **Implemented**: `split_holdout()` in `validation.py`
+These patterns proved high-value with low implementation effort:
 
-### Dependency Resolution ✅
-- [x] Use AST to detect which functions call which
-- [x] Topological sort to order functions by dependencies
-- [x] Ensure `normalize_phone()` runs before `validate_contact()` if needed
-- **Implemented**: `recursive_cleaner/dependencies.py`
-
-### Smart Sampling ✅
-- [x] Random sampling vs sequential (current)
-- [x] Stratified sampling for categorical fields
-- [x] Deterministic seed from file hash for reproducibility
-- **Implemented**: `sampling_strategy` param in `parsers.py`
-
-### Quality Metrics ✅
-- [x] Measure data quality before/after cleaning
-- [x] Count: nulls, empty strings, unique values per field
-- [x] Report improvement percentage
-- **Implemented**: `recursive_cleaner/metrics.py`
+1. **AST walking** - Dependency detection, dangerous code detection. ~50 lines each.
+2. **LLM agency** - Let model decide chunk cleanliness, saturation, consolidation. Elegant.
+3. **Retry with feedback** - On error, append error to prompt and retry. No complex recovery.
+4. **Holdout validation** - Test on unseen data before accepting. Catches edge cases.
+5. **Simple data structures** - List of dicts, JSON serialization. Easy to debug/resume.
 
 ---
 
-## Tier 3: Bigger Bets ✅ PARTIAL (v0.5.0)
+## Tier 4: Polish & Observability ✅ COMPLETE (v0.6.0)
 
-### Two-Pass Optimization ✅
-- [x] First pass: generate functions (current behavior)
-- [x] Second pass: LLM reviews all functions, consolidates/merges similar logic
-- [x] IDF-based grouping for efficient batching
-- [x] LLM agency: model decides when consolidation is complete
-- **Implemented**: `recursive_cleaner/optimizer.py`
+### Latency Metrics ✅
+- [x] Time each LLM call
+- [x] Track min/max/avg/total in progress events
+- [x] Report in final summary
+- **Implemented**: `_call_llm_timed()`, `_get_latency_summary()` in `cleaner.py`
 
-### Early Termination ✅
-- [x] LLM detects when pattern discovery has saturated
-- [x] Stop processing early to save time
-- **Implemented**: `early_termination` param, `_check_saturation()` in `cleaner.py`
+### Import Consolidation ✅
+- [x] Deduplicate imports across generated functions
+- [x] Move to single import block at top of output file
+- [x] Handle `from x import y` merging
+- **Implemented**: `consolidate_imports()` in `output.py`
 
-### Async Multi-Chunk Processing ❌ NOT PLANNED
-- [ ] Process multiple chunks in parallel with asyncio
-- [ ] Requires thread-safe function registry
-- **Status**: Deferred - complexity not justified for current use cases
+### Cleaning Report ✅
+- [x] Generate markdown summary alongside `cleaning_functions.py`
+- [x] List: issues found, functions generated, quality delta
+- [x] Include per-chunk breakdown
+- **Implemented**: `recursive_cleaner/report.py`
 
-### Global State Awareness ❌ NOT PLANNED
-- [ ] Cross-chunk deduplication tracking
-- [ ] Aggregation support (counts, sums across full dataset)
-- [ ] Shared state manager passed to generated functions
-- **Status**: Deferred - would require architectural changes
+### Dry-Run Mode ✅
+- [x] Analyze data without generating functions
+- [x] Report issues that would be detected
+- [x] Useful for data assessment before committing
+- **Implemented**: `dry_run` parameter, `_process_chunk_dry_run()` in `cleaner.py`
+
+---
+
+## Future Considerations
+
+Ideas that might be valuable but need more thought.
+
+### Confidence Scoring
+- LLM rates confidence in each generated function (high/medium/low)
+- Low confidence = flag for human review
+- **Question**: Does this actually help users, or just add noise?
+
+### Before/After Examples
+- User provides expected input→output pairs
+- Validate generated functions match expectations
+- **Question**: How to handle functions that transform data differently but correctly?
+
+### Multi-File Batch Mode
+- Process multiple files with shared function registry
+- Functions learned from file A applied to file B
+- **Question**: How to handle schema differences between files?
+
+### Summary Buffer Memory
+- Compress old function docstrings into summaries
+- Keep recent functions verbatim
+- **Question**: Does FIFO eviction already work well enough?
+
+---
+
+## Explicitly Deferred
+
+These don't fit the project philosophy:
+
+| Feature | Reason |
+|---------|--------|
+| Async multi-chunk | Complexity not justified; sequential is predictable |
+| Global state awareness | Would require architectural changes |
+| Vector retrieval | Adds chromadb dependency; FIFO works for typical use |
+| Jinja2 templates | f-strings are simpler and sufficient |
+| TypedDict state | Plain dicts are easier to debug |
 
 ---
 
@@ -105,3 +109,9 @@ From CLAUDE.md:
 - **Delete over abstract** - No interfaces for single implementations
 - **Retry over recover** - On error, retry with error in prompt
 - **Wu wei** - Let the LLM make decisions about data it understands
+
+---
+
+## Known Limitation
+
+**Stateful ops within chunks only** - Deduplication and aggregations don't work globally. This is architectural and accepted.

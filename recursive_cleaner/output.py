@@ -30,15 +30,58 @@ def remove_imports_from_code(code: str) -> str:
     return '\n'.join(lines)
 
 
-def deduplicate_imports(imports: list[str]) -> list[str]:
-    """Remove duplicate imports, preserving order."""
-    seen = set()
-    result = []
+def consolidate_imports(imports: list[str]) -> list[str]:
+    """
+    Consolidate and deduplicate imports.
+
+    - Duplicate `import x` → single `import x`
+    - `from x import a` + `from x import b` → `from x import a, b`
+    - `import x` + `from x import y` → both kept (different forms)
+
+    Args:
+        imports: Raw import statements from all functions
+
+    Returns:
+        Consolidated, sorted import statements
+    """
+    # Track regular imports (import x, import x.y)
+    regular_imports: set[str] = set()
+
+    # Track from imports: module -> set of names
+    from_imports: dict[str, set[str]] = {}
+
     for imp in imports:
-        if imp not in seen:
-            seen.add(imp)
-            result.append(imp)
-    return sorted(result)
+        imp = imp.strip()
+        if imp.startswith("from "):
+            # Parse: from module import name1, name2
+            try:
+                # Split "from module import names"
+                rest = imp[5:]  # Remove "from "
+                module, names_part = rest.split(" import ", 1)
+                module = module.strip()
+                # Parse names (handle "a, b, c" and "a as alias")
+                names = [n.strip() for n in names_part.split(",")]
+                if module not in from_imports:
+                    from_imports[module] = set()
+                from_imports[module].update(names)
+            except ValueError:
+                # Malformed import, keep as-is
+                regular_imports.add(imp)
+        elif imp.startswith("import "):
+            regular_imports.add(imp)
+
+    # Build result
+    result = []
+
+    # Add regular imports (sorted)
+    result.extend(sorted(regular_imports))
+
+    # Add consolidated from imports (sorted by module, then by names)
+    for module in sorted(from_imports.keys()):
+        names = sorted(from_imports[module])
+        result.append(f"from {module} import {', '.join(names)}")
+
+    return result
 
 
 def generate_clean_data_function(function_names: list[str]) -> str:
@@ -120,7 +163,7 @@ def write_cleaning_file(
         imports = [i for i in imports if '__main__' not in i]
         all_imports.extend(imports)
 
-    unique_imports = deduplicate_imports(all_imports)
+    unique_imports = consolidate_imports(all_imports)
 
     # Build file content
     lines = ['"""Auto-generated data cleaning functions."""', '']

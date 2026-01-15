@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Literal
@@ -58,6 +59,8 @@ class DataCleaner:
         optimize_threshold: int = 10,
         early_termination: bool = False,
         saturation_check_interval: int = 20,
+        report_path: str | None = "cleaning_report.md",
+        dry_run: bool = False,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -79,6 +82,8 @@ class DataCleaner:
         self.optimize_threshold = optimize_threshold
         self.early_termination = early_termination
         self.saturation_check_interval = saturation_check_interval
+        self.report_path = report_path
+        self.dry_run = dry_run
         self.functions: list[dict] = []  # List of {name, docstring, code}
         # Track recent function generation for saturation check
         self._recent_new_function_count = 0
@@ -90,6 +95,13 @@ class DataCleaner:
         # Quality metrics (populated when track_metrics=True)
         self.metrics_before: QualityMetrics | None = None
         self.metrics_after: QualityMetrics | None = None
+        # Latency tracking for LLM calls
+        self._latency_stats: dict = {
+            "call_count": 0,
+            "total_ms": 0.0,
+            "min_ms": float("inf"),
+            "max_ms": 0.0,
+        }
 
     def _emit(self, event_type: str, chunk_index: int = 0, **kwargs) -> None:
         """Emit a progress event to the callback, if set."""
@@ -105,6 +117,36 @@ class DataCleaner:
             self.on_progress(event)
         except Exception as e:
             print(f"  Warning: callback error: {e}")
+
+    def _call_llm_timed(self, prompt: str, chunk_index: int = 0) -> str:
+        """Call LLM with timing and emit latency event."""
+        start = time.perf_counter()
+        response = call_llm(self.backend, prompt)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+
+        # Update stats
+        self._latency_stats["call_count"] += 1
+        self._latency_stats["total_ms"] += elapsed_ms
+        self._latency_stats["min_ms"] = min(self._latency_stats["min_ms"], elapsed_ms)
+        self._latency_stats["max_ms"] = max(self._latency_stats["max_ms"], elapsed_ms)
+
+        # Emit event
+        self._emit("llm_call", chunk_index=chunk_index, latency_ms=round(elapsed_ms, 2))
+
+        return response
+
+    def _get_latency_summary(self) -> dict:
+        """Get summary of latency stats with avg calculation."""
+        stats = self._latency_stats.copy()
+        if stats["call_count"] > 0:
+            stats["avg_ms"] = round(stats["total_ms"] / stats["call_count"], 2)
+            stats["min_ms"] = round(stats["min_ms"], 2)
+            stats["max_ms"] = round(stats["max_ms"], 2)
+            stats["total_ms"] = round(stats["total_ms"], 2)
+        else:
+            stats["avg_ms"] = 0.0
+            stats["min_ms"] = 0.0
+        return stats
 
     def _optimize_functions(self) -> None:
         """
@@ -168,7 +210,7 @@ class DataCleaner:
         )
 
         try:
-            response = call_llm(self.backend, prompt)
+            response = self._call_llm_timed(prompt, chunk_index=chunks_processed - 1)
             assessment = parse_saturation_response(response)
         except Exception as e:
             print(f"  Warning: saturation check failed: {e}")
@@ -342,18 +384,38 @@ class DataCleaner:
                     print(f"Early termination: pattern discovery saturated at chunk {i + 1}")
                     break
 
+        # Skip optimization and output in dry_run mode
+        if self.dry_run:
+            self._emit(
+                "dry_run_complete",
+                chunk_index=self._total_chunks - 1,
+                latency_stats=self._get_latency_summary(),
+            )
+            print("Dry run complete. No functions generated or saved.")
+            return
+
         # Two-pass optimization (if enabled and enough functions)
         if self.optimize and len(self.functions) >= self.optimize_threshold:
             self._optimize_functions()
 
         self._write_output()
-        self._emit("complete", chunk_index=self._total_chunks - 1)
+        self._write_report()
+        self._emit(
+            "complete",
+            chunk_index=self._total_chunks - 1,
+            latency_stats=self._get_latency_summary(),
+        )
         print(f"Done! Generated {len(self.functions)} functions.")
 
     def _process_chunk(self, chunk: str, chunk_idx: int) -> None:
         """Process a single chunk, iterating until clean or max iterations."""
         self._emit("chunk_start", chunk_index=chunk_idx)
         error_feedback = ""
+
+        # Dry run mode: just detect issues, don't generate functions
+        if self.dry_run:
+            self._process_chunk_dry_run(chunk, chunk_idx)
+            return
 
         # Split chunk for holdout validation if enabled
         use_holdout = self.validate_runtime and self.holdout_ratio > 0
@@ -379,7 +441,7 @@ class DataCleaner:
                 prompt += f"\n\nYour previous response had an error: {error_feedback}\nPlease fix and try again."
 
             try:
-                response = call_llm(self.backend, prompt)
+                response = self._call_llm_timed(prompt, chunk_index=chunk_idx)
                 result = parse_response(response)
                 error_feedback = ""  # Clear on success
             except ParseError as e:
@@ -452,6 +514,41 @@ class DataCleaner:
         print(f"  Warning: chunk {chunk_idx} hit max iterations ({self.max_iterations})")
         self._emit("chunk_done", chunk_index=chunk_idx)
 
+    def _process_chunk_dry_run(self, chunk: str, chunk_idx: int) -> None:
+        """Process chunk in dry run mode - detect issues only."""
+        context = build_context(self.functions, self.context_budget)
+        prompt = build_prompt(
+            self.instructions,
+            context,
+            chunk,
+            self._schema_str,
+            mode=self._effective_mode,
+        )
+
+        try:
+            response = self._call_llm_timed(prompt, chunk_index=chunk_idx)
+            result = parse_response(response)
+        except ParseError as e:
+            print(f"  Warning: parse error in dry run: {e}")
+            self._emit("chunk_done", chunk_index=chunk_idx)
+            return
+
+        # Extract issues from result
+        issues = result.get("issues", [])
+        self._emit(
+            "issues_detected",
+            chunk_index=chunk_idx,
+            issues=issues,
+        )
+
+        if issues:
+            unsolved = [i for i in issues if not i.get("solved", False)]
+            print(f"  Found {len(issues)} issues ({len(unsolved)} unsolved)")
+        else:
+            print("  No issues detected")
+
+        self._emit("chunk_done", chunk_index=chunk_idx)
+
     def _write_output(self) -> None:
         """Write generated functions to cleaning_functions.py."""
         from .output import write_cleaning_file
@@ -474,6 +571,37 @@ class DataCleaner:
                 write_cleaning_file(valid_functions)
             else:
                 print("  No valid functions to write.")
+
+    def _write_report(self) -> None:
+        """Write cleaning report if report_path is set."""
+        if self.report_path is None:
+            return
+
+        from .report import write_report
+
+        # Prepare quality metrics if available
+        quality_before = None
+        quality_after = None
+        if self.metrics_before:
+            quality_before = {
+                "null_count": self.metrics_before.null_count,
+                "empty_string_count": self.metrics_before.empty_string_count,
+            }
+        if self.metrics_after:
+            quality_after = {
+                "null_count": self.metrics_after.null_count,
+                "empty_string_count": self.metrics_after.empty_string_count,
+            }
+
+        write_report(
+            report_path=self.report_path,
+            file_path=self.file_path,
+            total_chunks=self._total_chunks,
+            functions=self.functions,
+            latency_stats=self._get_latency_summary(),
+            quality_before=quality_before,
+            quality_after=quality_after,
+        )
 
     def get_improvement_report(self) -> dict | None:
         """
