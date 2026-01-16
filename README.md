@@ -1,23 +1,16 @@
 # Recursive Data Cleaner
 
-A Python library that uses LLMs to incrementally build data cleaning solutions for massive datasets. The system processes data in chunks, identifies quality issues, generates Python functions to solve them one at a time, and maintains awareness of existing solutions through docstring feedback loops.
+LLM-powered incremental data cleaning for massive datasets. Process files in chunks, identify quality issues, and automatically generate Python cleaning functions.
 
-## Features
+## How It Works
 
-- **Chunked Processing**: Handles large files that exceed LLM context windows (JSONL, CSV, JSON, text)
-- **Incremental Function Generation**: Creates one cleaning function per iteration, building up a complete solution
-- **Docstring Registry**: Feeds generated function docstrings back into prompts to avoid duplicate work
-- **AST Validation**: Validates all generated Python code before output
-- **Duplicate Detection**: Automatically skips duplicate function names
-- **Error Recovery**: Retries with error feedback on parse failures
-- **Backend Agnostic**: Works with any LLM that implements the simple `generate(prompt) -> str` interface
+1. **Chunk** your data (JSONL, CSV, JSON, or text)
+2. **Analyze** each chunk with an LLM to identify issues
+3. **Generate** one cleaning function per issue
+4. **Validate** functions on holdout data before accepting
+5. **Output** a ready-to-use `cleaning_functions.py`
 
-### v0.2.0 Features
-
-- **Runtime Validation**: Tests generated functions on sample data before accepting them
-- **Schema Inference**: Detects data schema and includes it in prompts for better LLM context
-- **Progress Callbacks**: Optional callbacks for real-time progress updates
-- **Incremental Saves**: Save state after each chunk, resume on interruption
+The system maintains a "docstring registry" - feeding generated function descriptions back into prompts so the LLM knows what's already solved and avoids duplicate work.
 
 ## Installation
 
@@ -25,9 +18,9 @@ A Python library that uses LLMs to incrementally build data cleaning solutions f
 pip install -e .
 ```
 
-For MLX backend (Apple Silicon):
+For Apple Silicon (MLX backend):
 ```bash
-pip install mlx-lm
+pip install -e ".[mlx]"
 ```
 
 ## Quick Start
@@ -36,94 +29,191 @@ pip install mlx-lm
 from recursive_cleaner import DataCleaner
 from backends import MLXBackend
 
-# Initialize LLM backend
-backend = MLXBackend(
-    model_path="lmstudio-community/Qwen3-Next-80B-A3B-Instruct-MLX-4bit",
-    max_tokens=4096,
-    temperature=0.7,
-)
+# Any LLM with generate(prompt) -> str works
+llm = MLXBackend(model_path="your-model")
 
-# Create cleaner
 cleaner = DataCleaner(
-    llm_backend=backend,
+    llm_backend=llm,
     file_path="messy_data.jsonl",
     chunk_size=50,
     instructions="""
-    CRM export data that needs:
-    - Phone numbers normalized to E.164 format
-    - Fix typos in 'status' field (valid: active, pending, churned)
-    - All dates to ISO 8601
+    - Normalize phone numbers to E.164
+    - Fix typos in status field (valid: active, pending, churned)
+    - Convert dates to ISO 8601
     """,
-    max_iterations=5,
-    # v0.2.0 options
-    on_progress=lambda e: print(f"{e['type']}: chunk {e['chunk_index']}"),
-    state_file="cleaning_state.json",  # Enable resume on interrupt
 )
 
-# Run and generate cleaning_functions.py
-cleaner.run()
+cleaner.run()  # Generates cleaning_functions.py
+```
 
-# Or resume from a previous run
-# cleaner = DataCleaner.resume("cleaning_state.json", backend)
-# cleaner.run()
+## Features
+
+### Core
+- **Chunked Processing**: Handle files larger than LLM context windows
+- **Incremental Generation**: One function per issue, building up a complete solution
+- **Docstring Registry**: Automatic context management with FIFO eviction
+- **AST Validation**: All generated code validated before output
+- **Error Recovery**: Retries with error feedback on parse failures
+
+### Data Quality (v0.4.0+)
+- **Holdout Validation**: Test functions on unseen 20% of each chunk
+- **Sampling Strategies**: Sequential, random, or stratified sampling
+- **Quality Metrics**: Before/after comparison with improvement reports
+- **Dependency Resolution**: Topological sort for correct function ordering
+
+### Optimization (v0.5.0+)
+- **Two-Pass Consolidation**: Merge redundant functions after generation
+- **Early Termination**: Stop when LLM detects pattern saturation
+- **LLM Agency**: Model decides chunk cleanliness and saturation
+
+### Security (v0.5.1+)
+- **Dangerous Code Detection**: AST-based detection of exec, eval, subprocess, network calls
+
+### Observability (v0.6.0)
+- **Latency Metrics**: Track min/max/avg/total LLM call times
+- **Import Consolidation**: Deduplicate and merge imports in output
+- **Cleaning Reports**: Markdown summary with functions, timing, quality delta
+- **Dry-Run Mode**: Analyze data without generating functions
+
+## Configuration
+
+```python
+cleaner = DataCleaner(
+    # Required
+    llm_backend=llm,
+    file_path="data.jsonl",
+
+    # Chunking
+    chunk_size=50,              # Items per chunk (or chars for text mode)
+    max_iterations=5,           # Max iterations per chunk
+    context_budget=8000,        # Max chars for docstring context
+
+    # Validation
+    validate_runtime=True,      # Test functions before accepting
+    schema_sample_size=10,      # Records for schema inference
+    holdout_ratio=0.2,          # Fraction held out for validation
+
+    # Sampling
+    sampling_strategy="stratified",  # "sequential", "random", "stratified"
+    stratify_field="status",         # Field for stratified sampling
+
+    # Optimization
+    optimize=True,              # Consolidate redundant functions
+    early_termination=True,     # Stop when patterns saturate
+    track_metrics=True,         # Measure before/after quality
+
+    # Observability
+    report_path="report.md",    # Markdown report output (None to disable)
+    dry_run=False,              # Analyze without generating functions
+
+    # Progress & State
+    on_progress=callback,       # Progress event callback
+    state_file="state.json",    # Enable resume on interrupt
+)
+```
+
+## Progress Events
+
+```python
+def on_progress(event):
+    match event["type"]:
+        case "chunk_start":
+            print(f"Chunk {event['chunk_index']}/{event['total_chunks']}")
+        case "llm_call":
+            print(f"LLM latency: {event['latency_ms']}ms")
+        case "function_generated":
+            print(f"Generated: {event['function_name']}")
+        case "issues_detected":  # dry-run mode
+            print(f"Found {len(event['issues'])} issues")
+        case "complete":
+            stats = event["latency_stats"]
+            print(f"Done! Avg latency: {stats['avg_ms']}ms")
 ```
 
 ## Output
 
-The cleaner generates a `cleaning_functions.py` file containing:
-
-1. Individual cleaning functions with docstrings
-2. A `clean_data()` entrypoint that chains all functions
+The cleaner generates `cleaning_functions.py`:
 
 ```python
-# Generated output example
-from cleaning_functions import clean_data
+# Auto-generated cleaning functions
+import re
 
-# Apply to your data
-cleaned_record = clean_data({"phone": "555-1234", "status": "actve"})
+def normalize_phone_numbers(data):
+    """Normalize phone numbers to E.164 format."""
+    # ... implementation ...
+
+def fix_status_typos(data):
+    """Fix typos in status field."""
+    # ... implementation ...
+
+def clean_data(data):
+    """Apply all cleaning functions in order."""
+    data = normalize_phone_numbers(data)
+    data = fix_status_typos(data)
+    return data
 ```
 
 ## Custom LLM Backend
 
-Implement the `LLMBackend` protocol:
+Implement the simple protocol:
 
 ```python
-from recursive_cleaner.types import LLMBackend
-
 class MyBackend:
     def generate(self, prompt: str) -> str:
-        # Call your LLM here
+        # Call your LLM (OpenAI, Anthropic, local, etc.)
         return response
+```
+
+## Text Mode
+
+For plain text files (PDFs, documents):
+
+```python
+cleaner = DataCleaner(
+    llm_backend=llm,
+    file_path="document.txt",
+    chunk_size=4000,  # Characters, not items
+    instructions="Fix OCR errors, normalize whitespace",
+)
+```
+
+Text mode uses sentence-aware chunking to avoid splitting mid-sentence.
+
+## Resume on Interrupt
+
+```python
+# Start with state file
+cleaner = DataCleaner(
+    llm_backend=llm,
+    file_path="huge_file.jsonl",
+    state_file="cleaning_state.json",
+)
+cleaner.run()
+
+# If interrupted, resume later:
+cleaner = DataCleaner.resume("cleaning_state.json", llm)
+cleaner.run()
 ```
 
 ## Architecture
 
 ```
 recursive_cleaner/
-├── __init__.py      # Public exports
-├── cleaner.py       # Main DataCleaner class
+├── cleaner.py       # Main DataCleaner class (~580 lines)
 ├── context.py       # Docstring registry with FIFO eviction
-├── errors.py        # Exception classes
-├── output.py        # Function file generation
-├── parsers.py       # File chunking (JSONL, CSV, JSON, text)
-├── prompt.py        # LLM prompt template
-├── response.py      # XML/markdown response parsing
-├── schema.py        # Schema inference (v0.2.0)
-├── types.py         # LLMBackend protocol
-└── validation.py    # Runtime validation (v0.2.0)
+├── dependencies.py  # Topological sort for function ordering
+├── metrics.py       # Quality metrics before/after
+├── optimizer.py     # Two-pass consolidation with LLM agency
+├── output.py        # Function file generation + import consolidation
+├── parsers.py       # Chunking for JSONL/CSV/JSON/text + sampling
+├── prompt.py        # LLM prompt templates
+├── report.py        # Markdown report generation
+├── response.py      # XML/markdown parsing + agency dataclasses
+├── schema.py        # Schema inference
+├── validation.py    # Runtime validation + holdout
+└── vendor/
+    └── chunker.py   # Vendored sentence-aware chunker
 ```
-
-## Configuration
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `chunk_size` | 50 | Items per chunk for JSONL/CSV/JSON |
-| `max_iterations` | 5 | Max iterations per chunk |
-| `context_budget` | 8000 | Max characters for docstring context |
-| `validate_runtime` | True | Test functions on sample data before accepting |
-| `schema_sample_size` | 10 | Records to sample for schema inference |
-| `on_progress` | None | Callback for progress events |
-| `state_file` | None | Path to save/resume state (enables incremental saves) |
 
 ## Testing
 
@@ -131,32 +221,29 @@ recursive_cleaner/
 pytest tests/ -v
 ```
 
-127 tests covering:
-- File parsing (JSONL, CSV, JSON, text)
-- Response parsing (XML, markdown code blocks)
-- Context management (FIFO eviction)
-- Error recovery (invalid XML, invalid Python)
-- Integration tests (full pipeline)
-- Runtime validation (v0.2.0)
-- Schema inference (v0.2.0)
-- Progress callbacks (v0.2.0)
-- Incremental saves (v0.2.0)
-
-## Test Cases
-
-The `test_cases/` directory contains comprehensive datasets:
-
-- **E-commerce**: Product catalog with price, date, SKU issues
-- **Healthcare**: Patient records with phone, date, state formatting
-- **Financial**: Transaction data with currency, time, status normalization
+392 tests covering all features. Test datasets in `test_cases/`:
+- E-commerce product catalogs
+- Healthcare patient records
+- Financial transaction data
 
 ## Philosophy
 
-- **Simplicity over extensibility**: ~977 lines that do one thing well
-- **stdlib over dependencies**: Only `tenacity` for retries
-- **Functions over classes**: Unless state genuinely helps
-- **Delete over abstract**: No interfaces for single implementations
-- **Retry over recover**: On error, retry with error message in prompt
+- **Simplicity over extensibility**: ~3,000 lines that do one thing well
+- **stdlib over dependencies**: Only `tenacity` required
+- **Retry over recover**: On error, retry with error in prompt
+- **Wu wei**: Let the LLM make decisions about data it understands
+
+## Version History
+
+| Version | Features |
+|---------|----------|
+| v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |
+| v0.5.1 | Dangerous code detection (AST-based security) |
+| v0.5.0 | Two-pass optimization, early termination, LLM agency |
+| v0.4.0 | Holdout validation, dependency resolution, sampling, quality metrics |
+| v0.3.0 | Text mode with sentence-aware chunking |
+| v0.2.0 | Runtime validation, schema inference, callbacks, incremental saves |
+| v0.1.0 | Core pipeline, chunking, docstring registry |
 
 ## License
 

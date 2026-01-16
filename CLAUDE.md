@@ -4,15 +4,19 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v0.5.0 | **Implemented** | 2025-01-15 |
+| v0.6.0 | **Implemented** | 2025-01-15 |
+| v0.5.1 | Implemented | 2025-01-15 |
+| v0.5.0 | Implemented | 2025-01-15 |
 | v0.4.0 | Implemented | 2025-01-15 |
 | v0.3.0 | Implemented | 2025-01-14 |
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v0.5.0 complete. 344 tests passing, 2,575 lines total.
+**Current State**: v0.6.0 complete. 392 tests passing, 2,967 lines total.
 
 ### Version History
+- **v0.6.0**: Latency metrics, import consolidation, cleaning report, dry-run mode
+- **v0.5.1**: Dangerous code detection (AST-based security)
 - **v0.5.0**: Two-pass optimization with LLM agency (consolidation, early termination)
 - **v0.4.0**: Holdout validation, dependency resolution, smart sampling, quality metrics
 - **v0.3.0**: Text mode with vendored sentence-aware chunker
@@ -62,9 +66,12 @@ cleaner = DataCleaner(
     # Optimization (v0.5.0)
     optimize=True,  # Consolidate redundant functions after generation
     early_termination=True,  # Stop when patterns saturate
+    # Observability (v0.6.0)
+    report_path="cleaning_report.md",  # Generate markdown report (None to disable)
+    dry_run=False,  # Set True to analyze without generating functions
 )
 
-cleaner.run()  # Outputs: cleaning_functions.py
+cleaner.run()  # Outputs: cleaning_functions.py, cleaning_report.md
 
 # Check improvement metrics
 print(cleaner.get_improvement_report())
@@ -134,25 +141,26 @@ def normalize_phone_numbers(data):
 </cleaning_analysis>
 ```
 
-## The Lean Architecture (~2,575 lines total)
+## The Lean Architecture (~2,967 lines total)
 
 ### File Structure (Implemented)
 ```
 recursive_cleaner/
     __init__.py          # Public exports (~45 lines)
-    cleaner.py           # Main DataCleaner class (~487 lines)
+    cleaner.py           # Main DataCleaner class (~580 lines)
     context.py           # Docstring registry with FIFO eviction (~27 lines)
     dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
     errors.py            # 4 exception classes (~17 lines)
     metrics.py           # Quality metrics before/after (~163 lines) [v0.4.0]
     optimizer.py         # Two-pass consolidation with LLM agency (~336 lines) [v0.5.0]
-    output.py            # Function file generation (~154 lines)
+    output.py            # Function file generation (~195 lines)
     parsers.py           # Chunk text/csv/json/jsonl with sampling (~325 lines)
     prompt.py            # LLM prompt templates (~218 lines)
+    report.py            # Markdown report generation (~120 lines) [v0.6.0]
     response.py          # XML/markdown parsing + agency dataclasses (~292 lines)
     schema.py            # Schema inference (~117 lines) [v0.2.0]
     types.py             # LLMBackend protocol (~11 lines)
-    validation.py        # Runtime validation + holdout (~133 lines)
+    validation.py        # Runtime validation + safety checks (~200 lines)
     vendor/
         __init__.py      # Vendor exports (~4 lines)
         chunker.py       # Vendored sentence-aware chunker (~187 lines) [v0.3.0]
@@ -161,22 +169,25 @@ backends/
     __init__.py          # Backend exports
     mlx_backend.py       # MLX-LM backend for Apple Silicon
 
-tests/                   # 344 tests
+tests/                   # 392 tests
     test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
     test_context.py      # Context management tests
     test_dependencies.py # Dependency resolution tests [v0.4.0]
+    test_dry_run.py      # Dry run mode tests [v0.6.0]
     test_holdout.py      # Holdout validation tests [v0.4.0]
     test_incremental.py  # Incremental save tests
     test_integration.py  # End-to-end tests
+    test_latency.py      # Latency metrics tests [v0.6.0]
     test_metrics.py      # Quality metrics tests [v0.4.0]
     test_optimizer.py    # Two-pass optimization tests [v0.5.0]
     test_output.py       # Output generation tests
     test_parsers.py      # Parsing tests
+    test_report.py       # Cleaning report tests [v0.6.0]
     test_sampling.py     # Sampling strategy tests [v0.4.0]
     test_schema.py       # Schema inference tests
     test_text_mode.py    # Text mode tests [v0.3.0]
-    test_validation.py   # Runtime validation tests
+    test_validation.py   # Runtime validation + safety tests
     test_vendor_chunker.py  # Vendored chunker tests [v0.3.0]
 
 test_cases/              # Comprehensive test datasets
@@ -187,7 +198,7 @@ test_cases/              # Comprehensive test datasets
 docs/                    # Orchestrated dev docs
     contracts/           # API and data contracts
     research/            # Research findings
-    refactor-assessment/ # Codebase health reports
+    handoffs/            # Phase completion handoffs
 
 pyproject.toml
 ```
@@ -412,6 +423,23 @@ The LLM now has agency over key decisions:
 | Pattern saturation | `saturated: true/false` for early termination |
 
 This follows the wu wei principle: let the model that understands the data make decisions about the data.
+
+## Observability (v0.6.0)
+
+New features for monitoring and analysis:
+
+| Feature | Description |
+|---------|-------------|
+| Latency Metrics | Track LLM call timing (min/max/avg/total) via `llm_call` events |
+| Import Consolidation | Merge duplicate imports, combine `from x import a, b` |
+| Cleaning Report | Markdown summary with functions, metrics, latency stats |
+| Dry-Run Mode | Analyze data without generating functions (`dry_run=True`) |
+
+New events emitted:
+- `llm_call` - After each LLM call with `latency_ms`
+- `issues_detected` - In dry-run mode with detected issues
+- `dry_run_complete` - End of dry run with stats
+- `complete` now includes `latency_stats` dict
 
 ## Success Criteria
 
