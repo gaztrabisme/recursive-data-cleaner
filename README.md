@@ -245,6 +245,11 @@ pytest tests/ -v
 | v0.2.0 | Runtime validation, schema inference, callbacks, incremental saves |
 | v0.1.0 | Core pipeline, chunking, docstring registry |
 
+## Acknowledgments
+
+- Sentence-aware text chunking adapted from [Chonkie](https://github.com/chonkie-inc/chonkie) (MIT License)
+- Development assisted by [Claude Code](https://claude.ai/claude-code)
+
 ## License
 
 MIT
