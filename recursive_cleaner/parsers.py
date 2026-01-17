@@ -17,6 +17,62 @@ try:
 except ImportError:
     _HAS_SENTENCE_CHUNKER = False
 
+# File extensions supported by markitdown for conversion to text
+MARKITDOWN_EXTENSIONS = {
+    ".pdf", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt",
+    ".html", ".htm", ".epub", ".msg", ".rtf", ".odt", ".ods", ".odp"
+}
+
+
+def load_parquet(file_path: str) -> list[dict]:
+    """Load parquet file as list of dicts.
+
+    Args:
+        file_path: Path to the parquet file
+
+    Returns:
+        List of dictionaries, one per row
+
+    Raises:
+        ImportError: If pyarrow is not installed
+    """
+    try:
+        import pyarrow.parquet as pq
+    except ImportError:
+        raise ImportError(
+            "pyarrow is required for parquet files. "
+            "Install with: pip install recursive-cleaner[parquet]"
+        )
+
+    table = pq.read_table(file_path)
+    return table.to_pylist()
+
+
+def preprocess_with_markitdown(file_path: str) -> str:
+    """
+    Convert supported formats to text using markitdown.
+
+    Args:
+        file_path: Path to the file to convert
+
+    Returns:
+        Extracted text content from the file
+
+    Raises:
+        ImportError: If markitdown is not installed
+    """
+    try:
+        from markitdown import MarkItDown
+    except ImportError:
+        raise ImportError(
+            "markitdown is required for this file type. "
+            "Install with: pip install recursive-cleaner[markitdown]"
+        )
+
+    md = MarkItDown()
+    result = md.convert(file_path)
+    return result.text_content
+
 
 def chunk_file(
     file_path: str,
@@ -50,6 +106,25 @@ def chunk_file(
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
 
+    # Handle markitdown formats: preprocess to text, then chunk as text
+    if suffix in MARKITDOWN_EXTENSIONS:
+        content = preprocess_with_markitdown(file_path)
+        if not content.strip():
+            return []
+        # Markitdown output is always processed as text
+        if sampling_strategy != "sequential":
+            raise ValueError(
+                f"Text mode only supports 'sequential' sampling, got '{sampling_strategy}'"
+            )
+        return chunk_text_sentences(content, chunk_size, chunk_overlap)
+
+    # Handle parquet files: load as list of dicts, chunk like JSONL
+    if suffix == ".parquet":
+        records = load_parquet(file_path)
+        if not records:
+            return []
+        return _chunk_records(records, chunk_size, sampling_strategy, stratify_field)
+
     content = path.read_text(encoding="utf-8")
 
     if not content.strip():
@@ -79,7 +154,7 @@ def chunk_file(
 
 def _detect_mode(suffix: str) -> Literal["structured", "text"]:
     """Detect mode from file extension."""
-    structured_extensions = {".jsonl", ".csv", ".json"}
+    structured_extensions = {".jsonl", ".csv", ".json", ".parquet"}
     if suffix in structured_extensions:
         return "structured"
     return "text"
@@ -279,6 +354,61 @@ def _chunk_jsonl(
         chunks.append("\n".join(chunk_lines))
 
     return chunks
+
+
+def _chunk_records(
+    records: list[dict],
+    item_count: int,
+    sampling_strategy: Literal["sequential", "random", "stratified"] = "sequential",
+    stratify_field: str | None = None,
+) -> list[str]:
+    """Chunk a list of dicts by item count with optional sampling."""
+    if not records:
+        return []
+
+    # For seed computation, use JSON representation
+    seed = _compute_seed(json.dumps(records[0]))
+
+    # Apply sampling strategy
+    if sampling_strategy == "random":
+        records = _shuffle_records(records, seed)
+    elif sampling_strategy == "stratified" and stratify_field:
+        records = _stratified_sample_dicts(records, stratify_field, seed)
+
+    chunks = []
+    for i in range(0, len(records), item_count):
+        chunk_records = records[i:i + item_count]
+        # Convert to JSONL format for LLM context
+        chunk_lines = [json.dumps(r) for r in chunk_records]
+        chunks.append("\n".join(chunk_lines))
+
+    return chunks
+
+
+def _stratified_sample_dicts(records: list[dict], field: str, seed: int) -> list[dict]:
+    """Group dicts by field, interleave proportionally."""
+    groups: dict[str, list] = {}
+    for record in records:
+        key = str(record.get(field, "_missing_"))
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(record)
+
+    # Shuffle within each group
+    rng = random.Random(seed)
+    for key in groups:
+        rng.shuffle(groups[key])
+
+    # Interleave from groups (round-robin)
+    result = []
+    group_lists = list(groups.values())
+    while any(group_lists):
+        for g in group_lists:
+            if g:
+                result.append(g.pop(0))
+        group_lists = [g for g in group_lists if g]
+
+    return result
 
 
 def _compute_seed(content: str) -> int:

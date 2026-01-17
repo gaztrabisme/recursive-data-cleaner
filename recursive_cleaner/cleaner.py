@@ -12,7 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from .context import build_context
 from .errors import OutputValidationError, ParseError
 from .metrics import QualityMetrics, compare_quality, load_structured_data, measure_quality
-from .parsers import chunk_file
+from .parsers import MARKITDOWN_EXTENSIONS, chunk_file
 from .prompt import build_prompt
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
@@ -61,6 +61,7 @@ class DataCleaner:
         saturation_check_interval: int = 20,
         report_path: str | None = "cleaning_report.md",
         dry_run: bool = False,
+        auto_parse: bool = False,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -84,7 +85,9 @@ class DataCleaner:
         self.saturation_check_interval = saturation_check_interval
         self.report_path = report_path
         self.dry_run = dry_run
+        self.auto_parse = auto_parse
         self.functions: list[dict] = []  # List of {name, docstring, code}
+        self._generated_parser: callable | None = None  # LLM-generated parser for unknown formats
         # Track recent function generation for saturation check
         self._recent_new_function_count = 0
         self._last_check_function_count = 0
@@ -319,27 +322,72 @@ class DataCleaner:
     def _detect_mode(self) -> Literal["structured", "text"]:
         """Detect mode from file extension."""
         suffix = Path(self.file_path).suffix.lower()
-        structured_extensions = {".jsonl", ".csv", ".json"}
+        # Markitdown formats are processed as text
+        if suffix in MARKITDOWN_EXTENSIONS:
+            return "text"
+        structured_extensions = {".jsonl", ".csv", ".json", ".parquet"}
         if suffix in structured_extensions:
             return "structured"
         return "text"
 
+    def _is_known_extension(self) -> bool:
+        """Check if file extension is natively supported."""
+        suffix = Path(self.file_path).suffix.lower()
+        known = {".jsonl", ".csv", ".json", ".parquet", ".txt"}
+        return suffix in known or suffix in MARKITDOWN_EXTENSIONS
+
+    def _load_with_auto_parser(self) -> list[str]:
+        """Load file using LLM-generated parser, return JSONL chunks."""
+        from .parser_generator import generate_parser
+
+        print(f"Unknown file format, generating parser...")
+        self._emit("parser_generation_start")
+
+        parser = generate_parser(self.backend, self.file_path)
+        self._generated_parser = parser
+
+        self._emit("parser_generation_complete")
+        print("Parser generated successfully.")
+
+        # Parse the file
+        records = parser(self.file_path)
+        if not records:
+            return []
+
+        # Convert to JSONL chunks
+        import json
+        chunks = []
+        for i in range(0, len(records), self.chunk_size):
+            chunk_records = records[i:i + self.chunk_size]
+            chunk_lines = [json.dumps(r) for r in chunk_records]
+            chunks.append("\n".join(chunk_lines))
+
+        return chunks
+
     def run(self) -> None:
         """Run the cleaning pipeline."""
-        # Resolve effective mode
-        if self.mode == "auto":
-            self._effective_mode = self._detect_mode()
-        else:
-            self._effective_mode = self.mode
+        # Check if we should use auto-parser for unknown formats
+        use_auto_parser = self.auto_parse and not self._is_known_extension()
 
-        chunks = chunk_file(
-            self.file_path,
-            self.chunk_size,
-            mode=self._effective_mode,
-            chunk_overlap=self.chunk_overlap,
-            sampling_strategy=self.sampling_strategy,
-            stratify_field=self.stratify_field,
-        )
+        if use_auto_parser:
+            # LLM generates parser, always structured mode
+            self._effective_mode = "structured"
+            chunks = self._load_with_auto_parser()
+        else:
+            # Resolve effective mode
+            if self.mode == "auto":
+                self._effective_mode = self._detect_mode()
+            else:
+                self._effective_mode = self.mode
+
+            chunks = chunk_file(
+                self.file_path,
+                self.chunk_size,
+                mode=self._effective_mode,
+                chunk_overlap=self.chunk_overlap,
+                sampling_strategy=self.sampling_strategy,
+                stratify_field=self.stratify_field,
+            )
 
         if not chunks:
             print("No data to process.")
