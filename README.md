@@ -4,7 +4,7 @@ LLM-powered incremental data cleaning for massive datasets. Process files in chu
 
 ## How It Works
 
-1. **Chunk** your data (JSONL, CSV, JSON, or text)
+1. **Chunk** your data (JSONL, CSV, JSON, Parquet, PDF, Word, Excel, XML, and more)
 2. **Analyze** each chunk with an LLM to identify issues
 3. **Generate** one cleaning function per issue
 4. **Validate** functions on holdout data before accepting
@@ -21,6 +21,16 @@ pip install -e .
 For Apple Silicon (MLX backend):
 ```bash
 pip install -e ".[mlx]"
+```
+
+For document conversion (PDF, Word, Excel, HTML, etc.):
+```bash
+pip install -e ".[markitdown]"
+```
+
+For Parquet files:
+```bash
+pip install -e ".[parquet]"
 ```
 
 ## Quick Start
@@ -75,6 +85,11 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Cleaning Reports**: Markdown summary with functions, timing, quality delta
 - **Dry-Run Mode**: Analyze data without generating functions
 
+### Format Expansion (v0.7.0)
+- **Markitdown Integration**: Convert 20+ formats (PDF, Word, Excel, PowerPoint, HTML, EPUB, etc.) to text
+- **Parquet Support**: Load parquet files as structured data via pyarrow
+- **LLM-Generated Parsers**: Auto-generate parsers for XML and unknown formats (`auto_parse=True`)
+
 ## Configuration
 
 ```python
@@ -105,6 +120,9 @@ cleaner = DataCleaner(
     # Observability
     report_path="report.md",    # Markdown report output (None to disable)
     dry_run=False,              # Analyze without generating functions
+
+    # Format Expansion
+    auto_parse=False,           # LLM generates parser for unknown formats
 
     # Progress & State
     on_progress=callback,       # Progress event callback
@@ -199,20 +217,21 @@ cleaner.run()
 
 ```
 recursive_cleaner/
-├── cleaner.py       # Main DataCleaner class (~580 lines)
-├── context.py       # Docstring registry with FIFO eviction
-├── dependencies.py  # Topological sort for function ordering
-├── metrics.py       # Quality metrics before/after
-├── optimizer.py     # Two-pass consolidation with LLM agency
-├── output.py        # Function file generation + import consolidation
-├── parsers.py       # Chunking for JSONL/CSV/JSON/text + sampling
-├── prompt.py        # LLM prompt templates
-├── report.py        # Markdown report generation
-├── response.py      # XML/markdown parsing + agency dataclasses
-├── schema.py        # Schema inference
-├── validation.py    # Runtime validation + holdout
+├── cleaner.py          # Main DataCleaner class
+├── context.py          # Docstring registry with FIFO eviction
+├── dependencies.py     # Topological sort for function ordering
+├── metrics.py          # Quality metrics before/after
+├── optimizer.py        # Two-pass consolidation with LLM agency
+├── output.py           # Function file generation + import consolidation
+├── parser_generator.py # LLM-generated parsers for unknown formats
+├── parsers.py          # Chunking for all formats + sampling
+├── prompt.py           # LLM prompt templates
+├── report.py           # Markdown report generation
+├── response.py         # XML/markdown parsing + agency dataclasses
+├── schema.py           # Schema inference
+├── validation.py       # Runtime validation + holdout
 └── vendor/
-    └── chunker.py   # Vendored sentence-aware chunker
+    └── chunker.py      # Vendored sentence-aware chunker
 ```
 
 ## Testing
@@ -221,7 +240,7 @@ recursive_cleaner/
 pytest tests/ -v
 ```
 
-392 tests covering all features. Test datasets in `test_cases/`:
+432 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
@@ -237,6 +256,7 @@ pytest tests/ -v
 
 | Version | Features |
 |---------|----------|
+| v0.7.0 | Markitdown (20+ formats), Parquet support, LLM-generated parsers |
 | v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |
 | v0.5.1 | Dangerous code detection (AST-based security) |
 | v0.5.0 | Two-pass optimization, early termination, LLM agency |
