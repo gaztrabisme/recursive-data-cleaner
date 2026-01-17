@@ -60,29 +60,41 @@ These patterns proved high-value with low implementation effort:
 
 ---
 
+## Tier 5: Format Expansion & UI (v0.7.0) - PLANNED
+
+### Markitdown Integration
+- [ ] Add markitdown as optional dependency
+- [ ] Auto-convert 20+ formats: Excel, HTML, Word, PDF, PowerPoint, EPUB, etc.
+- [ ] Preprocessing step before chunking
+- **Approach**: `pip install recursive-cleaner[markitdown]`
+
+### Parquet Support
+- [ ] Native parser using pyarrow
+- [ ] Read as list of dicts (same as JSONL)
+- **Approach**: Optional dependency, ~10 lines of code
+
+### LLM-Generated Parsers
+- [ ] For XML and unknown formats
+- [ ] Send sample to LLM: "Generate a function to parse this into list of records"
+- [ ] Validate generated parser on sample before using
+- **Approach**: Wu wei - let LLM decide how to parse data it understands
+
+### Terminal UI (Textual)
+- [ ] Optional `[ui]` extra dependency
+- [ ] Live dashboard showing: chunk progress, function generation, latency sparkline
+- [ ] Pure terminal, no browser needed
+- **Approach**: `pip install recursive-cleaner[ui]`
+
+---
+
 ## Future Considerations
 
 Ideas that might be valuable but need more thought.
-
-### Confidence Scoring
-- LLM rates confidence in each generated function (high/medium/low)
-- Low confidence = flag for human review
-- **Question**: Does this actually help users, or just add noise?
-
-### Before/After Examples
-- User provides expected input→output pairs
-- Validate generated functions match expectations
-- **Question**: How to handle functions that transform data differently but correctly?
 
 ### Multi-File Batch Mode
 - Process multiple files with shared function registry
 - Functions learned from file A applied to file B
 - **Question**: How to handle schema differences between files?
-
-### Summary Buffer Memory
-- Compress old function docstrings into summaries
-- Keep recent functions verbatim
-- **Question**: Does FIFO eviction already work well enough?
 
 ---
 
