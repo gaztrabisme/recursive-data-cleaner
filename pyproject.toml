@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "recursive-cleaner"
-version = "0.6.0"
+version = "0.6.1"
 description = "LLM-powered incremental data cleaning pipeline that processes massive datasets in chunks and generates Python cleaning functions"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    { name = "Gary Tou" },
+    { name = "Gary Tran" },
 ]
 keywords = [
     "data-cleaning",
