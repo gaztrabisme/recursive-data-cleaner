@@ -4,7 +4,8 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v0.8.0 | **Implemented** | 2025-01-19 |
+| v0.9.0 | **Implemented** | 2025-01-19 |
+| v0.8.0 | Implemented | 2025-01-19 |
 | v0.7.0 | Implemented | 2025-01-17 |
 | v0.6.0 | Implemented | 2025-01-15 |
 | v0.5.1 | Implemented | 2025-01-15 |
@@ -14,9 +15,10 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v0.8.0 complete. 465 tests passing.
+**Current State**: v0.9.0 complete. 502 tests passing.
 
 ### Version History
+- **v0.9.0**: CLI tool with MLX and OpenAI-compatible backends (LM Studio, Ollama)
 - **v0.8.0**: Terminal UI with Rich dashboard, mission control aesthetic, transmission log
 - **v0.7.0**: Markitdown integration (20+ formats), Parquet support, LLM-generated parsers
 - **v0.6.0**: Latency metrics, import consolidation, cleaning report, dry-run mode

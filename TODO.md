@@ -1,8 +1,8 @@
 # TODO - Recursive Data Cleaner Roadmap
 
-## Current Version: v0.6.0
+## Current Version: v0.9.0
 
-392 tests passing, 2,967 lines. Tier 4 complete.
+502 tests passing, ~3,400 lines. CLI complete.
 
 ---
 
@@ -17,6 +17,52 @@
 | v0.5.0 | Two-pass optimization, early termination, LLM agency |
 | v0.5.1 | Dangerous code detection (AST-based security) |
 | v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |
+| v0.7.0 | Markitdown (20+ formats), Parquet support, LLM-generated parsers |
+| v0.8.0 | Terminal UI with Rich dashboard, mission control aesthetic |
+| v0.9.0 | CLI tool with MLX and OpenAI-compatible backends |
+
+---
+
+## Version Progression
+
+| Version | Theme |
+|---------|-------|
+| v0.1-0.2 | Core pipeline + validation |
+| v0.3-0.4 | Data quality assurance |
+| v0.5-0.6 | Optimization + observability |
+| v0.7-0.8 | Accessibility (formats + UI) |
+| v0.9-1.0 | Complete workflow |
+
+---
+
+## Roadmap to v1.0
+
+### v0.9.0 - CLI Tool ✅ COMPLETE
+
+CLI implemented with:
+- `recursive_cleaner/cli.py` - argparse CLI (346 lines)
+- `backends/openai_backend.py` - OpenAI-compatible backend (71 lines)
+- Commands: `generate`, `analyze`, `resume`
+- Backends: MLX, OpenAI, LM Studio, Ollama (via --base-url)
+
+### v1.0.0 - Apply Mode (~150 lines)
+
+The final step: actually cleaning the data, not just generating functions.
+
+```python
+cleaner = DataCleaner(...)
+cleaner.run()  # Generates cleaning_functions.py
+
+# NEW: Apply to full dataset
+cleaner.apply(output_path="cleaned_data.jsonl")
+```
+
+**Implementation:**
+- [ ] `DataCleaner.apply(output_path)` method
+- [ ] Stream-process file applying generated functions
+- [ ] Progress callbacks for large files
+- [ ] Validate output schema matches input
+- [ ] CLI integration: `recursive-cleaner apply`
 
 ---
 
@@ -32,83 +78,27 @@ These patterns proved high-value with low implementation effort:
 
 ---
 
-## Tier 4: Polish & Observability ✅ COMPLETE (v0.6.0)
-
-### Latency Metrics ✅
-- [x] Time each LLM call
-- [x] Track min/max/avg/total in progress events
-- [x] Report in final summary
-- **Implemented**: `_call_llm_timed()`, `_get_latency_summary()` in `cleaner.py`
-
-### Import Consolidation ✅
-- [x] Deduplicate imports across generated functions
-- [x] Move to single import block at top of output file
-- [x] Handle `from x import y` merging
-- **Implemented**: `consolidate_imports()` in `output.py`
-
-### Cleaning Report ✅
-- [x] Generate markdown summary alongside `cleaning_functions.py`
-- [x] List: issues found, functions generated, quality delta
-- [x] Include per-chunk breakdown
-- **Implemented**: `recursive_cleaner/report.py`
-
-### Dry-Run Mode ✅
-- [x] Analyze data without generating functions
-- [x] Report issues that would be detected
-- [x] Useful for data assessment before committing
-- **Implemented**: `dry_run` parameter, `_process_chunk_dry_run()` in `cleaner.py`
-
----
-
-## Tier 5: Format Expansion & UI (v0.7.0) - PLANNED
-
-### Markitdown Integration
-- [ ] Add markitdown as optional dependency
-- [ ] Auto-convert 20+ formats: Excel, HTML, Word, PDF, PowerPoint, EPUB, etc.
-- [ ] Preprocessing step before chunking
-- **Approach**: `pip install recursive-cleaner[markitdown]`
-
-### Parquet Support
-- [ ] Native parser using pyarrow
-- [ ] Read as list of dicts (same as JSONL)
-- **Approach**: Optional dependency, ~10 lines of code
-
-### LLM-Generated Parsers
-- [ ] For XML and unknown formats
-- [ ] Send sample to LLM: "Generate a function to parse this into list of records"
-- [ ] Validate generated parser on sample before using
-- **Approach**: Wu wei - let LLM decide how to parse data it understands
-
-### Terminal UI (Textual)
-- [ ] Optional `[ui]` extra dependency
-- [ ] Live dashboard showing: chunk progress, function generation, latency sparkline
-- [ ] Pure terminal, no browser needed
-- **Approach**: `pip install recursive-cleaner[ui]`
-
----
-
-## Future Considerations
-
-Ideas that might be valuable but need more thought.
-
-### Multi-File Batch Mode
-- Process multiple files with shared function registry
-- Functions learned from file A applied to file B
-- **Question**: How to handle schema differences between files?
-
----
-
-## Explicitly Deferred
-
-These don't fit the project philosophy:
+## What We're Not Doing
 
 | Feature | Reason |
 |---------|--------|
+| Global deduplication | Adds complexity, breaks chunk-based philosophy |
+| Built-in LLM backends | Users bring their own, keeps us dependency-free |
+| Config files (YAML/TOML) | Python is already config, YAGNI |
+| Plugin system | No interfaces for things with one implementation |
 | Async multi-chunk | Complexity not justified; sequential is predictable |
-| Global state awareness | Would require architectural changes |
 | Vector retrieval | Adds chromadb dependency; FIFO works for typical use |
-| Jinja2 templates | f-strings are simpler and sufficient |
-| TypedDict state | Plain dicts are easier to debug |
+
+---
+
+## Line Count Budget
+
+| Component | Current | After v1.0 |
+|-----------|---------|------------|
+| Core library | ~3,000 | ~3,350 |
+| Tests | ~4,000 | ~4,400 |
+
+Staying under 3,500 lines for the library keeps us true to the philosophy.
 
 ---
 

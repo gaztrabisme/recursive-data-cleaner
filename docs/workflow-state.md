@@ -1,45 +1,40 @@
-# Workflow State
+# Workflow State - v0.9.0 CLI Tool
 
 ## Current Phase
-Complete - v0.6.0 Ready for Release
+Complete
 
 ## Awaiting
-User approval to commit and tag
+Nothing - v0.9.0 released
 
 ## Blockers
 None
 
 ## Progress
-- [x] Project structure exists (from v0.2.0+)
-- [x] Tier 4 success criteria defined
-- [x] Tier 4 API contract defined
-- [x] Implementation plan created
-- [x] User approval
-- [x] Phase 1: Latency Metrics (7 tests)
-- [x] Phase 2: Import Consolidation (5 tests)
-- [x] Phase 3: Cleaning Report (9 tests)
-- [x] Phase 4: Dry-Run Mode (7 tests)
-- [x] Final audit: PASSED
+- [x] Research complete
+- [x] Contracts approved
+- [x] Plan approved
+- [x] Phase 1-4 implementation
+- [x] Audit passed
+- [x] Documentation update
+- [x] Version bump & release
 
-## Final Stats
-- **Tests**: 392 passing (+27 new)
-- **Lines**: 2,967 total
-- **New dependencies**: None (stdlib only)
-- **Version**: 0.6.0
+## Project Context
+Building a CLI interface for the existing DataCleaner API using argparse (stdlib).
 
-## Files Created/Modified
+### Target Commands
+```bash
+recursive-cleaner analyze <file> --instructions "..."   # Dry-run mode
+recursive-cleaner generate <file> -o output.py         # Generate functions
+recursive-cleaner apply <file> --functions f.py -o out # Apply functions (v1.0)
+```
 
-| File | Change |
-|------|--------|
-| `recursive_cleaner/cleaner.py` | Added latency tracking, report_path, dry_run |
-| `recursive_cleaner/output.py` | Enhanced import consolidation |
-| `recursive_cleaner/report.py` | **NEW** - Markdown report generation |
-| `tests/test_latency.py` | **NEW** - 7 tests |
-| `tests/test_report.py` | **NEW** - 9 tests |
-| `tests/test_dry_run.py` | **NEW** - 7 tests |
-| `tests/test_output.py` | Extended with 5 import consolidation tests |
+### Constraints
+- No new dependencies (argparse is stdlib)
+- Wrap existing DataCleaner API
+- ~200 lines target
+- Support TUI flag (--tui)
 
-## Documents
-- `docs/contracts/tier4-success-criteria.md` - All criteria met
-- `docs/contracts/tier4-contract.md` - API contracts
-- `docs/implementation-plan-tier4.md` - 4-phase plan (complete)
+## Previous Version (v0.8.0)
+- **Tests**: 465 passing
+- **Lines**: ~3,000 total
+- **Status**: Released (Terminal UI)

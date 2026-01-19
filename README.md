@@ -102,6 +102,70 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Token Estimation**: Track estimated input/output tokens across the run
 - **Graceful Fallback**: Works without Rich installed (falls back to callbacks)
 
+### CLI (v0.9.0)
+- **Command Line Interface**: Use without writing Python code
+- **Multiple Backends**: MLX (Apple Silicon) and OpenAI-compatible (OpenAI, LM Studio, Ollama)
+- **Three Commands**: `generate`, `analyze` (dry-run), `resume`
+
+## Command Line Interface
+
+After installation, the `recursive-cleaner` command is available:
+
+```bash
+# Generate cleaning functions with MLX (Apple Silicon)
+recursive-cleaner generate data.jsonl \
+  --provider mlx \
+  --model "lmstudio-community/Qwen3-80B-MLX-4bit" \
+  --instructions "Normalize phone numbers to E.164" \
+  --output cleaning_functions.py
+
+# Use OpenAI
+export OPENAI_API_KEY=your-key
+recursive-cleaner generate data.jsonl \
+  --provider openai \
+  --model gpt-4o \
+  --instructions "Fix date formats"
+
+# Use LM Studio or Ollama (OpenAI-compatible)
+recursive-cleaner generate data.jsonl \
+  --provider openai \
+  --model "qwen/qwen3-vl-30b" \
+  --base-url http://localhost:1234/v1 \
+  --instructions "Normalize prices"
+
+# Dry-run analysis
+recursive-cleaner analyze data.jsonl \
+  --provider openai \
+  --model gpt-4o \
+  --instructions @instructions.txt
+
+# Resume from checkpoint
+recursive-cleaner resume cleaning_state.json \
+  --provider mlx \
+  --model "model-path"
+```
+
+### CLI Options
+
+```
+recursive-cleaner generate <FILE> [OPTIONS]
+
+Required:
+  FILE                      Input data file
+  -p, --provider {mlx,openai}  LLM provider
+  -m, --model MODEL         Model name/path
+
+Optional:
+  -i, --instructions TEXT   Cleaning instructions (or @file.txt)
+  --base-url URL            API URL for OpenAI-compatible servers
+  --chunk-size N            Items per chunk (default: 50)
+  --max-iterations N        Max iterations per chunk (default: 5)
+  -o, --output PATH         Output file (default: cleaning_functions.py)
+  --tui                     Enable Rich dashboard
+  --optimize                Consolidate redundant functions
+  --track-metrics           Measure before/after quality
+```
+
 ## Configuration
 
 ```python
@@ -232,6 +296,7 @@ cleaner.run()
 
 ```
 recursive_cleaner/
+├── cli.py              # Command line interface
 ├── cleaner.py          # Main DataCleaner class
 ├── context.py          # Docstring registry with FIFO eviction
 ├── dependencies.py     # Topological sort for function ordering
@@ -248,6 +313,10 @@ recursive_cleaner/
 ├── validation.py       # Runtime validation + holdout
 └── vendor/
     └── chunker.py      # Vendored sentence-aware chunker
+
+backends/
+├── mlx_backend.py      # MLX-LM backend for Apple Silicon
+└── openai_backend.py   # OpenAI-compatible backend
 ```
 
 ## Testing
@@ -256,7 +325,7 @@ recursive_cleaner/
 pytest tests/ -v
 ```
 
-465 tests covering all features. Test datasets in `test_cases/`:
+502 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
@@ -272,6 +341,7 @@ pytest tests/ -v
 
 | Version | Features |
 |---------|----------|
+| v0.9.0 | CLI tool with MLX and OpenAI-compatible backends (LM Studio, Ollama) |
 | v0.8.0 | Terminal UI with Rich dashboard, mission control aesthetic, transmission log |
 | v0.7.0 | Markitdown (20+ formats), Parquet support, LLM-generated parsers |
 | v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |

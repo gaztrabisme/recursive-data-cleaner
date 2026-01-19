@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "recursive-cleaner"
-version = "0.8.0"
+version = "0.9.0"
 description = "LLM-powered incremental data cleaning pipeline that processes massive datasets in chunks and generates Python cleaning functions"
 readme = "README.md"
 license = "MIT"
@@ -55,6 +55,12 @@ parquet = [
 tui = [
     "rich>=13.0",
 ]
+openai = [
+    "openai>=1.0.0",
+]
+
+[project.scripts]
+recursive-cleaner = "recursive_cleaner.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/gaztrabisme/recursive-data-cleaner"

@@ -63,6 +63,7 @@ class DataCleaner:
         dry_run: bool = False,
         auto_parse: bool = False,
         tui: bool = False,
+        output_path: str = "cleaning_functions.py",
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -88,6 +89,7 @@ class DataCleaner:
         self.dry_run = dry_run
         self.auto_parse = auto_parse
         self.tui = tui
+        self.output_path = output_path
         self.functions: list[dict] = []  # List of {name, docstring, code}
         self._tui_renderer = None  # TUIRenderer instance when tui=True
         self._generated_parser: callable | None = None  # LLM-generated parser for unknown formats
@@ -520,7 +522,7 @@ class DataCleaner:
                 "quality_delta": 0.0,  # Could be calculated from metrics
                 "latency_total_ms": latency_summary.get("total_ms", 0.0),
                 "llm_calls": latency_summary.get("call_count", 0),
-                "output_file": "cleaning_functions.py",
+                "output_file": self.output_path,
             })
             self._tui_renderer.stop()
 
@@ -687,11 +689,11 @@ class DataCleaner:
         self._emit("chunk_done", chunk_index=chunk_idx)
 
     def _write_output(self) -> None:
-        """Write generated functions to cleaning_functions.py."""
+        """Write generated functions to output file."""
         from .output import write_cleaning_file
 
         try:
-            write_cleaning_file(self.functions)
+            write_cleaning_file(self.functions, self.output_path)
         except OutputValidationError as e:
             if not self.tui:
                 print(f"  Error: {e}")
@@ -707,7 +709,7 @@ class DataCleaner:
                     if not self.tui:
                         print(f"  Skipping invalid function: {f['name']}")
             if valid_functions:
-                write_cleaning_file(valid_functions)
+                write_cleaning_file(valid_functions, self.output_path)
             elif not self.tui:
                 print("  No valid functions to write.")
 
