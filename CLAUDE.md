@@ -4,7 +4,9 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v0.6.0 | **Implemented** | 2025-01-15 |
+| v0.8.0 | **Implemented** | 2025-01-19 |
+| v0.7.0 | Implemented | 2025-01-17 |
+| v0.6.0 | Implemented | 2025-01-15 |
 | v0.5.1 | Implemented | 2025-01-15 |
 | v0.5.0 | Implemented | 2025-01-15 |
 | v0.4.0 | Implemented | 2025-01-15 |
@@ -12,9 +14,11 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v0.6.0 complete. 392 tests passing, 2,967 lines total.
+**Current State**: v0.8.0 complete. 465 tests passing.
 
 ### Version History
+- **v0.8.0**: Terminal UI with Rich dashboard, mission control aesthetic, transmission log
+- **v0.7.0**: Markitdown integration (20+ formats), Parquet support, LLM-generated parsers
 - **v0.6.0**: Latency metrics, import consolidation, cleaning report, dry-run mode
 - **v0.5.1**: Dangerous code detection (AST-based security)
 - **v0.5.0**: Two-pass optimization with LLM agency (consolidation, early termination)
@@ -69,6 +73,8 @@ cleaner = DataCleaner(
     # Observability (v0.6.0)
     report_path="cleaning_report.md",  # Generate markdown report (None to disable)
     dry_run=False,  # Set True to analyze without generating functions
+    # Terminal UI (v0.8.0)
+    tui=True,  # Enable Rich dashboard (requires pip install recursive-cleaner[tui])
 )
 
 cleaner.run()  # Outputs: cleaning_functions.py, cleaning_report.md
@@ -159,6 +165,7 @@ recursive_cleaner/
     report.py            # Markdown report generation (~120 lines) [v0.6.0]
     response.py          # XML/markdown parsing + agency dataclasses (~292 lines)
     schema.py            # Schema inference (~117 lines) [v0.2.0]
+    tui.py               # Rich terminal dashboard (~520 lines) [v0.8.0]
     types.py             # LLMBackend protocol (~11 lines)
     validation.py        # Runtime validation + safety checks (~200 lines)
     vendor/
@@ -187,6 +194,7 @@ tests/                   # 392 tests
     test_sampling.py     # Sampling strategy tests [v0.4.0]
     test_schema.py       # Schema inference tests
     test_text_mode.py    # Text mode tests [v0.3.0]
+    test_tui.py          # Terminal UI tests [v0.8.0]
     test_validation.py   # Runtime validation + safety tests
     test_vendor_chunker.py  # Vendored chunker tests [v0.3.0]
 

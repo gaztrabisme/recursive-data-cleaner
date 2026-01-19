@@ -62,6 +62,7 @@ class DataCleaner:
         report_path: str | None = "cleaning_report.md",
         dry_run: bool = False,
         auto_parse: bool = False,
+        tui: bool = False,
     ):
         self.backend = llm_backend
         self.file_path = file_path
@@ -86,7 +87,9 @@ class DataCleaner:
         self.report_path = report_path
         self.dry_run = dry_run
         self.auto_parse = auto_parse
+        self.tui = tui
         self.functions: list[dict] = []  # List of {name, docstring, code}
+        self._tui_renderer = None  # TUIRenderer instance when tui=True
         self._generated_parser: callable | None = None  # LLM-generated parser for unknown formats
         # Track recent function generation for saturation check
         self._recent_new_function_count = 0
@@ -119,10 +122,15 @@ class DataCleaner:
         try:
             self.on_progress(event)
         except Exception as e:
-            print(f"  Warning: callback error: {e}")
+            if not self.tui:
+                print(f"  Warning: callback error: {e}")
 
     def _call_llm_timed(self, prompt: str, chunk_index: int = 0) -> str:
         """Call LLM with timing and emit latency event."""
+        # Update TUI status before call
+        if self._tui_renderer:
+            self._tui_renderer.update_llm_status("calling")
+
         start = time.perf_counter()
         response = call_llm(self.backend, prompt)
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -132,6 +140,20 @@ class DataCleaner:
         self._latency_stats["total_ms"] += elapsed_ms
         self._latency_stats["min_ms"] = min(self._latency_stats["min_ms"], elapsed_ms)
         self._latency_stats["max_ms"] = max(self._latency_stats["max_ms"], elapsed_ms)
+
+        # Update TUI status and metrics after call
+        if self._tui_renderer:
+            self._tui_renderer.update_llm_status("idle")
+            latency_summary = self._get_latency_summary()
+            self._tui_renderer.update_metrics(
+                quality_delta=0.0,  # Quality delta calculated at end
+                latency_last=elapsed_ms,
+                latency_avg=latency_summary.get("avg_ms", 0.0),
+                latency_total=latency_summary.get("total_ms", 0.0),
+                llm_calls=latency_summary.get("call_count", 0),
+            )
+            self._tui_renderer.update_tokens(prompt, response)
+            self._tui_renderer.update_transmission(response)
 
         # Emit event
         self._emit("llm_call", chunk_index=chunk_index, latency_ms=round(elapsed_ms, 2))
@@ -216,7 +238,8 @@ class DataCleaner:
             response = self._call_llm_timed(prompt, chunk_index=chunks_processed - 1)
             assessment = parse_saturation_response(response)
         except Exception as e:
-            print(f"  Warning: saturation check failed: {e}")
+            if not self.tui:
+                print(f"  Warning: saturation check failed: {e}")
             return False  # Continue on error
 
         self._emit(
@@ -275,7 +298,8 @@ class DataCleaner:
         self.functions = state.get("functions", [])
         self._last_completed_chunk = state.get("last_completed_chunk", -1)
         self._total_chunks = state.get("total_chunks", 0)
-        print(f"Resumed from state: {self._last_completed_chunk + 1}/{self._total_chunks} chunks completed")
+        if not self.tui:
+            print(f"Resumed from state: {self._last_completed_chunk + 1}/{self._total_chunks} chunks completed")
         return True
 
     @classmethod
@@ -340,14 +364,16 @@ class DataCleaner:
         """Load file using LLM-generated parser, return JSONL chunks."""
         from .parser_generator import generate_parser
 
-        print(f"Unknown file format, generating parser...")
+        if not self.tui:
+            print(f"Unknown file format, generating parser...")
         self._emit("parser_generation_start")
 
         parser = generate_parser(self.backend, self.file_path)
         self._generated_parser = parser
 
         self._emit("parser_generation_complete")
-        print("Parser generated successfully.")
+        if not self.tui:
+            print("Parser generated successfully.")
 
         # Parse the file
         records = parser(self.file_path)
@@ -390,7 +416,8 @@ class DataCleaner:
             )
 
         if not chunks:
-            print("No data to process.")
+            if not self.tui:
+                print("No data to process.")
             return
 
         # Try to load existing state
@@ -409,13 +436,38 @@ class DataCleaner:
 
         self._total_chunks = len(chunks)
 
+        # Initialize TUI if enabled
+        if self.tui:
+            from .tui import HAS_RICH, TUIRenderer
+
+            if HAS_RICH:
+                self._tui_renderer = TUIRenderer(
+                    file_path=self.file_path,
+                    total_chunks=self._total_chunks,
+                    total_records=0,  # Could be calculated from chunks
+                )
+                self._tui_renderer.start()
+            else:
+                import logging
+
+                logging.warning(
+                    "tui=True but Rich not installed. "
+                    "Install with: pip install recursive-cleaner[tui]"
+                )
+
         for i, chunk in enumerate(chunks):
             # Skip already completed chunks
             if i <= self._last_completed_chunk:
-                if resumed:
+                if resumed and not self.tui:
                     print(f"Skipping chunk {i + 1}/{len(chunks)} (already completed)")
                 continue
-            print(f"Processing chunk {i + 1}/{len(chunks)}...")
+            if not self.tui:
+                print(f"Processing chunk {i + 1}/{len(chunks)}...")
+
+            # Update TUI with chunk progress
+            if self._tui_renderer:
+                self._tui_renderer.update_chunk(i, 0, self.max_iterations)
+
             self._process_chunk(chunk, i)
             # Mark chunk as completed and save state
             self._last_completed_chunk = i
@@ -429,7 +481,8 @@ class DataCleaner:
             ):
                 if self._check_saturation(i + 1):
                     self._emit("early_termination", chunk_index=i)
-                    print(f"Early termination: pattern discovery saturated at chunk {i + 1}")
+                    if not self.tui:
+                        print(f"Early termination: pattern discovery saturated at chunk {i + 1}")
                     break
 
         # Skip optimization and output in dry_run mode
@@ -439,7 +492,11 @@ class DataCleaner:
                 chunk_index=self._total_chunks - 1,
                 latency_stats=self._get_latency_summary(),
             )
-            print("Dry run complete. No functions generated or saved.")
+            # Stop TUI if running
+            if self._tui_renderer:
+                self._tui_renderer.stop()
+            if not self.tui:
+                print("Dry run complete. No functions generated or saved.")
             return
 
         # Two-pass optimization (if enabled and enough functions)
@@ -453,7 +510,22 @@ class DataCleaner:
             chunk_index=self._total_chunks - 1,
             latency_stats=self._get_latency_summary(),
         )
-        print(f"Done! Generated {len(self.functions)} functions.")
+
+        # Show TUI completion and stop
+        if self._tui_renderer:
+            latency_summary = self._get_latency_summary()
+            self._tui_renderer.show_complete({
+                "functions_count": len(self.functions),
+                "chunks_processed": self._total_chunks,
+                "quality_delta": 0.0,  # Could be calculated from metrics
+                "latency_total_ms": latency_summary.get("total_ms", 0.0),
+                "llm_calls": latency_summary.get("call_count", 0),
+                "output_file": "cleaning_functions.py",
+            })
+            self._tui_renderer.stop()
+
+        if not self.tui:
+            print(f"Done! Generated {len(self.functions)} functions.")
 
     def _process_chunk(self, chunk: str, chunk_idx: int) -> None:
         """Process a single chunk, iterating until clean or max iterations."""
@@ -476,6 +548,11 @@ class DataCleaner:
 
         for iteration in range(self.max_iterations):
             self._emit("iteration", chunk_index=chunk_idx, iteration=iteration)
+
+            # Update TUI with iteration progress
+            if self._tui_renderer:
+                self._tui_renderer.update_chunk(chunk_idx, iteration, self.max_iterations)
+
             context = build_context(self.functions, self.context_budget)
             prompt = build_prompt(
                 self.instructions,
@@ -511,7 +588,8 @@ class DataCleaner:
                         function_name=result["name"],
                         error=safety_error,
                     )
-                    print(f"  Safety check failed: {safety_error}")
+                    if not self.tui:
+                        print(f"  Safety check failed: {safety_error}")
                     continue
 
                 # Runtime validation if enabled
@@ -539,7 +617,8 @@ class DataCleaner:
                             function_name=result["name"],
                             error=error_msg,
                         )
-                        print(f"  Validation failed: {error_msg}")
+                        if not self.tui:
+                            print(f"  Validation failed: {error_msg}")
                         continue
 
                 self.functions.append({
@@ -549,17 +628,25 @@ class DataCleaner:
                 })
                 # Track for saturation check
                 self._recent_new_function_count += 1
+
+                # Update TUI with new function
+                if self._tui_renderer:
+                    self._tui_renderer.add_function(result["name"], result["docstring"])
+
                 self._emit(
                     "function_generated",
                     chunk_index=chunk_idx,
                     function_name=result["name"],
                 )
-                print(f"  Generated: {result['name']}")
+                if not self.tui:
+                    print(f"  Generated: {result['name']}")
             else:
                 # LLM said needs_more_work but didn't provide code
-                print(f"  Warning: iteration {iteration + 1} produced no function")
+                if not self.tui:
+                    print(f"  Warning: iteration {iteration + 1} produced no function")
 
-        print(f"  Warning: chunk {chunk_idx} hit max iterations ({self.max_iterations})")
+        if not self.tui:
+            print(f"  Warning: chunk {chunk_idx} hit max iterations ({self.max_iterations})")
         self._emit("chunk_done", chunk_index=chunk_idx)
 
     def _process_chunk_dry_run(self, chunk: str, chunk_idx: int) -> None:
@@ -577,7 +664,8 @@ class DataCleaner:
             response = self._call_llm_timed(prompt, chunk_index=chunk_idx)
             result = parse_response(response)
         except ParseError as e:
-            print(f"  Warning: parse error in dry run: {e}")
+            if not self.tui:
+                print(f"  Warning: parse error in dry run: {e}")
             self._emit("chunk_done", chunk_index=chunk_idx)
             return
 
@@ -589,11 +677,12 @@ class DataCleaner:
             issues=issues,
         )
 
-        if issues:
-            unsolved = [i for i in issues if not i.get("solved", False)]
-            print(f"  Found {len(issues)} issues ({len(unsolved)} unsolved)")
-        else:
-            print("  No issues detected")
+        if not self.tui:
+            if issues:
+                unsolved = [i for i in issues if not i.get("solved", False)]
+                print(f"  Found {len(issues)} issues ({len(unsolved)} unsolved)")
+            else:
+                print("  No issues detected")
 
         self._emit("chunk_done", chunk_index=chunk_idx)
 
@@ -604,8 +693,9 @@ class DataCleaner:
         try:
             write_cleaning_file(self.functions)
         except OutputValidationError as e:
-            print(f"  Error: {e}")
-            print("  Attempting to write valid functions only...")
+            if not self.tui:
+                print(f"  Error: {e}")
+                print("  Attempting to write valid functions only...")
             # Try writing functions one by one, skipping invalid ones
             valid_functions = []
             for f in self.functions:
@@ -614,10 +704,11 @@ class DataCleaner:
                     ast.parse(f["code"])
                     valid_functions.append(f)
                 except SyntaxError:
-                    print(f"  Skipping invalid function: {f['name']}")
+                    if not self.tui:
+                        print(f"  Skipping invalid function: {f['name']}")
             if valid_functions:
                 write_cleaning_file(valid_functions)
-            else:
+            elif not self.tui:
                 print("  No valid functions to write.")
 
     def _write_report(self) -> None:

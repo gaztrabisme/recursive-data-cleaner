@@ -33,6 +33,11 @@ For Parquet files:
 pip install -e ".[parquet]"
 ```
 
+For Terminal UI (Rich dashboard):
+```bash
+pip install -e ".[tui]"
+```
+
 ## Quick Start
 
 ```python
@@ -90,6 +95,13 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Parquet Support**: Load parquet files as structured data via pyarrow
 - **LLM-Generated Parsers**: Auto-generate parsers for XML and unknown formats (`auto_parse=True`)
 
+### Terminal UI (v0.8.0)
+- **Mission Control Dashboard**: Rich-based live terminal UI with retro aesthetic
+- **Real-time Progress**: Animated progress bars, chunk/iteration counters
+- **Transmission Log**: Parsed LLM responses showing issues detected and functions being generated
+- **Token Estimation**: Track estimated input/output tokens across the run
+- **Graceful Fallback**: Works without Rich installed (falls back to callbacks)
+
 ## Configuration
 
 ```python
@@ -123,6 +135,9 @@ cleaner = DataCleaner(
 
     # Format Expansion
     auto_parse=False,           # LLM generates parser for unknown formats
+
+    # Terminal UI
+    tui=True,                   # Enable Rich dashboard (requires [tui] extra)
 
     # Progress & State
     on_progress=callback,       # Progress event callback
@@ -229,6 +244,7 @@ recursive_cleaner/
 ├── report.py           # Markdown report generation
 ├── response.py         # XML/markdown parsing + agency dataclasses
 ├── schema.py           # Schema inference
+├── tui.py              # Rich terminal dashboard
 ├── validation.py       # Runtime validation + holdout
 └── vendor/
     └── chunker.py      # Vendored sentence-aware chunker
@@ -240,7 +256,7 @@ recursive_cleaner/
 pytest tests/ -v
 ```
 
-432 tests covering all features. Test datasets in `test_cases/`:
+465 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
@@ -256,6 +272,7 @@ pytest tests/ -v
 
 | Version | Features |
 |---------|----------|
+| v0.8.0 | Terminal UI with Rich dashboard, mission control aesthetic, transmission log |
 | v0.7.0 | Markitdown (20+ formats), Parquet support, LLM-generated parsers |
 | v0.6.0 | Latency metrics, import consolidation, cleaning report, dry-run mode |
 | v0.5.1 | Dangerous code detection (AST-based security) |
