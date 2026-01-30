@@ -105,7 +105,14 @@ cleaner.run()  # Generates cleaning_functions.py
 ### CLI (v0.9.0)
 - **Command Line Interface**: Use without writing Python code
 - **Multiple Backends**: MLX (Apple Silicon) and OpenAI-compatible (OpenAI, LM Studio, Ollama)
-- **Three Commands**: `generate`, `analyze` (dry-run), `resume`
+- **Four Commands**: `generate`, `analyze` (dry-run), `resume`, `apply`
+
+### Apply Mode (v1.0.0)
+- **Apply Cleaning Functions**: Apply generated functions to full datasets
+- **Data Formats**: JSONL, CSV, JSON, Parquet, Excel (.xlsx/.xls) output same format
+- **Text Formats**: PDF, Word, HTML, etc. output as Markdown
+- **Streaming**: Memory-efficient line-by-line processing for JSONL/CSV
+- **Colored TUI**: Enhanced transmission log with syntax-highlighted XML parsing
 
 ## Command Line Interface
 
@@ -143,6 +150,20 @@ recursive-cleaner analyze data.jsonl \
 recursive-cleaner resume cleaning_state.json \
   --provider mlx \
   --model "model-path"
+
+# Apply cleaning functions to data
+recursive-cleaner apply data.jsonl \
+  --functions cleaning_functions.py \
+  --output cleaned_data.jsonl
+
+# Apply to Excel (outputs same format)
+recursive-cleaner apply sales.xlsx \
+  --functions cleaning_functions.py
+
+# Apply to PDF (outputs markdown)
+recursive-cleaner apply document.pdf \
+  --functions cleaning_functions.py \
+  --output cleaned.md
 ```
 
 ### CLI Options

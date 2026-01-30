@@ -162,6 +162,39 @@ def cmd_analyze(args) -> int:
         return 3
 
 
+def cmd_apply(args) -> int:
+    """Handle the apply command."""
+    from recursive_cleaner.apply import apply_cleaning
+
+    # Check if input file exists
+    if not os.path.exists(args.file):
+        print(f"Error: File not found: {args.file}", file=sys.stderr)
+        return 1
+
+    # Check if functions file exists
+    if not os.path.exists(args.functions):
+        print(f"Error: Functions file not found: {args.functions}", file=sys.stderr)
+        return 1
+
+    try:
+        output_path = apply_cleaning(
+            input_path=args.file,
+            functions_path=args.functions,
+            output_path=args.output,
+        )
+        print(f"Cleaned data written to: {output_path}")
+        return 0
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except ImportError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 3
+
+
 def cmd_resume(args) -> int:
     """Handle the resume command."""
     from recursive_cleaner import DataCleaner
@@ -319,6 +352,21 @@ def create_parser() -> argparse.ArgumentParser:
         "--api-key", help="API key (or use OPENAI_API_KEY env var)"
     )
     resume_parser.set_defaults(func=cmd_resume)
+
+    # --- apply command ---
+    apply_parser = subparsers.add_parser(
+        "apply",
+        help="Apply cleaning functions to data file",
+    )
+    apply_parser.add_argument("file", metavar="FILE", help="Path to input data file")
+    apply_parser.add_argument(
+        "-f", "--functions", required=True,
+        help="Path to cleaning_functions.py"
+    )
+    apply_parser.add_argument(
+        "-o", "--output", help="Output file path (default: <input>.cleaned.<ext>)"
+    )
+    apply_parser.set_defaults(func=cmd_apply)
 
     return parser
 

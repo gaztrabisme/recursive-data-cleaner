@@ -505,19 +505,28 @@ class TUIRenderer:
         )
         self._layout["left_panel"].update(left_panel)
 
-    def _parse_response_for_display(self, response: str) -> str:
-        """Parse LLM XML response into readable format for transmission log.
+    def _colorize_transmission(self, response: str) -> "Text":
+        """Parse LLM XML response into colorized Rich Text for transmission log.
+
+        Color scheme:
+        - Issues (solved): dim
+        - Issues (unsolved): bright_white with cycling accent (blue/magenta/cyan/yellow)
+        - Function names: green
+        - Docstrings: italic
+        - Status clean: green
+        - Status needs_more_work: yellow
 
         Args:
             response: Raw LLM response text (XML format)
 
         Returns:
-            Formatted string for display showing issues, function being
-            generated, and chunk status.
+            Rich Text object with colors applied.
         """
         import re
 
-        lines = []
+        ISSUE_COLORS = ["blue", "magenta", "cyan", "yellow"]
+        text = Text()
+        unsolved_index = 0
 
         try:
             # Find all issues
@@ -525,53 +534,63 @@ class TUIRenderer:
             issues = re.findall(issue_pattern, response, re.DOTALL)
 
             if issues:
-                lines.append("ISSUES DETECTED:")
+                text.append("ISSUES DETECTED:\n", style="bold cyan")
                 for issue_id, solved, desc in issues[:8]:  # Limit to 8 issues
-                    marker = "\u2713" if solved == "true" else "\u2717"  # checkmark or X
                     desc_clean = desc.strip()[:40]  # Truncate description
-                    lines.append(f"  {marker} {desc_clean}")
+                    if solved == "true":
+                        text.append("  \u2713 ", style="green")
+                        text.append(f"{desc_clean}\n", style="dim")
+                    else:
+                        accent = ISSUE_COLORS[unsolved_index % len(ISSUE_COLORS)]
+                        text.append("  \u2717 ", style=accent)
+                        text.append(f"{desc_clean}\n", style="bright_white")
+                        unsolved_index += 1
                 if len(issues) > 8:
-                    lines.append(f"  (+{len(issues) - 8} more)")
-                lines.append("")
+                    text.append(f"  (+{len(issues) - 8} more)\n", style="dim")
+                text.append("\n")
 
             # Find function being generated
             name_match = re.search(r'<name>([^<]+)</name>', response)
             docstring_match = re.search(r'<docstring>([^<]+)</docstring>', response, re.DOTALL)
 
             if name_match:
-                lines.append(f"GENERATING: {name_match.group(1).strip()}")
+                text.append("GENERATING: ", style="bold cyan")
+                text.append(f"{name_match.group(1).strip()}\n", style="green bold")
                 if docstring_match:
                     doc = docstring_match.group(1).strip()[:60]
-                    lines.append(f'  "{doc}..."')
-                lines.append("")
+                    text.append(f'  "{doc}..."\n', style="italic")
+                text.append("\n")
 
             # Find chunk status
             status_match = re.search(r'<chunk_status>([^<]+)</chunk_status>', response)
             if status_match:
                 status = status_match.group(1).strip()
-                lines.append(f"STATUS: {status.upper()}")
+                text.append("STATUS: ", style="bold cyan")
+                if status == "clean":
+                    text.append(status.upper(), style="green bold")
+                else:
+                    text.append(status.upper().replace("_", " "), style="yellow bold")
 
-            if lines:
-                return "\n".join(lines)
+            if text.plain:
+                return text
         except Exception:
             pass
 
         # Fallback: show truncated raw response
-        return response[:500] + "..." if len(response) > 500 else response
+        fallback = response[:500] + "..." if len(response) > 500 else response
+        return Text(fallback, style="dim cyan")
 
     def _refresh_right_panel(self) -> None:
-        """Refresh the right panel with parsed transmission log."""
+        """Refresh the right panel with colorized transmission log."""
         if not HAS_RICH or self._layout is None:
             return
 
-        # Get last response and parse for display
+        # Get last response and colorize for display
         response = self._state.last_response
         if not response:
-            display_text = "(Awaiting transmission...)"
+            log_text = Text("(Awaiting transmission...)", style="dim cyan")
         else:
-            display_text = self._parse_response_for_display(response)
-
-        log_text = Text(display_text, style="dim cyan")
+            log_text = self._colorize_transmission(response)
 
         right_panel = Panel(
             log_text,

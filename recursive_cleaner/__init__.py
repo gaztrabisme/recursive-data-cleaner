@@ -1,5 +1,6 @@
 """Recursive Data Cleaner - LLM-powered incremental data cleaning pipeline."""
 
+from recursive_cleaner.apply import apply_cleaning
 from recursive_cleaner.cleaner import DataCleaner
 from recursive_cleaner.context import build_context
 from recursive_cleaner.dependencies import resolve_dependencies
@@ -24,6 +25,7 @@ from recursive_cleaner.tui import HAS_RICH, TUIRenderer
 from recursive_cleaner.validation import check_code_safety, extract_sample_data, validate_function
 
 __all__ = [
+    "apply_cleaning",
     "CleanerError",
     "ParseError",
     "MaxIterationsError",
