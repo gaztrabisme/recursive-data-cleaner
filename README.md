@@ -346,14 +346,14 @@ backends/
 pytest tests/ -v
 ```
 
-502 tests covering all features. Test datasets in `test_cases/`:
+548 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
 
 ## Philosophy
 
-- **Simplicity over extensibility**: ~3,000 lines that do one thing well
+- **Simplicity over extensibility**: ~5,000 lines that do one thing well
 - **stdlib over dependencies**: Only `tenacity` required
 - **Retry over recover**: On error, retry with error in prompt
 - **Wu wei**: Let the LLM make decisions about data it understands
