@@ -362,6 +362,8 @@ pytest tests/ -v
 
 | Version | Features |
 |---------|----------|
+| v1.0.1 | Return type validation, prompt signature clarity, duplicate field detection |
+| v1.0.0 | Apply mode for cleaning data, Excel support (.xlsx/.xls), enhanced TUI colors |
 | v0.9.0 | CLI tool with MLX and OpenAI-compatible backends (LM Studio, Ollama) |
 | v0.8.0 | Terminal UI with Rich dashboard, mission control aesthetic, transmission log |
 | v0.7.0 | Markitdown (20+ formats), Parquet support, LLM-generated parsers |
