@@ -17,7 +17,7 @@ from .prompt import build_prompt
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
 from .types import LLMBackend
-from .validation import check_code_safety, extract_sample_data, split_holdout, validate_function
+from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_function
 
 STATE_VERSION = "0.5.0"
 
@@ -110,6 +110,8 @@ class DataCleaner:
             "min_ms": float("inf"),
             "max_ms": 0.0,
         }
+        # Track fields already covered by generated functions (per chunk)
+        self._fields_covered: set[str] = set()
 
     def _emit(self, event_type: str, chunk_index: int = 0, **kwargs) -> None:
         """Emit a progress event to the callback, if set."""
@@ -533,6 +535,8 @@ class DataCleaner:
         """Process a single chunk, iterating until clean or max iterations."""
         self._emit("chunk_start", chunk_index=chunk_idx)
         error_feedback = ""
+        # Reset fields covered for new chunk
+        self._fields_covered = set()
 
         # Dry run mode: just detect issues, don't generate functions
         if self.dry_run:
@@ -594,6 +598,20 @@ class DataCleaner:
                         print(f"  Safety check failed: {safety_error}")
                     continue
 
+                # Check for duplicate field coverage
+                new_fields = extract_modified_fields(result["code"])
+                overlap = new_fields & self._fields_covered
+                if overlap:
+                    field_list = ", ".join(sorted(overlap))
+                    error_feedback = f"You already generated a function for field(s): {field_list}. This issue is solved. Move on to the next unsolved issue."
+                    self._emit(
+                        "duplicate_field",
+                        chunk_index=chunk_idx,
+                        function_name=result["name"],
+                        fields=list(overlap),
+                    )
+                    continue
+
                 # Runtime validation if enabled
                 if self.validate_runtime:
                     # Use holdout data if available, else sample from generation chunk
@@ -628,6 +646,8 @@ class DataCleaner:
                     "docstring": result["docstring"],
                     "code": result["code"],
                 })
+                # Track fields covered by this function
+                self._fields_covered.update(new_fields)
                 # Track for saturation check
                 self._recent_new_function_count += 1
 

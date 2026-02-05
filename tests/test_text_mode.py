@@ -261,7 +261,7 @@ class TestTextPromptTemplate:
         )
 
         # Should have structured-specific content
-        assert "def function_name(data):" in prompt
+        assert "def function_name(record: dict) -> dict:" in prompt
         # Should have schema section
         assert "=== DATA SCHEMA ===" in prompt
 

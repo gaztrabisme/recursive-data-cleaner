@@ -160,7 +160,10 @@ def validate_function(
         # Structured mode: sample_data is list[dict]
         for i, record in enumerate(sample_data):
             try:
-                func(record)
+                result = func(record)
+                # Verify function returns a dict (not string, int, etc.)
+                if not isinstance(result, dict):
+                    return False, f"Function must return dict, got {type(result).__name__}"
             except Exception as e:
                 return False, f"Runtime error on sample {i}: {type(e).__name__}: {e}"
 
@@ -200,3 +203,39 @@ def extract_sample_data(
         except json.JSONDecodeError:
             continue
     return samples
+
+
+def extract_modified_fields(code: str) -> set[str]:
+    """
+    Extract field names that are modified via record["field"] = ... pattern.
+
+    Args:
+        code: Python source code of the function
+
+    Returns:
+        Set of field names that are assigned to
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return set()
+
+    fields = set()
+    # Common parameter names for the data/record argument
+    data_names = {"record", "data"}
+
+    for node in ast.walk(tree):
+        # Look for assignment statements
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                # Check if target is a subscript: record["field"] or data["field"]
+                if isinstance(target, ast.Subscript):
+                    # The value should be a Name node (record or data)
+                    if isinstance(target.value, ast.Name):
+                        if target.value.id in data_names:
+                            # The slice should be a string constant
+                            if isinstance(target.slice, ast.Constant):
+                                if isinstance(target.slice.value, str):
+                                    fields.add(target.slice.value)
+
+    return fields

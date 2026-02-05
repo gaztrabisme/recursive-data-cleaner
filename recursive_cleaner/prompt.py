@@ -52,7 +52,8 @@ CONSOLIDATION_TEMPLATE = '''You are reviewing cleaning functions for consolidati
       </docstring>
       <code>
 ```python
-def merged_function_name(record):
+def merged_function_name(record: dict) -> dict:
+    # Modify fields, return record
     ...
 ```
       </code>
@@ -108,9 +109,10 @@ Tags: domain, action, detail
     </docstring>
     <code>
 ```python
-def function_name(data):
-    # Complete implementation
-    pass
+def function_name(record: dict) -> dict:
+    # Modify field(s) in the record
+    record["field"] = cleaned_value
+    return record
 ```
     </code>
   </function_to_generate>
@@ -120,6 +122,8 @@ def function_name(data):
 
 RULES:
 - ONE function per response
+- Function signature: takes a dict (one record), returns the modified dict
+- Modify fields directly on the record, then return it
 - If all issues solved: <chunk_status>clean</chunk_status>, omit <function_to_generate>
 - Include imports inside the function or document needed imports in docstring
 - Function must be idempotent (safe to run multiple times)

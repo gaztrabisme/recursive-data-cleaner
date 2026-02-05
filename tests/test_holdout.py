@@ -246,7 +246,7 @@ def test_cleaner_holdout_validation_uses_holdout_data(tmp_path):
     # Records where only the holdout has a specific key
     test_file.write_text('{"name":"A"}\n{"name":"B"}\n{"name":"C"}\n{"name":"D"}\n{"special":"E"}\n')
 
-    # Function that accesses "special" key - should fail on holdout
+    # Function that accesses "special" key - should pass on holdout (which has it)
     response_with_special_access = '''
 <cleaning_analysis>
   <issues_detected>
@@ -258,7 +258,8 @@ def test_cleaner_holdout_validation_uses_holdout_data(tmp_path):
     <code>
 ```python
 def get_special(data):
-    return data["special"]
+    data["found_special"] = data["special"]
+    return data
 ```
     </code>
   </function_to_generate>

@@ -2,6 +2,7 @@
 
 import pytest
 from recursive_cleaner import DataCleaner, validate_function, extract_sample_data, check_code_safety
+from recursive_cleaner.validation import extract_modified_fields
 
 
 class MockLLM:
@@ -22,12 +23,25 @@ def test_validate_function_accepts_working_code():
     """Function that works on sample data is accepted."""
     code = '''
 def process_data(data):
-    return data.get("name", "unknown")
+    data["processed"] = True
+    return data
 '''
     sample_data = [{"name": "Alice"}, {"name": "Bob"}]
     valid, error = validate_function(code, sample_data, "process_data")
     assert valid is True
     assert error is None
+
+
+def test_validate_function_rejects_wrong_return_type():
+    """Function that returns non-dict is rejected."""
+    code = '''
+def bad_return(data):
+    return data.get("name", "unknown")
+'''
+    sample_data = [{"name": "Alice"}]
+    valid, error = validate_function(code, sample_data, "bad_return")
+    assert valid is False
+    assert "must return dict" in error
 
 
 def test_validate_function_rejects_key_error():
@@ -157,7 +171,8 @@ RESPONSE_WITH_GOOD_FUNCTION = '''
     <code>
 ```python
 def good_processor(data):
-    return data.get("name", "unknown")
+    data["processed"] = True
+    return data
 ```
     </code>
   </function_to_generate>
@@ -516,7 +531,8 @@ RESPONSE_SAFE_FUNCTION = '''
     <code>
 ```python
 def safe_processor(data):
-    return data.get("value", 0) * 2
+    data["doubled"] = data.get("value", 0) * 2
+    return data
 ```
     </code>
   </function_to_generate>
@@ -557,3 +573,168 @@ def test_cleaner_rejects_dangerous_code_and_retries(tmp_path):
     safety_events = [e for e in events if e["type"] == "safety_failed"]
     assert len(safety_events) == 1
     assert "os" in safety_events[0]["error"]
+
+
+# Tests for extract_modified_fields
+
+
+def test_extract_modified_fields_simple():
+    """Extract single field from record assignment."""
+    code = '''
+def fix_phone(record: dict) -> dict:
+    record["phone"] = normalize(record["phone"])
+    return record
+'''
+    fields = extract_modified_fields(code)
+    assert fields == {"phone"}
+
+
+def test_extract_modified_fields_multiple():
+    """Extract multiple fields from function."""
+    code = '''
+def clean_record(record: dict) -> dict:
+    record["phone"] = normalize(record["phone"])
+    record["email"] = record["email"].lower()
+    return record
+'''
+    fields = extract_modified_fields(code)
+    assert fields == {"phone", "email"}
+
+
+def test_extract_modified_fields_data_param():
+    """Works with 'data' parameter name too."""
+    code = '''
+def fix_status(data: dict) -> dict:
+    data["status"] = data["status"].lower()
+    return data
+'''
+    fields = extract_modified_fields(code)
+    assert fields == {"status"}
+
+
+def test_extract_modified_fields_no_assignments():
+    """Returns empty set when no field assignments."""
+    code = '''
+def passthrough(record: dict) -> dict:
+    return record
+'''
+    fields = extract_modified_fields(code)
+    assert fields == set()
+
+
+def test_extract_modified_fields_nested_not_extracted():
+    """Only extracts direct record assignments, not nested."""
+    code = '''
+def process(record: dict) -> dict:
+    temp = {}
+    temp["key"] = "value"
+    record["result"] = temp
+    return record
+'''
+    fields = extract_modified_fields(code)
+    assert fields == {"result"}
+
+
+# Integration test: duplicate field detection in DataCleaner
+
+
+def test_cleaner_rejects_duplicate_field_with_feedback(tmp_path):
+    """Cleaner rejects functions that modify already-covered fields."""
+    test_file = tmp_path / "test.jsonl"
+    test_file.write_text('{"phone": "555-1234", "status": "active"}\n')
+
+    # First response: phone function (should be accepted)
+    response_phone = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>normalize_phone</name>
+    <docstring>Normalize phone numbers.</docstring>
+    <code>
+```python
+def normalize_phone(record: dict) -> dict:
+    record["phone"] = record["phone"].replace("-", "")
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+    # Second response: another phone function (should be rejected as duplicate)
+    response_phone_again = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone still needs work</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>fix_phone_format</name>
+    <docstring>Fix phone format.</docstring>
+    <code>
+```python
+def fix_phone_format(record: dict) -> dict:
+    record["phone"] = "+1" + record["phone"]
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+    # Third response: status function (should be accepted - different field)
+    response_status = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="true">Phone handled</issue>
+    <issue id="2" solved="false">Status needs fixing</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>fix_status</name>
+    <docstring>Fix status field.</docstring>
+    <code>
+```python
+def fix_status(record: dict) -> dict:
+    record["status"] = record["status"].lower()
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+    response_clean = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="true">Phone handled</issue>
+    <issue id="2" solved="true">Status handled</issue>
+  </issues_detected>
+  <chunk_status>clean</chunk_status>
+</cleaning_analysis>
+'''
+
+    mock_llm = MockLLM([response_phone, response_phone_again, response_status, response_clean])
+
+    cleaner = DataCleaner(
+        llm_backend=mock_llm,
+        file_path=str(test_file),
+        chunk_size=10,
+        validate_runtime=True,
+    )
+    cleaner.run()
+
+    # Should have 2 functions: normalize_phone and fix_status
+    # fix_phone_format should have been rejected as duplicate
+    assert len(cleaner.functions) == 2
+    function_names = [f["name"] for f in cleaner.functions]
+    assert "normalize_phone" in function_names
+    assert "fix_status" in function_names
+    assert "fix_phone_format" not in function_names
+
+    # The retry prompt should mention "already generated" or "duplicate"
+    assert any("phone" in call.lower() and ("already" in call.lower() or "duplicate" in call.lower())
+               for call in mock_llm.calls[2:])  # Check prompts after first acceptance

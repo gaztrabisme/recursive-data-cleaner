@@ -346,7 +346,7 @@ backends/
 pytest tests/ -v
 ```
 
-548 tests covering all features. Test datasets in `test_cases/`:
+555 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
