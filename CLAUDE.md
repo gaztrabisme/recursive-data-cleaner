@@ -17,7 +17,7 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.0.1 complete. 555 tests passing.
+**Current State**: v1.0.1 complete. 555 tests passing. Refactored 2026-02-07.
 
 ### Version History
 - **v1.0.1**: Return type validation, prompt signature clarity, duplicate field detection
@@ -158,22 +158,27 @@ def normalize_phone_numbers(data):
 ### File Structure (Implemented)
 ```
 recursive_cleaner/
-    __init__.py          # Public exports (~45 lines)
-    cleaner.py           # Main DataCleaner class (~580 lines)
+    __init__.py          # Public exports (~59 lines)
+    apply.py             # Apply cleaning functions to data (~484 lines) [v1.0.0]
+    cleaner.py           # Main DataCleaner class (~729 lines)
+    cli.py               # CLI interface with subcommands (~396 lines) [v0.9.0]
     context.py           # Docstring registry with FIFO eviction (~27 lines)
     dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
     errors.py            # 4 exception classes (~17 lines)
+    latency.py           # LLM call timing and LatencyTracker (~53 lines) [extracted]
     metrics.py           # Quality metrics before/after (~163 lines) [v0.4.0]
-    optimizer.py         # Two-pass consolidation with LLM agency (~336 lines) [v0.5.0]
-    output.py            # Function file generation (~195 lines)
-    parsers.py           # Chunk text/csv/json/jsonl with sampling (~325 lines)
-    prompt.py            # LLM prompt templates (~218 lines)
+    optimizer.py         # Two-pass consolidation with LLM agency (~337 lines) [v0.5.0]
+    output.py            # Function file generation (~198 lines)
+    parser_generator.py  # LLM-generated parsers for unknown formats [v0.7.0]
+    parsers.py           # Chunk text/csv/json/jsonl with sampling (~448 lines)
+    prompt.py            # LLM prompt templates (~223 lines)
     report.py            # Markdown report generation (~120 lines) [v0.6.0]
-    response.py          # XML/markdown parsing + agency dataclasses (~292 lines)
+    response.py          # XML/markdown parsing + agency dataclasses (~293 lines)
     schema.py            # Schema inference (~117 lines) [v0.2.0]
-    tui.py               # Rich terminal dashboard (~520 lines) [v0.8.0]
+    state.py             # Pipeline state persistence (~97 lines) [extracted]
+    tui.py               # Rich terminal dashboard (~615 lines) [v0.8.0]
     types.py             # LLMBackend protocol (~11 lines)
-    validation.py        # Runtime validation + safety checks (~200 lines)
+    validation.py        # Runtime validation + safety checks (~242 lines)
     vendor/
         __init__.py      # Vendor exports (~4 lines)
         chunker.py       # Vendored sentence-aware chunker (~187 lines) [v0.3.0]
@@ -181,10 +186,13 @@ recursive_cleaner/
 backends/
     __init__.py          # Backend exports
     mlx_backend.py       # MLX-LM backend for Apple Silicon
+    openai_backend.py    # OpenAI-compatible backend (LM Studio, Ollama) [v0.9.0]
 
-tests/                   # 392 tests
+tests/                   # 555 tests
+    test_apply.py        # Apply mode tests [v1.0.0]
     test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
+    test_cli.py          # CLI tests [v0.9.0]
     test_context.py      # Context management tests
     test_dependencies.py # Dependency resolution tests [v0.4.0]
     test_dry_run.py      # Dry run mode tests [v0.6.0]
@@ -193,8 +201,10 @@ tests/                   # 392 tests
     test_integration.py  # End-to-end tests
     test_latency.py      # Latency metrics tests [v0.6.0]
     test_metrics.py      # Quality metrics tests [v0.4.0]
+    test_openai_backend.py # OpenAI backend tests [v0.9.0]
     test_optimizer.py    # Two-pass optimization tests [v0.5.0]
     test_output.py       # Output generation tests
+    test_parser_generator.py # Parser generator tests [v0.7.0]
     test_parsers.py      # Parsing tests
     test_report.py       # Cleaning report tests [v0.6.0]
     test_sampling.py     # Sampling strategy tests [v0.4.0]
@@ -209,10 +219,10 @@ test_cases/              # Comprehensive test datasets
     healthcare_*.jsonl   # Patient records
     financial_*.jsonl    # Transaction data
 
-docs/                    # Orchestrated dev docs
-    contracts/           # API and data contracts
-    research/            # Research findings
-    handoffs/            # Phase completion handoffs
+docs/                    # Project documentation
+    archive/             # Historical plans, research, contracts
+    orchestrated-dev/    # Dev session logs
+    refactor-assessment/ # Codebase health reports
 
 pyproject.toml
 ```

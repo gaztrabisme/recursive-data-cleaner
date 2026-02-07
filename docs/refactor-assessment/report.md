@@ -1,149 +1,128 @@
-# Refactor Assessment Report
+# Refactor Assessment: Recursive Data Cleaner
+
+**Date:** 2026-02-07
+**Scope:** Entire project
+**Codebase:** 54 Python files, ~15,700 lines (22 library, 25 tests, 7 scripts/demos)
+
+---
 
 ## Executive Summary
 
-The Recursive Data Cleaner codebase is in **excellent health**. It follows a lean philosophy with clear separation of concerns. The main library is well-organized at 2,575 lines across 14 modules. The only significant finding is that CLAUDE.md is outdated (describes v0.2.0 but code is at v0.5.0). No critical refactoring needed.
+This is a **healthy, well-structured codebase** that delivers on its design philosophy of "elegant, clean, lean, path of least resistance." The core library (`recursive_cleaner/`) is 22 files totaling ~4,900 lines — impressively lean for what it does. 555 tests pass. The only file that genuinely warrants attention is `cleaner.py` at 789 lines — it's accumulating concerns and approaching the threshold where it becomes hard to navigate. Everything else is either fine or cosmetic.
 
-## Codebase Overview
-
-| Metric | Value |
-|--------|-------|
-| Total files | 67 |
-| Total lines | 16,281 |
-| Code lines | 11,076 |
-| Languages | Python (39 files), Markdown (23 files) |
-| Tests | 344 passing |
-| External deps | 1 (tenacity) + optional mlx_lm |
-
-### Directory Structure
-
-```
-recursive_cleaner/     # Core library (2,575 lines)
-├── cleaner.py         # Main DataCleaner class (487 lines)
-├── optimizer.py       # Two-pass consolidation (336 lines)
-├── parsers.py         # File chunking (325 lines)
-├── response.py        # XML parsing (292 lines)
-├── prompt.py          # LLM templates (218 lines)
-├── metrics.py         # Quality metrics (163 lines)
-├── output.py          # Code generation (154 lines)
-├── validation.py      # Runtime validation (133 lines)
-├── schema.py          # Schema inference (117 lines)
-├── dependencies.py    # Topological sort (59 lines)
-├── context.py         # Docstring registry (27 lines)
-├── errors.py          # Exception classes (17 lines)
-├── types.py           # LLMBackend protocol (11 lines)
-└── vendor/            # Vendored chunker (191 lines)
-
-backends/              # LLM backends (100 lines)
-tests/                 # Test suite (6,305 lines)
-docs/                  # Documentation (5,444 lines)
-test_cases/            # Sample data (179 lines)
-```
+---
 
 ## What's Working Well
 
-### Clean Architecture
-- **Single responsibility**: Each module has one clear purpose
-- **Minimal dependencies**: Only stdlib + tenacity
-- **Protocol-based extension**: LLMBackend is a simple Protocol, not abstract class
-- **No circular dependencies**: Clean import graph (except __init__.py self-import, which is fine)
+**Clear module boundaries.** Each file in `recursive_cleaner/` has one job you can describe in a sentence: `parsers.py` chunks files, `response.py` parses XML, `validation.py` checks safety, `optimizer.py` groups and consolidates. This is textbook separation of concerns.
 
-### Consistent Patterns
-- Dataclasses for structured data (AgentAssessment, ConsolidationResult, QualityMetrics)
-- XML templates with markdown code blocks for LLM communication
-- Comprehensive test coverage (344 tests)
+**Consistent patterns.** LLM interactions follow the same prompt -> call -> parse -> validate cycle everywhere. Error handling is uniform (retry with error feedback appended). The XML parsing approach in `response.py` handles three different response types (cleaning, consolidation, saturation) with the same structure.
 
-### Philosophy Adherence
-- "stdlib over dependencies" ✓ (only tenacity)
-- "Functions over classes" ✓ (classes only where state helps)
-- "Delete over abstract" ✓ (no unnecessary interfaces)
+**No dependency bloat.** The only real runtime dependency is `tenacity`. Everything else (Rich, pyarrow, markitdown, openpyxl) is optional with graceful `ImportError` handling. This is exactly right.
 
-## Findings
+**Test coverage is excellent.** 555 tests across 25 test files. Test files mirror source files 1:1. Test names are descriptive. The oversized test files (`test_optimizer.py` at 1,504 lines, `test_integration.py` at 943 lines) are natural — they're exercising complex behaviors with many scenarios.
 
-### Significant (Causing Pain)
+**Clean dependency graph.** No real circular dependencies (the ones flagged are `__init__.py` re-exports, which are benign and standard Python). Import hotspot is `recursive_cleaner/__init__.py`, which is expected — it's the public API surface.
 
-#### 1. CLAUDE.md is Outdated
-**Location**: `/CLAUDE.md`
-**Problem**: Documents v0.2.0 (127 tests, 977 lines) but code is at v0.5.0 (344 tests, 2,575 lines)
-**Missing**:
-- v0.3.0: Text mode, vendored chunker
-- v0.4.0: Holdout, dependencies, sampling, metrics
-- v0.5.0: Two-pass optimization, LLM agency
-**Impact**: Developers get wrong mental model of codebase
-**Fix**: Update CLAUDE.md to reflect current architecture
-**Effort**: Low (30 min)
+---
 
-### Minor (Nice to Have)
+## What Hurts
 
-#### 2. Large Test Files
-**Files**:
-- `tests/test_optimizer.py` (1,504 lines)
-- `tests/test_integration.py` (943 lines)
-**Assessment**: These are comprehensive test suites, not problematic. Test files naturally grow larger than source files. The tests are well-organized into classes.
-**Recommendation**: Leave as-is. Test organization is good.
+### 1. `cleaner.py` is accumulating too many concerns (789 lines) — High impact, Low effort
 
-#### 3. TODO.md is Stale
-**Location**: `/TODO.md`
-**Problem**: Still shows Tier 2 features as incomplete, but they're done (v0.4.0)
-**Impact**: Minor confusion
-**Fix**: Update TODO.md or remove if all tiers complete
-**Effort**: Low (10 min)
+**Evidence:** `recursive_cleaner/cleaner.py` — 789 lines, 1 class (`DataCleaner`) with 14 methods.
 
-### Skipped (Wu Wei)
+The `DataCleaner` class currently handles:
+- Pipeline orchestration (`run()`, `_process_chunk()`)
+- State persistence (`_save_state()`, `_load_state()`, `resume()`)
+- Latency tracking (`_call_llm_timed()`, `_get_latency_summary()`)
+- TUI integration (scattered `if self._tui_renderer:` checks in 8+ places)
+- Optimization orchestration (`_optimize_functions()`)
+- Saturation checking (`_check_saturation()`)
+- Report writing (`_write_report()`)
+- Dry-run mode (`_process_chunk_dry_run()`)
+- Duplicate field detection
 
-#### Files Over 500 Lines (Test/Docs)
-- `tests/test_optimizer.py` (1,504 lines) — Test file, well-organized
-- `tests/test_integration.py` (943 lines) — Test file, well-organized
-- `CLAUDE_ADVANCED.md` (955 lines) — Reference documentation
-- `docs/*.md` (640, 545, 513, 507 lines) — Research docs, not active code
+This isn't broken yet — it's readable and working. But it's the one file where adding the next feature will feel uncomfortable. The 27-parameter `__init__` is a signal.
 
-**Reasoning**: These are documentation and test files. Large test files with many cases are a *good* thing. Research docs are read-only reference material.
+**Recommended extraction (one at a time, test after each):**
 
-#### "Orphan Modules" in Dependency Analysis
-The dependency scanner flags test files as "orphan modules" because nothing imports them. This is correct behavior — tests are entry points, not libraries.
+| Extract | From | Lines saved | Effort |
+|---------|------|-------------|--------|
+| Latency tracking to `latency.py` | `_call_llm_timed()`, `_get_latency_summary()`, `_latency_stats` dict | ~50 | Trivial |
+| State persistence to its own module | `_save_state()`, `_load_state()`, `resume()` | ~80 | Low |
 
-#### Self-Import in __init__.py
-The dependency map shows `recursive_cleaner` importing itself. This is just the `__init__.py` re-exporting from submodules — completely normal Python packaging.
+These two alone bring `cleaner.py` under 650 lines and remove the two most self-contained concerns. The TUI integration wiring and dry-run mode are more interleaved and not worth extracting until the class grows further.
+
+### 2. Duplicate stratified sampling logic in `parsers.py` — Medium impact, Low effort
+
+**Evidence:** `recursive_cleaner/parsers.py:388-455`
+
+`_stratified_sample()` (for JSONL strings, lines 427-455) and `_stratified_sample_dicts()` (for dict lists, lines 388-411) implement the **exact same algorithm** — group by field, shuffle within groups, round-robin interleave. The only difference is that one parses JSON from strings first.
+
+One function could handle both by accepting a key-extraction callable, or `_stratified_sample` could convert strings to dicts and delegate to `_stratified_sample_dicts`.
+
+### 3. Docs directory has accumulated stale artifacts — Low impact, Low effort
+
+**Evidence:** `docs/` — 44 files, ~14,000 lines
+
+The `docs/` directory contains:
+- 6 versioned implementation plans (`implementation-plan.md`, `-v03.md` through `v100-implementation-plan.md`)
+- An `archive/` with framework analysis docs (langchain, smolagents, langgraph)
+- `contracts/`, `handoffs/`, `research/` from orchestrated development phases
+- A previous `refactor-assessment/` with stale data
+
+These served their purpose during development. They're not causing bugs, but they add noise when exploring the codebase. The `archive/` directory is correctly named — the implementation plans could join it.
+
+---
+
+## What to Skip (Wu Wei filter)
+
+**Test file sizes.** `test_optimizer.py` (1,504 lines), `test_integration.py` (943), `test_tui.py` (758), `test_validation.py` (740), `test_apply.py` (645). These are all big, but they're test files — cohesive collections of scenarios for a single module. Splitting them adds indirection without benefit. Leave them.
+
+**`tui.py` at 614 lines.** It's a single-purpose rendering module. The ASCII banner alone is 14 lines. The layout code is inherently verbose with Rich's API. It's well-structured internally (dataclass state, separate `_refresh_*` methods). Not worth splitting.
+
+**`apply.py` at 484 lines.** Each `apply_to_*` function handles one format. They're repetitive (read, transform, write) but intentionally so — no shared abstraction would be cleaner than the current explicit handlers. This is the right design.
+
+**`__init__.py` as import hotspot.** 25 modules import from `recursive_cleaner`. This is normal — it's the public API package. The re-exports in `__init__.py` are clean and intentional.
+
+**Circular dependency cycles.** The three flagged cycles all run through `__init__.py` re-exports (`recursive_cleaner` -> `recursive_cleaner.cleaner` -> `recursive_cleaner.optimizer` -> `recursive_cleaner.response` -> `recursive_cleaner`). These are benign `__init__.py` barrel-file patterns, not real architectural cycles. The actual module-to-module imports are acyclic.
+
+**"Orphan" modules.** All 27 flagged orphans are test files, demo scripts, and test case runners — they're entry points, not dead code. Static analysis can't detect `pytest` test discovery.
+
+**CLAUDE.md at 469 lines.** Under the 500-line threshold. It's comprehensive but not bloated.
+
+---
 
 ## Dependency Analysis
 
-### Hotspots (Expected)
-| Module | Imported By |
-|--------|-------------|
-| `recursive_cleaner` | 15 modules (main entry point) |
-| `recursive_cleaner.errors` | 7 modules (shared exceptions) |
+### Hotspots (expected and healthy)
+| Module | Imported by | Assessment |
+|--------|-------------|------------|
+| `recursive_cleaner` (init) | 25 modules | Expected — it's the public API |
+| `recursive_cleaner.parsers` | 7 modules | Core utility, expected |
+| `backends` | 6 modules | Expected — used by CLI, demos, tests |
 
-These are healthy hotspots — the main package and shared errors *should* be widely imported.
-
-### No Problematic Cycles
-The only "cycle" detected is `recursive_cleaner` → `recursive_cleaner` which is just `__init__.py` structure.
+### Circular Dependencies
+All 3 cycles run through `__init__.py` — benign, standard Python package pattern. No action needed.
 
 ### External Dependencies
-Only 2 non-stdlib dependencies:
-- `tenacity` — Retry logic (required)
-- `mlx_lm` — Apple Silicon LLM (optional, in backends/)
+Runtime: `tenacity` (required), everything else optional.
+This is the leanest dependency profile possible for the feature set.
 
-**Assessment**: Excellent dependency hygiene.
+---
 
-## Context Documentation Assessment
+## Priority Summary
 
-### Current State
-- `CLAUDE.md` exists but is 3 versions behind
-- No module-specific CLAUDE.md files
-- `CLAUDE_ADVANCED.md` has alternative patterns
+| # | Finding | Impact | Effort | Action |
+|---|---------|--------|--------|--------|
+| 1 | `cleaner.py` accumulating concerns (789 lines) | High | Low | Extract latency tracking and state persistence |
+| 2 | Duplicate stratified sampling in `parsers.py` | Medium | Low | Consolidate to single implementation |
+| 3 | Stale docs artifacts | Low | Low | Move implementation plans to `docs/archive/` |
 
-### Recommendation
-Given the codebase is only ~2,575 lines with 14 modules, a single CLAUDE.md is appropriate. Splitting into per-module files would be over-engineering.
+---
 
-**Action**: Update the root CLAUDE.md to reflect v0.5.0 state.
+## Raw Data
 
-## Summary
-
-| Category | Count | Action |
-|----------|-------|--------|
-| Critical | 0 | — |
-| Significant | 1 | Update CLAUDE.md |
-| Minor | 1 | Update/remove TODO.md |
-| Skipped | 4 | Leave alone |
-
-**Overall Health**: Excellent. The codebase follows its stated philosophy consistently. The main issue is documentation drift, not code quality.
+- Analysis output: `docs/refactor-assessment/data/stats.json` (generated by analyze.py)
+- Analysis script: `/Users/GaryT/.claude/skills/refactor-assessment/scripts/analyze.py`

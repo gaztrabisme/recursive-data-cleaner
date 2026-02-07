@@ -2,30 +2,20 @@
 
 import json
 import os
-import time
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Literal
 
-from tenacity import retry, stop_after_attempt, wait_exponential
-
 from .context import build_context
 from .errors import OutputValidationError, ParseError
+from .latency import LatencyTracker, call_llm
 from .metrics import QualityMetrics, compare_quality, load_structured_data, measure_quality
 from .parsers import MARKITDOWN_EXTENSIONS, chunk_file
 from .prompt import build_prompt
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
+from .state import STATE_VERSION, load_state, load_state_for_resume, save_state
 from .types import LLMBackend
 from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_function
-
-STATE_VERSION = "0.5.0"
-
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
-def call_llm(backend: LLMBackend, prompt: str) -> str:
-    """Call LLM with retry logic."""
-    return backend.generate(prompt)
 
 
 class DataCleaner:
@@ -104,12 +94,7 @@ class DataCleaner:
         self.metrics_before: QualityMetrics | None = None
         self.metrics_after: QualityMetrics | None = None
         # Latency tracking for LLM calls
-        self._latency_stats: dict = {
-            "call_count": 0,
-            "total_ms": 0.0,
-            "min_ms": float("inf"),
-            "max_ms": 0.0,
-        }
+        self._latency = LatencyTracker()
         # Track fields already covered by generated functions (per chunk)
         self._fields_covered: set[str] = set()
 
@@ -135,20 +120,12 @@ class DataCleaner:
         if self._tui_renderer:
             self._tui_renderer.update_llm_status("calling")
 
-        start = time.perf_counter()
-        response = call_llm(self.backend, prompt)
-        elapsed_ms = (time.perf_counter() - start) * 1000
-
-        # Update stats
-        self._latency_stats["call_count"] += 1
-        self._latency_stats["total_ms"] += elapsed_ms
-        self._latency_stats["min_ms"] = min(self._latency_stats["min_ms"], elapsed_ms)
-        self._latency_stats["max_ms"] = max(self._latency_stats["max_ms"], elapsed_ms)
+        response, elapsed_ms = self._latency.timed_call(self.backend, prompt)
 
         # Update TUI status and metrics after call
         if self._tui_renderer:
             self._tui_renderer.update_llm_status("idle")
-            latency_summary = self._get_latency_summary()
+            latency_summary = self._latency.summary()
             self._tui_renderer.update_metrics(
                 quality_delta=0.0,  # Quality delta calculated at end
                 latency_last=elapsed_ms,
@@ -163,19 +140,6 @@ class DataCleaner:
         self._emit("llm_call", chunk_index=chunk_index, latency_ms=round(elapsed_ms, 2))
 
         return response
-
-    def _get_latency_summary(self) -> dict:
-        """Get summary of latency stats with avg calculation."""
-        stats = self._latency_stats.copy()
-        if stats["call_count"] > 0:
-            stats["avg_ms"] = round(stats["total_ms"] / stats["call_count"], 2)
-            stats["min_ms"] = round(stats["min_ms"], 2)
-            stats["max_ms"] = round(stats["max_ms"], 2)
-            stats["total_ms"] = round(stats["total_ms"], 2)
-        else:
-            stats["avg_ms"] = 0.0
-            stats["min_ms"] = 0.0
-        return stats
 
     def _optimize_functions(self) -> None:
         """
@@ -264,44 +228,28 @@ class DataCleaner:
         """Save current state to JSON file with atomic write."""
         if self.state_file is None:
             return
-        state = {
-            "version": STATE_VERSION,
-            "file_path": self.file_path,
-            "instructions": self.instructions,
-            "chunk_size": self.chunk_size,
-            "last_completed_chunk": self._last_completed_chunk,
-            "total_chunks": self._total_chunks,
-            "functions": self.functions,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "optimize": self.optimize,
-            "optimize_threshold": self.optimize_threshold,
-            "early_termination": self.early_termination,
-            "saturation_check_interval": self.saturation_check_interval,
-        }
-        tmp_path = self.state_file + ".tmp"
-        with open(tmp_path, "w") as f:
-            json.dump(state, f, indent=2)
-        os.rename(tmp_path, self.state_file)
+        save_state(
+            state_file=self.state_file,
+            file_path=self.file_path,
+            instructions=self.instructions,
+            chunk_size=self.chunk_size,
+            last_completed_chunk=self._last_completed_chunk,
+            total_chunks=self._total_chunks,
+            functions=self.functions,
+            optimize=self.optimize,
+            optimize_threshold=self.optimize_threshold,
+            early_termination=self.early_termination,
+            saturation_check_interval=self.saturation_check_interval,
+        )
 
     def _load_state(self) -> bool:
         """Load state from JSON file if it exists. Returns True if loaded."""
         if self.state_file is None or not os.path.exists(self.state_file):
             return False
-        try:
-            with open(self.state_file) as f:
-                state = json.load(f)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid state file JSON: {e}")
-        # Validate file_path matches
-        if state.get("file_path") != self.file_path:
-            raise ValueError(
-                f"State file_path mismatch: state has '{state.get('file_path')}', "
-                f"but current file_path is '{self.file_path}'"
-            )
-        # Load state
-        self.functions = state.get("functions", [])
-        self._last_completed_chunk = state.get("last_completed_chunk", -1)
-        self._total_chunks = state.get("total_chunks", 0)
+        restored = load_state(self.state_file, self.file_path)
+        self.functions = restored["functions"]
+        self._last_completed_chunk = restored["last_completed_chunk"]
+        self._total_chunks = restored["total_chunks"]
         if not self.tui:
             print(f"Resumed from state: {self._last_completed_chunk + 1}/{self._total_chunks} chunks completed")
         return True
@@ -322,14 +270,7 @@ class DataCleaner:
             FileNotFoundError: If state file doesn't exist
             ValueError: If state file is invalid
         """
-        if not os.path.exists(state_file):
-            raise FileNotFoundError(f"State file not found: {state_file}")
-        try:
-            with open(state_file) as f:
-                state = json.load(f)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid state file JSON: {e}")
-        # Create instance with saved parameters
+        state = load_state_for_resume(state_file)
         instance = cls(
             llm_backend=llm_backend,
             file_path=state["file_path"],
@@ -341,7 +282,6 @@ class DataCleaner:
             early_termination=state.get("early_termination", False),
             saturation_check_interval=state.get("saturation_check_interval", 20),
         )
-        # Restore state
         instance.functions = state.get("functions", [])
         instance._last_completed_chunk = state.get("last_completed_chunk", -1)
         instance._total_chunks = state.get("total_chunks", 0)
@@ -494,7 +434,7 @@ class DataCleaner:
             self._emit(
                 "dry_run_complete",
                 chunk_index=self._total_chunks - 1,
-                latency_stats=self._get_latency_summary(),
+                latency_stats=self._latency.summary(),
             )
             # Stop TUI if running
             if self._tui_renderer:
@@ -512,12 +452,12 @@ class DataCleaner:
         self._emit(
             "complete",
             chunk_index=self._total_chunks - 1,
-            latency_stats=self._get_latency_summary(),
+            latency_stats=self._latency.summary(),
         )
 
         # Show TUI completion and stop
         if self._tui_renderer:
-            latency_summary = self._get_latency_summary()
+            latency_summary = self._latency.summary()
             self._tui_renderer.show_complete({
                 "functions_count": len(self.functions),
                 "chunks_processed": self._total_chunks,
@@ -759,7 +699,7 @@ class DataCleaner:
             file_path=self.file_path,
             total_chunks=self._total_chunks,
             functions=self.functions,
-            latency_stats=self._get_latency_summary(),
+            latency_stats=self._latency.summary(),
             quality_before=quality_before,
             quality_after=quality_after,
         )

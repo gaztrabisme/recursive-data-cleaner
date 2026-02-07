@@ -424,32 +424,25 @@ def _shuffle_records(records: list, seed: int) -> list:
     return result
 
 
-def _stratified_sample(records: list, field: str, seed: int) -> list:
-    """Group by field, interleave proportionally."""
-    # Group records by field value
-    groups: dict[str, list] = {}
-    for record in records:
+def _stratified_sample(records: list[str], field: str, seed: int) -> list[str]:
+    """Group JSONL strings by field, interleave proportionally.
+
+    Parses each line, delegates to _stratified_sample_dicts for the
+    grouping/interleaving logic, then maps back to original strings.
+    """
+    # Parse lines into (dict, original_string) pairs
+    parsed: list[dict] = []
+    originals: dict[int, str] = {}  # id(dict) -> original line
+    for line in records:
         try:
-            data = json.loads(record)
-            key = str(data.get(field, "_missing_"))
+            data = json.loads(line)
         except (json.JSONDecodeError, TypeError):
-            key = "_invalid_"
-        if key not in groups:
-            groups[key] = []
-        groups[key].append(record)
+            data = {"_parse_error_": True}
+        parsed.append(data)
+        originals[id(data)] = line
 
-    # Shuffle within each group
-    rng = random.Random(seed)
-    for key in groups:
-        rng.shuffle(groups[key])
+    # Delegate to dict-based implementation
+    reordered = _stratified_sample_dicts(parsed, field, seed)
 
-    # Interleave from groups (round-robin)
-    result = []
-    group_lists = list(groups.values())
-    while any(group_lists):
-        for g in group_lists:
-            if g:
-                result.append(g.pop(0))
-        group_lists = [g for g in group_lists if g]
-
-    return result
+    # Map back to original strings
+    return [originals[id(d)] for d in reordered]

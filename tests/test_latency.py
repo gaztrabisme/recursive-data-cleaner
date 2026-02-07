@@ -65,10 +65,10 @@ def test_latency_stats_initialized(tmp_path):
         chunk_size=10,
     )
 
-    assert cleaner._latency_stats["call_count"] == 0
-    assert cleaner._latency_stats["total_ms"] == 0.0
-    assert cleaner._latency_stats["min_ms"] == float("inf")
-    assert cleaner._latency_stats["max_ms"] == 0.0
+    assert cleaner._latency.call_count == 0
+    assert cleaner._latency.total_ms == 0.0
+    assert cleaner._latency.min_ms == float("inf")
+    assert cleaner._latency.max_ms == 0.0
 
 
 def test_latency_tracked_on_llm_call(tmp_path):
@@ -85,11 +85,10 @@ def test_latency_tracked_on_llm_call(tmp_path):
     )
     cleaner.run()
 
-    stats = cleaner._latency_stats
-    assert stats["call_count"] == 1
-    assert stats["total_ms"] >= 50  # At least 50ms
-    assert stats["min_ms"] >= 50
-    assert stats["max_ms"] >= 50
+    assert cleaner._latency.call_count == 1
+    assert cleaner._latency.total_ms >= 50  # At least 50ms
+    assert cleaner._latency.min_ms >= 50
+    assert cleaner._latency.max_ms >= 50
 
 
 def test_latency_min_max_tracked_across_calls(tmp_path):
@@ -106,11 +105,10 @@ def test_latency_min_max_tracked_across_calls(tmp_path):
     )
     cleaner.run()
 
-    stats = cleaner._latency_stats
-    assert stats["call_count"] == 2
-    assert stats["total_ms"] >= 40  # At least 2 * 20ms
-    assert stats["min_ms"] >= 20
-    assert stats["max_ms"] >= 20
+    assert cleaner._latency.call_count == 2
+    assert cleaner._latency.total_ms >= 40  # At least 2 * 20ms
+    assert cleaner._latency.min_ms >= 20
+    assert cleaner._latency.max_ms >= 20
 
 
 def test_llm_call_event_emitted(tmp_path):
@@ -182,7 +180,7 @@ def test_latency_avg_calculated_correctly(tmp_path):
     )
     cleaner.run()
 
-    summary = cleaner._get_latency_summary()
+    summary = cleaner._latency.summary()
     assert summary["call_count"] == 2
     # Avg should be close to 30ms (each call is ~30ms)
     assert summary["avg_ms"] >= 30
@@ -202,7 +200,7 @@ def test_latency_summary_zero_calls():
         chunk_size=10,
     )
 
-    summary = cleaner._get_latency_summary()
+    summary = cleaner._latency.summary()
     assert summary["call_count"] == 0
     assert summary["avg_ms"] == 0.0
     assert summary["min_ms"] == 0.0
