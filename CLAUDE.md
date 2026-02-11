@@ -4,7 +4,8 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v1.0.1 | **Implemented** | 2025-02-05 |
+| v1.0.2 | **Implemented** | 2025-02-07 |
+| v1.0.1 | Implemented | 2025-02-05 |
 | v1.0.0 | Implemented | 2025-01-30 |
 | v0.9.0 | Implemented | 2025-01-19 |
 | v0.8.0 | Implemented | 2025-01-19 |
@@ -17,9 +18,10 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.0.1 complete. 555 tests passing. Refactored 2026-02-07.
+**Current State**: v1.0.2 complete. 555 tests passing. Refactored 2026-02-07.
 
 ### Version History
+- **v1.0.2**: Documentation completeness, version alignment
 - **v1.0.1**: Return type validation, prompt signature clarity, duplicate field detection
 - **v1.0.0**: Apply mode for applying cleaning functions to data, Excel support, TUI color enhancement
 - **v0.9.0**: CLI tool with MLX and OpenAI-compatible backends (LM Studio, Ollama)
@@ -63,22 +65,31 @@ cleaner = DataCleaner(
     - Remove duplicates by email
     - All dates to ISO 8601
     """,
+    # Processing mode (v0.3.0)
+    mode="auto",  # "auto" detects from extension; "structured" for records, "text" for prose
+    chunk_overlap=200,  # Chars of overlap between text chunks to avoid splitting context
     # Validation & schema (v0.2.0)
     on_progress=lambda e: print(f"{e['type']}: {e.get('chunk_index', '')}"),
     state_file="cleaning_state.json",  # Resume on interrupt
-    validate_runtime=True,  # Test functions before accepting
-    schema_sample_size=10,  # Infer schema from first N records
+    validate_runtime=True,  # Execute generated functions on sample data before accepting
+    schema_sample_size=10,  # Infer field names/types from first N records for the prompt
     # Sampling & metrics (v0.4.0)
-    holdout_ratio=0.2,  # Test on hidden 20% of each chunk
+    holdout_ratio=0.2,  # Reserve 20% of each chunk as unseen test data
     sampling_strategy="stratified",  # "sequential", "random", or "stratified"
-    stratify_field="status",  # Field for stratified sampling
-    track_metrics=True,  # Measure before/after quality
+    stratify_field="status",  # Field to stratify on (ensures balanced sampling)
+    track_metrics=True,  # Measure null counts, empty strings, uniqueness before/after
     # Optimization (v0.5.0)
-    optimize=True,  # Consolidate redundant functions after generation
-    early_termination=True,  # Stop when patterns saturate
+    optimize=True,  # Two-pass: merge redundant functions after generation
+    optimize_threshold=10,  # Only run consolidation when >= N functions exist
+    early_termination=True,  # Ask LLM if new patterns are unlikely; stop if saturated
+    saturation_check_interval=20,  # How many chunks between saturation checks
     # Observability (v0.6.0)
-    report_path="cleaning_report.md",  # Generate markdown report (None to disable)
-    dry_run=False,  # Set True to analyze without generating functions
+    report_path="cleaning_report.md",  # Markdown summary with functions, latency, quality delta
+    dry_run=False,  # If True, detect issues but don't generate or save functions
+    # Format expansion (v0.7.0)
+    auto_parse=False,  # If True, ask LLM to generate a parser for unrecognized file formats
+    # Output (v0.9.0)
+    output_path="cleaning_functions.py",  # Where to write the generated Python file
     # Terminal UI (v0.8.0)
     tui=True,  # Enable Rich dashboard (requires pip install recursive-cleaner[tui])
 )
@@ -424,10 +435,15 @@ That's it. No langchain, no frameworks, no abstractions.
 | Invalid Python | Retry with syntax error in prompt (max 3) |
 | `__main__` imports | Reject during parsing, retry with error feedback |
 | Duplicate functions | Skip duplicates, keep first occurrence |
+| Duplicate field coverage | Reject, ask LLM to pick different field |
 | Invalid combined output | Fall back to writing only valid functions |
 | Chunk never "clean" | Skip after 5 iterations, log warning |
 | Empty chunk | Skip without LLM call |
 | Context too large | FIFO eviction, keep most recent functions |
+| Safety check failure | Reject dangerous code, request safer alternative |
+| Return type mismatch | Validation fails (expected dict for structured, str for text) |
+| Text mode + stratified sampling | Raise ValueError |
+| Unknown format without auto_parse | Raise ValueError |
 
 ## Known Limitations
 
@@ -459,11 +475,23 @@ New features for monitoring and analysis:
 | Cleaning Report | Markdown summary with functions, metrics, latency stats |
 | Dry-Run Mode | Analyze data without generating functions (`dry_run=True`) |
 
-New events emitted:
+All progress events emitted:
+- `chunk_start` - Begin processing chunk
+- `iteration` - Start iteration N within a chunk
 - `llm_call` - After each LLM call with `latency_ms`
+- `function_generated` - New function created
+- `validation_failed` - Runtime validation error
+- `safety_failed` - Code safety check failure
+- `duplicate_field` - Field already covered by existing function
+- `chunk_done` - Finish processing chunk
 - `issues_detected` - In dry-run mode with detected issues
 - `dry_run_complete` - End of dry run with stats
-- `complete` now includes `latency_stats` dict
+- `optimize_start` / `optimize_group` / `optimize_complete` - Two-pass optimization phases
+- `saturation_check` - Early termination assessment
+- `early_termination` - Stopped due to pattern saturation
+- `parser_generation_start` / `parser_generation_complete` - Auto-parser generation
+- `apply_start` / `apply_progress` / `apply_complete` - Apply mode events
+- `complete` - Pipeline finished, includes `latency_stats` dict
 
 ## Success Criteria
 
