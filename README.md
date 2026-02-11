@@ -74,6 +74,7 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Docstring Registry**: Automatic context management with FIFO eviction
 - **AST Validation**: All generated code validated before output
 - **Error Recovery**: Retries with error feedback on parse failures
+- **Processing Modes**: Auto-detect format from file extension, or force `structured` (record-by-record) or `text` (prose/document) mode
 
 ### Data Quality (v0.4.0+)
 - **Holdout Validation**: Test functions on unseen 20% of each chunk
@@ -86,8 +87,10 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Early Termination**: Stop when LLM detects pattern saturation
 - **LLM Agency**: Model decides chunk cleanliness and saturation
 
-### Security (v0.5.1+)
+### Validation (v0.5.1+, v1.0.1)
 - **Dangerous Code Detection**: AST-based detection of exec, eval, subprocess, network calls
+- **Return Type Validation**: Ensures generated functions return the correct type (`dict` for structured, `str` for text)
+- **Duplicate Field Detection**: Prevents multiple functions from modifying the same field, asks LLM to target a different issue instead
 
 ### Observability (v0.6.0)
 - **Latency Metrics**: Track min/max/avg/total LLM call times
@@ -249,12 +252,12 @@ cleaner = DataCleaner(
     llm_backend=llm,
     file_path="data.jsonl",
 
-    # Chunking
+    # Chunking & mode
     chunk_size=50,              # Items per chunk (or chars for text mode)
-    max_iterations=5,           # Max iterations per chunk
-    context_budget=8000,        # Max chars for docstring context
-    mode="auto",                # "auto", "structured", or "text"
-    chunk_overlap=200,          # Character overlap for text mode
+    max_iterations=5,           # Max LLM iterations per chunk before moving on
+    context_budget=8000,        # Max chars for docstring registry fed into prompts
+    mode="auto",                # "auto" detects from extension; "structured" for records, "text" for prose
+    chunk_overlap=200,          # Chars of overlap between text chunks to avoid splitting context
 
     # Validation
     validate_runtime=True,      # Test functions before accepting
@@ -266,19 +269,19 @@ cleaner = DataCleaner(
     stratify_field="status",         # Field for stratified sampling
 
     # Optimization
-    optimize=True,              # Consolidate redundant functions
-    optimize_threshold=10,      # Min functions to trigger consolidation
-    early_termination=True,     # Stop when patterns saturate
-    saturation_check_interval=20,  # Chunks between saturation checks
-    track_metrics=True,         # Measure before/after quality
+    optimize=True,              # Two-pass: merge redundant functions after generation
+    optimize_threshold=10,      # Only run consolidation when >= N functions exist
+    early_termination=True,     # Ask LLM if new patterns are unlikely; stop if saturated
+    saturation_check_interval=20,  # How many chunks between saturation checks
+    track_metrics=True,         # Measure null counts, empty strings, uniqueness before/after
 
     # Output
-    output_path="cleaning_functions.py",  # Output file path
-    report_path="report.md",    # Markdown report output (None to disable)
-    dry_run=False,              # Analyze without generating functions
+    output_path="cleaning_functions.py",  # Where to write the generated Python file
+    report_path="report.md",    # Markdown summary with functions, latency, quality delta (None to disable)
+    dry_run=False,              # If True, detect issues but don't generate or save functions
 
     # Format Expansion
-    auto_parse=False,           # LLM generates parser for unknown formats
+    auto_parse=False,           # If True, ask LLM to generate a parser for unrecognized file formats
 
     # Terminal UI
     tui=True,                   # Enable Rich dashboard (requires [tui] extra)

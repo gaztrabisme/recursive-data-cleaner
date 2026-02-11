@@ -66,30 +66,30 @@ cleaner = DataCleaner(
     - All dates to ISO 8601
     """,
     # Processing mode (v0.3.0)
-    mode="auto",  # "auto", "structured", or "text"
-    chunk_overlap=200,  # Character overlap for text mode
+    mode="auto",  # "auto" detects from extension; "structured" for records, "text" for prose
+    chunk_overlap=200,  # Chars of overlap between text chunks to avoid splitting context
     # Validation & schema (v0.2.0)
     on_progress=lambda e: print(f"{e['type']}: {e.get('chunk_index', '')}"),
     state_file="cleaning_state.json",  # Resume on interrupt
-    validate_runtime=True,  # Test functions before accepting
-    schema_sample_size=10,  # Infer schema from first N records
+    validate_runtime=True,  # Execute generated functions on sample data before accepting
+    schema_sample_size=10,  # Infer field names/types from first N records for the prompt
     # Sampling & metrics (v0.4.0)
-    holdout_ratio=0.2,  # Test on hidden 20% of each chunk
+    holdout_ratio=0.2,  # Reserve 20% of each chunk as unseen test data
     sampling_strategy="stratified",  # "sequential", "random", or "stratified"
-    stratify_field="status",  # Field for stratified sampling
-    track_metrics=True,  # Measure before/after quality
+    stratify_field="status",  # Field to stratify on (ensures balanced sampling)
+    track_metrics=True,  # Measure null counts, empty strings, uniqueness before/after
     # Optimization (v0.5.0)
-    optimize=True,  # Consolidate redundant functions after generation
-    optimize_threshold=10,  # Min functions to trigger consolidation
-    early_termination=True,  # Stop when patterns saturate
-    saturation_check_interval=20,  # Chunks between saturation checks
+    optimize=True,  # Two-pass: merge redundant functions after generation
+    optimize_threshold=10,  # Only run consolidation when >= N functions exist
+    early_termination=True,  # Ask LLM if new patterns are unlikely; stop if saturated
+    saturation_check_interval=20,  # How many chunks between saturation checks
     # Observability (v0.6.0)
-    report_path="cleaning_report.md",  # Generate markdown report (None to disable)
-    dry_run=False,  # Set True to analyze without generating functions
+    report_path="cleaning_report.md",  # Markdown summary with functions, latency, quality delta
+    dry_run=False,  # If True, detect issues but don't generate or save functions
     # Format expansion (v0.7.0)
-    auto_parse=False,  # LLM generates parser for unknown formats
+    auto_parse=False,  # If True, ask LLM to generate a parser for unrecognized file formats
     # Output (v0.9.0)
-    output_path="cleaning_functions.py",  # Output file path
+    output_path="cleaning_functions.py",  # Where to write the generated Python file
     # Terminal UI (v0.8.0)
     tui=True,  # Enable Rich dashboard (requires pip install recursive-cleaner[tui])
 )
