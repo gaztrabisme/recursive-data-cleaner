@@ -33,6 +33,11 @@ For Parquet files:
 pip install -e ".[parquet]"
 ```
 
+For Excel files (.xlsx/.xls):
+```bash
+pip install -e ".[excel]"
+```
+
 For Terminal UI (Rich dashboard):
 ```bash
 pip install -e ".[tui]"
@@ -177,15 +182,64 @@ Required:
   -m, --model MODEL         Model name/path
 
 Optional:
-  -i, --instructions TEXT   Cleaning instructions (or @file.txt)
+  -i, --instructions TEXT   Cleaning instructions (text, @file.txt, or - for stdin)
   --base-url URL            API URL for OpenAI-compatible servers
+  --api-key KEY             API key (or use OPENAI_API_KEY env var)
   --chunk-size N            Items per chunk (default: 50)
   --max-iterations N        Max iterations per chunk (default: 5)
+  --mode {auto,structured,text}  Processing mode (default: auto)
   -o, --output PATH         Output file (default: cleaning_functions.py)
+  --report PATH             Report file (empty to disable, default: cleaning_report.md)
+  --state-file PATH         Checkpoint file for resume on interrupt
   --tui                     Enable Rich dashboard
   --optimize                Consolidate redundant functions
   --track-metrics           Measure before/after quality
+  --early-termination       Stop when LLM detects pattern saturation
 ```
+
+```
+recursive-cleaner analyze <FILE> [OPTIONS]
+
+Required:
+  FILE                      Input data file
+  -p, --provider {mlx,openai}  LLM provider
+  -m, --model MODEL         Model name/path
+
+Optional:
+  -i, --instructions TEXT   Cleaning instructions (text, @file.txt, or - for stdin)
+  --base-url URL            API URL for OpenAI-compatible servers
+  --api-key KEY             API key (or use OPENAI_API_KEY env var)
+  --chunk-size N            Items per chunk (default: 50)
+  --max-iterations N        Max iterations per chunk (default: 5)
+  --mode {auto,structured,text}  Processing mode (default: auto)
+  --tui                     Enable Rich dashboard
+```
+
+```
+recursive-cleaner resume <STATE_FILE> [OPTIONS]
+
+Required:
+  STATE_FILE                Path to checkpoint JSON file
+  -p, --provider {mlx,openai}  LLM provider
+  -m, --model MODEL         Model name/path
+
+Optional:
+  --base-url URL            API URL for OpenAI-compatible servers
+  --api-key KEY             API key (or use OPENAI_API_KEY env var)
+```
+
+```
+recursive-cleaner apply <FILE> [OPTIONS]
+
+Required:
+  FILE                      Input data file
+  -f, --functions PATH      Path to cleaning_functions.py
+
+Optional:
+  -o, --output PATH         Output file (default: <input>.cleaned.<ext>)
+```
+
+Exit codes: 0 = success, 1 = general error, 2 = backend error, 3 = validation error
 
 ## Configuration
 
@@ -199,6 +253,8 @@ cleaner = DataCleaner(
     chunk_size=50,              # Items per chunk (or chars for text mode)
     max_iterations=5,           # Max iterations per chunk
     context_budget=8000,        # Max chars for docstring context
+    mode="auto",                # "auto", "structured", or "text"
+    chunk_overlap=200,          # Character overlap for text mode
 
     # Validation
     validate_runtime=True,      # Test functions before accepting
@@ -211,10 +267,13 @@ cleaner = DataCleaner(
 
     # Optimization
     optimize=True,              # Consolidate redundant functions
+    optimize_threshold=10,      # Min functions to trigger consolidation
     early_termination=True,     # Stop when patterns saturate
+    saturation_check_interval=20,  # Chunks between saturation checks
     track_metrics=True,         # Measure before/after quality
 
-    # Observability
+    # Output
+    output_path="cleaning_functions.py",  # Output file path
     report_path="report.md",    # Markdown report output (None to disable)
     dry_run=False,              # Analyze without generating functions
 
@@ -237,12 +296,40 @@ def on_progress(event):
     match event["type"]:
         case "chunk_start":
             print(f"Chunk {event['chunk_index']}/{event['total_chunks']}")
+        case "iteration":
+            print(f"Iteration {event['iteration']}")
         case "llm_call":
             print(f"LLM latency: {event['latency_ms']}ms")
         case "function_generated":
             print(f"Generated: {event['function_name']}")
+        case "validation_failed":
+            print(f"Validation failed for {event['function_name']}: {event['error']}")
+        case "safety_failed":
+            print(f"Safety check failed for {event['function_name']}: {event['error']}")
+        case "duplicate_field":
+            print(f"Duplicate field in {event['function_name']}: {event['fields']}")
+        case "chunk_done":
+            print(f"Chunk {event['chunk_index']} done")
         case "issues_detected":  # dry-run mode
             print(f"Found {len(event['issues'])} issues")
+        case "dry_run_complete":
+            print("Dry run finished")
+        case "optimize_start":
+            print(f"Optimizing {event['function_count']} functions")
+        case "optimize_complete":
+            print(f"Optimized: {event['original']} -> {event['final']} functions")
+        case "saturation_check":
+            print(f"Saturated: {event['saturated']} ({event['confidence']})")
+        case "early_termination":
+            print("Stopped early: patterns saturated")
+        case "parser_generation_start":
+            print("Generating parser for unknown format")
+        case "apply_start":
+            print("Starting to apply cleaning functions")
+        case "apply_progress":
+            print(f"Records processed: {event['records_processed']}")
+        case "apply_complete":
+            print(f"Applied to {event['total_records']} records -> {event['output_path']}")
         case "complete":
             stats = event["latency_stats"]
             print(f"Done! Avg latency: {stats['avg_ms']}ms")
@@ -317,10 +404,13 @@ cleaner.run()
 
 ```
 recursive_cleaner/
+├── apply.py            # Apply cleaning functions to data
 ├── cli.py              # Command line interface
 ├── cleaner.py          # Main DataCleaner class
 ├── context.py          # Docstring registry with FIFO eviction
 ├── dependencies.py     # Topological sort for function ordering
+├── errors.py           # Exception classes (CleanerError, ParseError, etc.)
+├── latency.py          # LLM call timing and LatencyTracker
 ├── metrics.py          # Quality metrics before/after
 ├── optimizer.py        # Two-pass consolidation with LLM agency
 ├── output.py           # Function file generation + import consolidation
@@ -330,8 +420,10 @@ recursive_cleaner/
 ├── report.py           # Markdown report generation
 ├── response.py         # XML/markdown parsing + agency dataclasses
 ├── schema.py           # Schema inference
+├── state.py            # Pipeline state persistence
 ├── tui.py              # Rich terminal dashboard
-├── validation.py       # Runtime validation + holdout
+├── types.py            # LLMBackend protocol
+├── validation.py       # Runtime validation + holdout + safety
 └── vendor/
     └── chunker.py      # Vendored sentence-aware chunker
 
@@ -362,6 +454,7 @@ pytest tests/ -v
 
 | Version | Features |
 |---------|----------|
+| v1.0.2 | Documentation completeness, version alignment |
 | v1.0.1 | Return type validation, prompt signature clarity, duplicate field detection |
 | v1.0.0 | Apply mode for cleaning data, Excel support (.xlsx/.xls), enhanced TUI colors |
 | v0.9.0 | CLI tool with MLX and OpenAI-compatible backends (LM Studio, Ollama) |
