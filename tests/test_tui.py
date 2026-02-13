@@ -70,6 +70,11 @@ def test_tui_renderer_default_state():
     assert renderer._state.tokens_in == 0
     assert renderer._state.tokens_out == 0
     assert renderer._state.last_response == ""
+    # Enhanced TUI fields
+    assert renderer._state.phase == "IDLE"
+    assert renderer._state.last_function_time == 0.0
+    assert renderer._state.latency_history == []
+    assert renderer._state.activity_log == []
 
 
 def test_tui_renderer_has_start_time():
@@ -590,6 +595,11 @@ def test_tui_state_dataclass():
     assert state.tokens_in == 0
     assert state.tokens_out == 0
     assert state.last_response == ""
+    # Enhanced TUI fields
+    assert state.phase == "IDLE"
+    assert state.last_function_time == 0.0
+    assert state.latency_history == []
+    assert state.activity_log == []
 
 
 def test_function_info_dataclass():
@@ -756,3 +766,435 @@ def test_header_title_exists():
     assert HEADER_TITLE is not None
     assert len(HEADER_TITLE) > 0
     assert "RECURSIVE CLEANER" in HEADER_TITLE
+
+
+# ===== Enhanced TUI Tests =====
+
+
+# Test constants
+def test_spark_blocks_constant():
+    """SPARK_BLOCKS contains 8 Unicode block characters."""
+    from recursive_cleaner.tui import SPARK_BLOCKS
+
+    assert len(SPARK_BLOCKS) == 8
+    assert SPARK_BLOCKS[0] == "▁"
+    assert SPARK_BLOCKS[7] == "█"
+
+
+def test_phases_constant():
+    """PHASES contains the pipeline stage names."""
+    from recursive_cleaner.tui import PHASES
+
+    assert PHASES == ["ANALYZE", "GENERATE", "VALIDATE"]
+
+
+# Test sparkline generation
+def test_build_sparkline_empty():
+    """Sparkline returns empty string with no history."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    assert renderer._build_sparkline() == ""
+
+
+def test_build_sparkline_single():
+    """Sparkline returns middle block for single value."""
+    from recursive_cleaner.tui import SPARK_BLOCKS, TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer._state.latency_history = [1.5]
+    result = renderer._build_sparkline()
+    assert result == SPARK_BLOCKS[3]
+
+
+def test_build_sparkline_multiple():
+    """Sparkline builds correct block characters from history."""
+    from recursive_cleaner.tui import SPARK_BLOCKS, TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer._state.latency_history = [1.0, 2.0, 3.0, 4.0]
+    result = renderer._build_sparkline()
+    assert len(result) == 4
+    # First value (min) should be lowest block
+    assert result[0] == SPARK_BLOCKS[0]
+    # Last value (max) should be highest block
+    assert result[3] == SPARK_BLOCKS[7]
+
+
+def test_build_sparkline_uniform():
+    """Sparkline handles uniform values (no variance)."""
+    from recursive_cleaner.tui import SPARK_BLOCKS, TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer._state.latency_history = [2.0, 2.0, 2.0]
+    result = renderer._build_sparkline()
+    assert result == SPARK_BLOCKS[3] * 3
+
+
+# Test phase indicator
+def test_build_phase_indicator():
+    """Phase indicator highlights the current phase."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer._state.phase = "GENERATE"
+    text = renderer._build_phase_indicator()
+    plain = text.plain
+    assert "ANALYZE" in plain
+    assert "GENERATE" in plain
+    assert "VALIDATE" in plain
+
+
+def test_phase_updates_on_llm_call():
+    """Phase changes to ANALYZE when LLM is called."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_llm_status("calling")
+    assert renderer._state.phase == "ANALYZE"
+
+
+def test_phase_updates_on_transmission():
+    """Phase changes to GENERATE when response has function code."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_transmission("<name>func</name><code>pass</code>")
+    assert renderer._state.phase == "GENERATE"
+
+
+def test_phase_updates_on_function_add():
+    """Phase changes to VALIDATE when function is acquired."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_function("test_func", "Test")
+    assert renderer._state.phase == "VALIDATE"
+
+
+def test_update_phase_method():
+    """update_phase sets phase directly."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_phase("GENERATE")
+    assert renderer._state.phase == "GENERATE"
+
+
+# Test activity log
+def test_add_activity():
+    """add_activity appends timestamped events."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_activity("Test event")
+    assert len(renderer._state.activity_log) == 1
+    assert "Test event" in renderer._state.activity_log[0]
+    # Should have timestamp prefix
+    assert "[" in renderer._state.activity_log[0]
+
+
+def test_activity_log_ring_buffer():
+    """Activity log keeps only last 8 entries."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    for i in range(12):
+        renderer.add_activity(f"Event {i}")
+    assert len(renderer._state.activity_log) == 8
+    # Should have most recent events
+    assert "Event 11" in renderer._state.activity_log[-1]
+    assert "Event 4" in renderer._state.activity_log[0]
+
+
+def test_add_function_adds_activity():
+    """Adding a function also adds an activity log entry."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_function("normalize_phones", "Normalize phone numbers")
+    assert len(renderer._state.activity_log) == 1
+    assert "Acquired: normalize_phones" in renderer._state.activity_log[0]
+
+
+def test_update_chunk_adds_activity():
+    """Updating chunk also adds an activity log entry."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=10)
+    renderer.update_chunk(chunk_index=3, iteration=1, max_iterations=5)
+    assert len(renderer._state.activity_log) == 1
+    assert "Chunk 4/10 pass 2" in renderer._state.activity_log[0]
+
+
+# Test function flash effect
+def test_function_flash_timestamp():
+    """add_function records flash timestamp."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    before = time.time()
+    renderer.add_function("func1", "Doc1")
+    after = time.time()
+    assert before <= renderer._state.last_function_time <= after
+
+
+# Test latency history tracking
+def test_latency_history_tracking():
+    """update_metrics appends to latency history."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_metrics(0.0, 2000.0, 1500.0, 5000.0, 3)
+    assert len(renderer._state.latency_history) == 1
+    assert renderer._state.latency_history[0] == 2.0  # 2000ms -> 2.0s
+
+
+def test_latency_history_caps_at_15():
+    """Latency history keeps only last 15 values."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    for i in range(20):
+        renderer.update_metrics(0.0, float(i * 100), 100.0, 1000.0, i + 1)
+    assert len(renderer._state.latency_history) == 15
+
+
+# Test iteration display in progress bar
+def test_iteration_shown_in_progress():
+    """Progress bar shows iteration (PASS) indicator."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=10)
+    renderer.update_chunk(chunk_index=2, iteration=1, max_iterations=5)
+    assert renderer._state.current_iteration == 2
+    assert renderer._state.max_iterations == 5
+
+
+# Test activity log display
+def test_build_activity_log_empty():
+    """Activity log shows waiting message when empty."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    text = renderer._build_activity_log()
+    assert "ACTIVITY:" in text.plain
+    assert "(waiting...)" in text.plain
+
+
+def test_build_activity_log_with_events():
+    """Activity log displays recent events."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_activity("Started processing")
+    renderer.add_activity("Found issue")
+    text = renderer._build_activity_log()
+    assert "Started processing" in text.plain
+    assert "Found issue" in text.plain
+
+
+# Test show_complete includes sparkline
+def test_show_complete_with_sparkline():
+    """show_complete includes latency sparkline when history exists."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    # Add some latency history
+    for i in range(5):
+        renderer.update_metrics(0.0, float(i * 500 + 500), 500.0, 2500.0, i + 1)
+    renderer.add_function("func1", "Doc1")
+
+    # Should not raise
+    renderer.show_complete({
+        "functions_count": 1,
+        "chunks_processed": 5,
+        "output_file": "cleaning_functions.py",
+    })
+    assert renderer._state.phase == "IDLE"
+
+
+# Test refresh with spinner
+def test_refresh_status_bar_with_spinner():
+    """Status bar renders without error when LLM is calling (spinner mode)."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_llm_status("calling")
+    # Should not raise
+    renderer._refresh_status_bar()
+
+
+def test_refresh_status_bar_idle():
+    """Status bar renders without error when idle."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_llm_status("idle")
+    # Should not raise
+    renderer._refresh_status_bar()
+
+
+def test_refresh_progress_bar_with_iteration():
+    """Progress bar renders with iteration indicator."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=10)
+    renderer.update_chunk(chunk_index=3, iteration=2, max_iterations=5)
+    # Should not raise
+    renderer._refresh_progress_bar()
+
+
+def test_refresh_left_panel_with_flash():
+    """Left panel renders with flash effect on new function."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_function("func1", "Doc1")
+    # Should not raise - flash should be active
+    renderer._refresh_left_panel()
+
+
+def test_refresh_left_panel_with_sparkline():
+    """Left panel renders with latency sparkline."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.update_metrics(0.0, 2000.0, 1500.0, 5000.0, 3)
+    renderer.update_metrics(0.0, 3000.0, 2000.0, 8000.0, 4)
+    # Should not raise
+    renderer._refresh_left_panel()
+
+
+def test_refresh_right_panel_with_activity():
+    """Right panel renders with activity log."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.add_activity("Test event 1")
+    renderer.add_activity("Test event 2")
+    # Should not raise
+    renderer._refresh_right_panel()
+
+
+# ===== Completion Celebration Tests =====
+
+
+def test_celebration_colors_constant():
+    """CELEBRATION_COLORS has the expected sweep sequence."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    colors = TUIRenderer.CELEBRATION_COLORS
+    assert isinstance(colors, list)
+    assert len(colors) == 5
+    assert colors[0] == "cyan"
+    assert colors[-1] == "green"
+
+
+def test_celebrate_no_crash_without_live():
+    """_celebrate is a no-op when Live display is not running."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    # _live is None — should silently do nothing
+    renderer._celebrate()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_celebrate_cycles_colors(mock_sleep):
+    """_celebrate cycles through all colors with sleeps between frames."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer._celebrate()
+        # Should sleep once per color in the sweep
+        assert mock_sleep.call_count == len(TUIRenderer.CELEBRATION_COLORS)
+        # Each sleep should be 0.15s
+        for call in mock_sleep.call_args_list:
+            assert call[0][0] == 0.15
+    finally:
+        renderer.stop()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_show_complete_calls_celebrate(mock_sleep):
+    """show_complete runs celebration before showing summary."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer.show_complete({
+            "functions_count": 3,
+            "chunks_processed": 5,
+            "output_file": "output.py",
+        })
+        # Celebration sleeps should have fired
+        assert mock_sleep.call_count == len(TUIRenderer.CELEBRATION_COLORS)
+    finally:
+        renderer.stop()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_show_complete_preserves_banner(mock_sleep):
+    """show_complete keeps the banner visible in green after celebration."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer.show_complete({
+            "functions_count": 1,
+            "chunks_processed": 5,
+            "output_file": "output.py",
+        })
+        # Layout should have header + complete sections
+        child_names = [c.name for c in renderer._layout.children]
+        assert "header" in child_names
+        assert "complete" in child_names
+    finally:
+        renderer.stop()

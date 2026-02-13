@@ -11,7 +11,8 @@ try:
     from rich.layout import Layout
     from rich.live import Live
     from rich.panel import Panel
-    from rich.progress import BarColumn, Progress, TextColumn
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+    from rich.spinner import Spinner
     from rich.table import Table
     from rich.text import Text
 
@@ -40,6 +41,13 @@ ASCII_BANNER = """
 HEADER_TITLE = "RECURSIVE CLEANER"
 
 
+# Sparkline block characters (8 levels, low to high)
+SPARK_BLOCKS = "▁▂▃▄▅▆▇█"
+
+# Phase definitions for the pipeline stage indicator
+PHASES = ["ANALYZE", "GENERATE", "VALIDATE"]
+
+
 @dataclass
 class FunctionInfo:
     """Info about a generated cleaning function."""
@@ -66,8 +74,14 @@ class TUIState:
     # LLM Status
     llm_status: Literal["idle", "calling"] = "idle"
 
+    # Phase tracking
+    phase: str = "IDLE"
+
     # Functions
     functions: list[FunctionInfo] = field(default_factory=list)
+
+    # Function flash effect - timestamp of last function acquisition
+    last_function_time: float = 0.0
 
     # Latency metrics
     latency_last_ms: float = 0.0
@@ -75,12 +89,18 @@ class TUIState:
     latency_total_ms: float = 0.0
     llm_call_count: int = 0
 
+    # Latency history for sparkline (last N values in seconds)
+    latency_history: list[float] = field(default_factory=list)
+
     # Token estimation
     tokens_in: int = 0
     tokens_out: int = 0
 
     # Transmission log
     last_response: str = ""
+
+    # Activity log (ring buffer of recent events)
+    activity_log: list[str] = field(default_factory=list)
 
 
 class TUIRenderer:
@@ -140,7 +160,7 @@ class TUIRenderer:
 
         # Fixed heights for top sections
         header_height = 14  # ASCII banner (12 lines + border)
-        status_height = 3
+        status_height = 4  # Status + phase rows + border
         progress_height = 3
         fixed_total = header_height + status_height + progress_height
 
@@ -171,7 +191,7 @@ class TUIRenderer:
         self._live = Live(
             self._layout,
             console=self._console,
-            refresh_per_second=2,
+            refresh_per_second=4,
             vertical_overflow="crop",
         )
         self._live.start()
@@ -194,6 +214,8 @@ class TUIRenderer:
         self._state.current_chunk = chunk_index + 1  # Convert to 1-based for display
         self._state.current_iteration = iteration + 1
         self._state.max_iterations = max_iterations
+        self._state.phase = "ANALYZE"
+        self.add_activity(f"Chunk {chunk_index + 1}/{self._state.total_chunks} pass {iteration + 1}")
         self._refresh()
 
     def update_llm_status(self, status: Literal["calling", "idle"]) -> None:
@@ -204,6 +226,18 @@ class TUIRenderer:
             status: "calling" when LLM is being called, "idle" otherwise
         """
         self._state.llm_status = status
+        if status == "calling":
+            self._state.phase = "ANALYZE"
+        self._refresh()
+
+    def update_phase(self, phase: str) -> None:
+        """
+        Update the current pipeline phase.
+
+        Args:
+            phase: One of "ANALYZE", "GENERATE", "VALIDATE", or "IDLE"
+        """
+        self._state.phase = phase
         self._refresh()
 
     def add_function(self, name: str, docstring: str) -> None:
@@ -215,7 +249,26 @@ class TUIRenderer:
             docstring: Function docstring
         """
         self._state.functions.append(FunctionInfo(name=name, docstring=docstring))
+        self._state.last_function_time = time.time()
+        self._state.phase = "VALIDATE"
+        self.add_activity(f"Acquired: {name}")
         self._refresh()
+
+    def add_activity(self, message: str) -> None:
+        """
+        Add an event to the activity log.
+
+        Keeps a ring buffer of the most recent 8 events.
+
+        Args:
+            message: Short description of the event
+        """
+        elapsed = self._get_elapsed_time()
+        entry = f"[{elapsed}] {message}"
+        self._state.activity_log.append(entry)
+        # Ring buffer: keep last 8 entries
+        if len(self._state.activity_log) > 8:
+            self._state.activity_log = self._state.activity_log[-8:]
 
     def update_metrics(
         self,
@@ -239,6 +292,10 @@ class TUIRenderer:
         self._state.latency_avg_ms = latency_avg
         self._state.latency_total_ms = latency_total
         self._state.llm_call_count = llm_calls
+        # Track latency history for sparkline (store in seconds)
+        self._state.latency_history.append(latency_last / 1000.0)
+        if len(self._state.latency_history) > 15:
+            self._state.latency_history = self._state.latency_history[-15:]
         self._refresh()
 
     def update_tokens(self, prompt: str, response: str) -> None:
@@ -263,6 +320,9 @@ class TUIRenderer:
             response: The latest LLM response text
         """
         self._state.last_response = response
+        # Update phase based on response content
+        if "<name>" in response and "<code>" in response:
+            self._state.phase = "GENERATE"
         self._refresh()
 
     def _get_elapsed_time(self) -> str:
@@ -272,9 +332,36 @@ class TUIRenderer:
         seconds = elapsed % 60
         return f"{minutes:02d}:{seconds:02d}"
 
+    # Color sweep sequence for completion celebration
+    CELEBRATION_COLORS = ["cyan", "magenta", "yellow", "bright_green", "green"]
+
+    def _celebrate(self) -> None:
+        """Run a brief color sweep across the banner to celebrate completion.
+
+        Cycles the ASCII banner through CELEBRATION_COLORS, sleeping briefly
+        between each frame. Only runs when a Live display is active.
+        """
+        if not self._live or not self._layout:
+            return
+
+        for color in self.CELEBRATION_COLORS:
+            banner_text = Text(ASCII_BANNER, style=f"bold {color}")
+            header_panel = Panel(
+                banner_text,
+                border_style=color,
+                box=DOUBLE,
+                padding=(0, 1),
+            )
+            self._layout["header"].update(header_panel)
+            self._live.update(self._layout)
+            time.sleep(0.15)
+
     def show_complete(self, summary: dict) -> None:
         """
-        Show completion summary panel.
+        Show completion summary panel with celebration animation.
+
+        Runs a brief color sweep across the banner, then replaces the
+        layout with a green-bordered summary panel.
 
         Args:
             summary: Dictionary with completion stats including:
@@ -286,6 +373,11 @@ class TUIRenderer:
         """
         if not HAS_RICH or self._layout is None:
             return
+
+        self._state.phase = "IDLE"
+
+        # Celebration: color sweep the banner
+        self._celebrate()
 
         # Build completion panel content
         content = Table.grid(padding=(0, 2))
@@ -302,7 +394,7 @@ class TUIRenderer:
 
         content.add_row(
             Text("Functions Acquired:", style="bold"),
-            Text(str(func_count), style="green"),
+            Text(str(func_count), style="green bold"),
         )
         content.add_row(
             Text("Chunks Processed:", style="bold"),
@@ -316,22 +408,41 @@ class TUIRenderer:
             Text("Tokens:", style="bold"),
             Text(f"~{tokens_in_k:.1f}k in / ~{tokens_out_k:.1f}k out"),
         )
+
+        # Latency sparkline in summary
+        sparkline = self._build_sparkline()
+        if sparkline:
+            content.add_row(
+                Text("Latency Profile:", style="bold"),
+                Text(sparkline, style="cyan"),
+            )
+
         content.add_row(Text(""), Text(""))  # Spacer
         content.add_row(
             Text("Output:", style="bold"),
-            Text(summary.get("output_file", "cleaning_functions.py"), style="cyan"),
+            Text(summary.get("output_file", "cleaning_functions.py"), style="cyan bold"),
+        )
+
+        # Green banner for final state
+        banner_text = Text(ASCII_BANNER, style="bold green")
+        banner_panel = Panel(
+            banner_text,
+            border_style="green",
+            box=DOUBLE,
+            padding=(0, 1),
         )
 
         # Build the complete panel with box drawing
         complete_panel = Panel(
             content,
-            title="[bold green]MISSION COMPLETE[/bold green]",
+            title="[bold green]\u2713 MISSION COMPLETE \u2713[/bold green]",
             border_style="green",
             box=DOUBLE,
         )
 
-        # Replace entire layout with completion panel
+        # Replace entire layout with banner + completion panel
         self._layout.split_column(
+            Layout(banner_panel, name="header", size=14),
             Layout(complete_panel, name="complete"),
         )
 
@@ -366,8 +477,21 @@ class TUIRenderer:
         )
         self._layout["header"].update(header_panel)
 
+    def _build_phase_indicator(self) -> Text:
+        """Build the phase pipeline indicator: ANALYZE > GENERATE > VALIDATE."""
+        text = Text()
+        current = self._state.phase
+        for i, phase in enumerate(PHASES):
+            if i > 0:
+                text.append(" \u25b8 ", style="dim")  # Small right triangle separator
+            if phase == current:
+                text.append(phase, style="bold bright_white on blue")
+            else:
+                text.append(phase, style="dim")
+        return text
+
     def _refresh_status_bar(self) -> None:
-        """Refresh the status bar with mission info, timer, and status."""
+        """Refresh the status bar with mission info, timer, status, and phase."""
         if not HAS_RICH or self._layout is None:
             return
 
@@ -377,14 +501,6 @@ class TUIRenderer:
             file_path = "..." + file_path[-27:]
 
         elapsed = self._get_elapsed_time()
-
-        # Status indicator
-        if self._state.llm_status == "calling":
-            status_text = Text("ACTIVE", style="bold green")
-            status_indicator = "\u25cf"  # Filled circle
-        else:
-            status_text = Text("IDLE", style="dim")
-            status_indicator = "\u25cb"  # Empty circle
 
         # Build status bar content
         status_table = Table.grid(padding=(0, 2), expand=True)
@@ -400,15 +516,41 @@ class TUIRenderer:
         time_text.append("TIME: ", style="bold")
         time_text.append(elapsed, style="cyan")
 
-        status_combined = Text()
-        status_combined.append("STATUS: ", style="bold")
-        status_combined.append(f"{status_indicator} ", style="green" if self._state.llm_status == "calling" else "dim")
-        status_combined.append_text(status_text)
+        # Status with animated spinner when active
+        if self._state.llm_status == "calling":
+            status_renderable = Text()
+            status_renderable.append("STATUS: ", style="bold")
+            # We use a spinner character sequence for animation feel
+            # Rich Spinner needs to be rendered separately, so we embed it in the Group
+            spinner = Spinner("dots", text="ACTIVE", style="bold green")
+            status_table.add_row(mission_text, time_text, spinner)
+        else:
+            status_combined = Text()
+            status_combined.append("STATUS: ", style="bold")
+            status_combined.append("\u25cb ", style="dim")  # Empty circle
+            status_combined.append("IDLE", style="dim")
+            status_table.add_row(mission_text, time_text, status_combined)
 
-        status_table.add_row(mission_text, time_text, status_combined)
+        # Phase indicator row
+        phase_table = Table.grid(padding=(0, 2), expand=True)
+        phase_table.add_column(justify="left", ratio=1)
+        phase_table.add_column(justify="right", ratio=1)
+        phase_text = Text()
+        phase_text.append("PHASE: ", style="bold")
+        phase_text.append_text(self._build_phase_indicator())
+
+        # Functions per minute rate
+        rate_text = Text()
+        func_count = len(self._state.functions)
+        elapsed_secs = time.time() - self._start_time
+        if func_count > 0 and elapsed_secs > 0:
+            rate = func_count / (elapsed_secs / 60.0)
+            rate_text.append("RATE: ", style="bold")
+            rate_text.append(f"{rate:.1f} func/min", style="cyan")
+        phase_table.add_row(phase_text, rate_text)
 
         status_panel = Panel(
-            status_table,
+            Group(status_table, phase_table),
             border_style="cyan",
             box=DOUBLE,
             padding=(0, 1),
@@ -416,7 +558,7 @@ class TUIRenderer:
         self._layout["status_bar"].update(status_panel)
 
     def _refresh_progress_bar(self) -> None:
-        """Refresh the progress bar panel."""
+        """Refresh the progress bar panel with chunk and iteration progress."""
         if not HAS_RICH or self._layout is None:
             return
 
@@ -425,12 +567,18 @@ class TUIRenderer:
         if self._state.total_chunks > 0:
             progress_pct = int((self._state.current_chunk / self._state.total_chunks) * 100)
 
+        # Iteration indicator: PASS 2/5
+        iteration_str = ""
+        if self._state.current_iteration > 0:
+            iteration_str = f"  \u2022  PASS {self._state.current_iteration}/{self._state.max_iterations}"
+
         # Build progress bar using Rich Progress
         progress = Progress(
             TextColumn("[bold cyan]\u25ba[/bold cyan]"),
             TextColumn(f"CHUNK {self._state.current_chunk}/{self._state.total_chunks}"),
             BarColumn(bar_width=30, complete_style="cyan", finished_style="green"),
             TextColumn(f"{progress_pct}%"),
+            TextColumn(f"[dim]{iteration_str}[/dim]"),
             expand=False,
         )
         task = progress.add_task("", total=self._state.total_chunks, completed=self._state.current_chunk)
@@ -443,12 +591,36 @@ class TUIRenderer:
         )
         self._layout["progress_bar"].update(progress_panel)
 
+    def _build_sparkline(self) -> str:
+        """Build a Unicode sparkline from latency history.
+
+        Returns:
+            String of Unicode block characters representing latency trend.
+        """
+        history = self._state.latency_history
+        if not history:
+            return ""
+        if len(history) == 1:
+            return SPARK_BLOCKS[3]  # Middle height for single value
+        min_val = min(history)
+        max_val = max(history)
+        span = max_val - min_val
+        if span == 0:
+            return SPARK_BLOCKS[3] * len(history)
+        return "".join(
+            SPARK_BLOCKS[min(7, int((v - min_val) / span * 7))]
+            for v in history
+        )
+
     def _refresh_left_panel(self) -> None:
-        """Refresh the left panel with functions list and metrics."""
+        """Refresh the left panel with functions list, sparkline, and metrics."""
         if not HAS_RICH or self._layout is None:
             return
 
         func_count = len(self._state.functions)
+        now = time.time()
+        # Flash effect: highlight last function for 1.5 seconds after acquisition
+        flash_active = (now - self._state.last_function_time) < 1.5 if self._state.last_function_time > 0 else False
 
         # Build function tree
         content = Table.grid(padding=(0, 0))
@@ -459,15 +631,21 @@ class TUIRenderer:
         display_funcs = self._state.functions[-max_display:] if func_count > max_display else self._state.functions
 
         for i, func in enumerate(display_funcs):
+            is_last = i == len(display_funcs) - 1
             func_text = Text()
             # Tree-style prefix
-            if i == len(display_funcs) - 1:
+            if is_last:
                 func_text.append("\u2514\u2500 ", style="dim cyan")  # Corner
             else:
                 func_text.append("\u251c\u2500 ", style="dim cyan")  # Tee
 
-            func_text.append(func.name, style="bold")
-            func_text.append(" \u2713", style="green")  # Checkmark
+            # Flash the newest function with bright highlight
+            if is_last and flash_active:
+                func_text.append(func.name, style="bold bright_green")
+                func_text.append(" \u2713 NEW", style="bold bright_green")
+            else:
+                func_text.append(func.name, style="bold")
+                func_text.append(" \u2713", style="green")  # Checkmark
 
             content.add_row(func_text)
 
@@ -487,12 +665,16 @@ class TUIRenderer:
         tokens_text.append(f"~{tokens_in_k:.1f}k in / ~{tokens_out_k:.1f}k out", style="dim")
         content.add_row(tokens_text)
 
-        # Latency stats
+        # Latency stats with sparkline
         latency_text = Text()
         latency_text.append("LATENCY: ", style="bold")
         if self._state.llm_call_count > 0:
-            latency_text.append(f"{self._state.latency_last_ms:.1f}s", style="cyan")
-            latency_text.append(f" (avg {self._state.latency_avg_ms / 1000:.1f}s)", style="dim")
+            latency_text.append(f"{self._state.latency_last_ms / 1000:.1f}s ", style="cyan")
+            sparkline = self._build_sparkline()
+            if sparkline:
+                latency_text.append(sparkline, style="cyan")
+                latency_text.append(" ", style="")
+            latency_text.append(f"(avg {self._state.latency_avg_ms / 1000:.1f}s)", style="dim")
         else:
             latency_text.append("\u2014", style="dim")  # Em dash
         content.add_row(latency_text)
@@ -580,8 +762,19 @@ class TUIRenderer:
         fallback = response[:500] + "..." if len(response) > 500 else response
         return Text(fallback, style="dim cyan")
 
+    def _build_activity_log(self) -> Text:
+        """Build the activity log display from the event ring buffer."""
+        text = Text()
+        text.append("ACTIVITY:\n", style="bold cyan")
+        if not self._state.activity_log:
+            text.append("  (waiting...)", style="dim")
+        else:
+            for entry in self._state.activity_log:
+                text.append(f"  {entry}\n", style="dim green")
+        return text
+
     def _refresh_right_panel(self) -> None:
-        """Refresh the right panel with colorized transmission log."""
+        """Refresh the right panel with colorized transmission log and activity."""
         if not HAS_RICH or self._layout is None:
             return
 
@@ -592,8 +785,11 @@ class TUIRenderer:
         else:
             log_text = self._colorize_transmission(response)
 
+        # Append activity log below transmission
+        activity = self._build_activity_log()
+
         right_panel = Panel(
-            log_text,
+            Group(log_text, Text(""), activity),
             title="[bold cyan]\u25c4\u25c4 TRANSMISSION LOG \u25ba\u25ba[/bold cyan]",
             border_style="cyan",
             box=DOUBLE,
