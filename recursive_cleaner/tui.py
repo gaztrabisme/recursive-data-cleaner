@@ -332,9 +332,36 @@ class TUIRenderer:
         seconds = elapsed % 60
         return f"{minutes:02d}:{seconds:02d}"
 
+    # Color sweep sequence for completion celebration
+    CELEBRATION_COLORS = ["cyan", "magenta", "yellow", "bright_green", "green"]
+
+    def _celebrate(self) -> None:
+        """Run a brief color sweep across the banner to celebrate completion.
+
+        Cycles the ASCII banner through CELEBRATION_COLORS, sleeping briefly
+        between each frame. Only runs when a Live display is active.
+        """
+        if not self._live or not self._layout:
+            return
+
+        for color in self.CELEBRATION_COLORS:
+            banner_text = Text(ASCII_BANNER, style=f"bold {color}")
+            header_panel = Panel(
+                banner_text,
+                border_style=color,
+                box=DOUBLE,
+                padding=(0, 1),
+            )
+            self._layout["header"].update(header_panel)
+            self._live.update(self._layout)
+            time.sleep(0.15)
+
     def show_complete(self, summary: dict) -> None:
         """
-        Show completion summary panel.
+        Show completion summary panel with celebration animation.
+
+        Runs a brief color sweep across the banner, then replaces the
+        layout with a green-bordered summary panel.
 
         Args:
             summary: Dictionary with completion stats including:
@@ -348,6 +375,9 @@ class TUIRenderer:
             return
 
         self._state.phase = "IDLE"
+
+        # Celebration: color sweep the banner
+        self._celebrate()
 
         # Build completion panel content
         content = Table.grid(padding=(0, 2))
@@ -393,6 +423,15 @@ class TUIRenderer:
             Text(summary.get("output_file", "cleaning_functions.py"), style="cyan bold"),
         )
 
+        # Green banner for final state
+        banner_text = Text(ASCII_BANNER, style="bold green")
+        banner_panel = Panel(
+            banner_text,
+            border_style="green",
+            box=DOUBLE,
+            padding=(0, 1),
+        )
+
         # Build the complete panel with box drawing
         complete_panel = Panel(
             content,
@@ -401,8 +440,9 @@ class TUIRenderer:
             box=DOUBLE,
         )
 
-        # Replace entire layout with completion panel
+        # Replace entire layout with banner + completion panel
         self._layout.split_column(
+            Layout(banner_panel, name="header", size=14),
             Layout(complete_panel, name="complete"),
         )
 

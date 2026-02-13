@@ -1105,3 +1105,96 @@ def test_refresh_right_panel_with_activity():
     renderer.add_activity("Test event 2")
     # Should not raise
     renderer._refresh_right_panel()
+
+
+# ===== Completion Celebration Tests =====
+
+
+def test_celebration_colors_constant():
+    """CELEBRATION_COLORS has the expected sweep sequence."""
+    from recursive_cleaner.tui import TUIRenderer
+
+    colors = TUIRenderer.CELEBRATION_COLORS
+    assert isinstance(colors, list)
+    assert len(colors) == 5
+    assert colors[0] == "cyan"
+    assert colors[-1] == "green"
+
+
+def test_celebrate_no_crash_without_live():
+    """_celebrate is a no-op when Live display is not running."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    # _live is None — should silently do nothing
+    renderer._celebrate()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_celebrate_cycles_colors(mock_sleep):
+    """_celebrate cycles through all colors with sleeps between frames."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer._celebrate()
+        # Should sleep once per color in the sweep
+        assert mock_sleep.call_count == len(TUIRenderer.CELEBRATION_COLORS)
+        # Each sleep should be 0.15s
+        for call in mock_sleep.call_args_list:
+            assert call[0][0] == 0.15
+    finally:
+        renderer.stop()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_show_complete_calls_celebrate(mock_sleep):
+    """show_complete runs celebration before showing summary."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer.show_complete({
+            "functions_count": 3,
+            "chunks_processed": 5,
+            "output_file": "output.py",
+        })
+        # Celebration sleeps should have fired
+        assert mock_sleep.call_count == len(TUIRenderer.CELEBRATION_COLORS)
+    finally:
+        renderer.stop()
+
+
+@patch("recursive_cleaner.tui.time.sleep")
+def test_show_complete_preserves_banner(mock_sleep):
+    """show_complete keeps the banner visible in green after celebration."""
+    from recursive_cleaner.tui import HAS_RICH, TUIRenderer
+
+    if not HAS_RICH:
+        pytest.skip("Rich not installed")
+
+    renderer = TUIRenderer(file_path="test.jsonl", total_chunks=5)
+    renderer.start()
+    try:
+        renderer.show_complete({
+            "functions_count": 1,
+            "chunks_processed": 5,
+            "output_file": "output.py",
+        })
+        # Layout should have header + complete sections
+        child_names = [c.name for c in renderer._layout.children]
+        assert "header" in child_names
+        assert "complete" in child_names
+    finally:
+        renderer.stop()
