@@ -1,0 +1,223 @@
+{
+  "model": "lmstudio-community/Qwen3-30B-A3B-Instruct-2507-MLX-8bit",
+  "data_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/benchmark_data.jsonl",
+  "chunk_size": 20,
+  "max_iterations": 5,
+  "download_time_s": 489.05,
+  "load_time_s": 2.15,
+  "warmup": {
+    "warmup_time_s": 0.465,
+    "warmup_prompt_tokens": 16,
+    "warmup_response_tokens": 1,
+    "warmup_decode_tok_per_s": 2.2
+  },
+  "runs": [
+    {
+      "pipeline_time_s": 588.74,
+      "chunks": 5,
+      "llm_calls": 25,
+      "functions_generated": 9,
+      "function_names": [
+        "normalize_dates",
+        "normalize_phone_numbers",
+        "normalize_names",
+        "normalize_category_field",
+        "normalize_amounts",
+        "normalize_whitespace",
+        "normalize_status_field",
+        "normalize_weight_field",
+        "normalize_tags_field"
+      ],
+      "latency_avg_ms": 23549.2,
+      "latency_min_ms": 16354.5,
+      "latency_max_ms": 29893.8,
+      "latency_total_ms": 588728.9,
+      "token_stats": {
+        "total_prompt_tokens": 84161,
+        "total_response_tokens": 23353,
+        "total_generation_time_s": 588.617,
+        "avg_decode_tok_per_s": 39.7
+      },
+      "per_call_stats": [
+        {
+          "call_num": 1,
+          "prompt_tokens": 3011,
+          "response_tokens": 1227,
+          "generation_time_s": 27.257,
+          "decode_tok_per_s": 45.0
+        },
+        {
+          "call_num": 2,
+          "prompt_tokens": 3041,
+          "response_tokens": 1071,
+          "generation_time_s": 24.283,
+          "decode_tok_per_s": 44.1
+        },
+        {
+          "call_num": 3,
+          "prompt_tokens": 3041,
+          "response_tokens": 1064,
+          "generation_time_s": 24.568,
+          "decode_tok_per_s": 43.3
+        },
+        {
+          "call_num": 4,
+          "prompt_tokens": 3041,
+          "response_tokens": 1059,
+          "generation_time_s": 24.822,
+          "decode_tok_per_s": 42.7
+        },
+        {
+          "call_num": 5,
+          "prompt_tokens": 3041,
+          "response_tokens": 1325,
+          "generation_time_s": 29.889,
+          "decode_tok_per_s": 44.3
+        },
+        {
+          "call_num": 6,
+          "prompt_tokens": 3057,
+          "response_tokens": 1229,
+          "generation_time_s": 27.69,
+          "decode_tok_per_s": 44.4
+        },
+        {
+          "call_num": 7,
+          "prompt_tokens": 3135,
+          "response_tokens": 1028,
+          "generation_time_s": 23.84,
+          "decode_tok_per_s": 43.1
+        },
+        {
+          "call_num": 8,
+          "prompt_tokens": 3165,
+          "response_tokens": 909,
+          "generation_time_s": 21.74,
+          "decode_tok_per_s": 41.8
+        },
+        {
+          "call_num": 9,
+          "prompt_tokens": 3165,
+          "response_tokens": 930,
+          "generation_time_s": 22.166,
+          "decode_tok_per_s": 42.0
+        },
+        {
+          "call_num": 10,
+          "prompt_tokens": 3212,
+          "response_tokens": 819,
+          "generation_time_s": 20.203,
+          "decode_tok_per_s": 40.5
+        },
+        {
+          "call_num": 11,
+          "prompt_tokens": 3232,
+          "response_tokens": 719,
+          "generation_time_s": 18.019,
+          "decode_tok_per_s": 39.9
+        },
+        {
+          "call_num": 12,
+          "prompt_tokens": 3305,
+          "response_tokens": 823,
+          "generation_time_s": 20.339,
+          "decode_tok_per_s": 40.5
+        },
+        {
+          "call_num": 13,
+          "prompt_tokens": 3335,
+          "response_tokens": 620,
+          "generation_time_s": 16.35,
+          "decode_tok_per_s": 37.9
+        },
+        {
+          "call_num": 14,
+          "prompt_tokens": 3362,
+          "response_tokens": 738,
+          "generation_time_s": 19.015,
+          "decode_tok_per_s": 38.8
+        },
+        {
+          "call_num": 15,
+          "prompt_tokens": 3392,
+          "response_tokens": 887,
+          "generation_time_s": 22.28,
+          "decode_tok_per_s": 39.8
+        },
+        {
+          "call_num": 16,
+          "prompt_tokens": 3377,
+          "response_tokens": 659,
+          "generation_time_s": 17.735,
+          "decode_tok_per_s": 37.2
+        },
+        {
+          "call_num": 17,
+          "prompt_tokens": 3513,
+          "response_tokens": 953,
+          "generation_time_s": 24.641,
+          "decode_tok_per_s": 38.7
+        },
+        {
+          "call_num": 18,
+          "prompt_tokens": 3543,
+          "response_tokens": 760,
+          "generation_time_s": 20.914,
+          "decode_tok_per_s": 36.3
+        },
+        {
+          "call_num": 19,
+          "prompt_tokens": 3543,
+          "response_tokens": 1027,
+          "generation_time_s": 27.562,
+          "decode_tok_per_s": 37.3
+        },
+        {
+          "call_num": 20,
+          "prompt_tokens": 3543,
+          "response_tokens": 821,
+          "generation_time_s": 23.456,
+          "decode_tok_per_s": 35.0
+        },
+        {
+          "call_num": 21,
+          "prompt_tokens": 3615,
+          "response_tokens": 900,
+          "generation_time_s": 25.68,
+          "decode_tok_per_s": 35.0
+        },
+        {
+          "call_num": 22,
+          "prompt_tokens": 3707,
+          "response_tokens": 1027,
+          "generation_time_s": 28.686,
+          "decode_tok_per_s": 35.8
+        },
+        {
+          "call_num": 23,
+          "prompt_tokens": 3888,
+          "response_tokens": 1034,
+          "generation_time_s": 28.806,
+          "decode_tok_per_s": 35.9
+        },
+        {
+          "call_num": 24,
+          "prompt_tokens": 3918,
+          "response_tokens": 767,
+          "generation_time_s": 22.225,
+          "decode_tok_per_s": 34.5
+        },
+        {
+          "call_num": 25,
+          "prompt_tokens": 3979,
+          "response_tokens": 957,
+          "generation_time_s": 26.449,
+          "decode_tok_per_s": 36.2
+        }
+      ],
+      "output_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/results/cleaning_functions_Qwen3-30B-A3B-Instruct-2507-MLX-8bit.py",
+      "report_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/results/cleaning_report_Qwen3-30B-A3B-Instruct-2507-MLX-8bit.md"
+    }
+  ],
+  "timestamp": "2026-02-11T14:18:39.862925+00:00"
+}

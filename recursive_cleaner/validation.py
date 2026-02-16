@@ -1,6 +1,7 @@
 """Runtime validation for generated cleaning functions."""
 
 import ast
+import copy
 import json
 import re
 from typing import Literal
@@ -160,7 +161,7 @@ def validate_function(
         # Structured mode: sample_data is list[dict]
         for i, record in enumerate(sample_data):
             try:
-                result = func(record)
+                result = func(copy.deepcopy(record))
                 # Verify function returns a dict (not string, int, etc.)
                 if not isinstance(result, dict):
                     return False, f"Function must return dict, got {type(result).__name__}"
@@ -203,6 +204,58 @@ def extract_sample_data(
         except json.JSONDecodeError:
             continue
     return samples
+
+
+def validate_test_cases(
+    code: str,
+    test_cases: list[str],
+    function_name: str,
+) -> tuple[bool, str | None]:
+    """
+    Execute LLM-provided test assertions against generated function.
+
+    Args:
+        code: The Python source code of the function
+        test_cases: List of assertion strings (Python expressions evaluating to True)
+        function_name: Name of the function to call
+
+    Returns:
+        (True, None) if all tests pass
+        (False, error_message) if any test fails
+    """
+    if not test_cases:
+        return True, None
+
+    # Safety-check assertions (reuse existing check)
+    assertion_code = "\n".join(f"assert {a}" for a in test_cases)
+    safe, safety_error = check_code_safety(assertion_code)
+    if not safe:
+        return False, f"Unsafe test assertion: {safety_error}"
+
+    # Load function into namespace
+    namespace: dict = {}
+    try:
+        exec(code, namespace)
+    except Exception as e:
+        return False, f"Code compilation failed: {type(e).__name__}: {e}"
+
+    func = namespace.get(function_name)
+    if func is None:
+        return False, f"Function '{function_name}' not found in code"
+
+    # Run each assertion
+    for i, assertion in enumerate(test_cases, 1):
+        try:
+            result = eval(assertion, namespace)
+            if not result:
+                return False, f"Test {i} failed: {assertion}"
+        except Exception as e:
+            return False, (
+                f"Test {i} raised {type(e).__name__}: {e} "
+                f"— assertion: {assertion}"
+            )
+
+    return True, None
 
 
 def extract_modified_fields(code: str) -> set[str]:

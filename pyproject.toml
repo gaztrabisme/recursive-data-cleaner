@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "recursive-cleaner"
-version = "1.0.2"
+version = "1.1.0"
 description = "LLM-powered incremental data cleaning pipeline that processes massive datasets in chunks and generates Python cleaning functions"
 readme = "README.md"
 license = "MIT"

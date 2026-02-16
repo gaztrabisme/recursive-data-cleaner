@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from recursive_cleaner import chunk_file, parse_response, extract_python_block
 from recursive_cleaner.errors import ParseError
-from recursive_cleaner.parsers import MARKITDOWN_EXTENSIONS, preprocess_with_markitdown, load_parquet
+from recursive_cleaner.parsers import MARKITDOWN_EXTENSIONS, preprocess_with_markitdown, load_excel, load_ods, load_parquet
 
 
 # =============================================================================
@@ -399,6 +399,275 @@ class TestChunkFileParquet:
 
 
 # =============================================================================
+# Excel Integration Tests
+# =============================================================================
+
+
+class TestLoadExcel:
+    """Tests for Excel loading function."""
+
+    def test_raises_import_error_when_openpyxl_not_installed(self):
+        """Test ImportError raised when openpyxl is not available."""
+        import builtins
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "openpyxl":
+                raise ImportError("No module named 'openpyxl'")
+            return original_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(ImportError) as exc_info:
+                load_excel("/fake/file.xlsx")
+
+            assert "openpyxl is required" in str(exc_info.value)
+            assert "pip install recursive-cleaner[excel]" in str(exc_info.value)
+
+    def test_raises_import_error_for_xls_when_xlrd_not_installed(self):
+        """Test ImportError raised for .xls when xlrd is not available."""
+        import builtins
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "xlrd":
+                raise ImportError("No module named 'xlrd'")
+            return original_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(ImportError) as exc_info:
+                load_excel("/fake/file.xls")
+
+            assert "xlrd is required" in str(exc_info.value)
+            assert "pip install recursive-cleaner[excel]" in str(exc_info.value)
+
+    def test_load_xlsx_returns_list_of_dicts(self):
+        """Test loading XLSX returns list of dicts with correct data."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "age", "city"])
+            ws.append(["Alice", 30, "NYC"])
+            ws.append(["Bob", 25, "LA"])
+            ws.append(["Charlie", 35, "Chicago"])
+            wb.save(f.name)
+
+            records = load_excel(f.name)
+
+            assert len(records) == 3
+            assert records[0] == {"name": "Alice", "age": 30, "city": "NYC"}
+            assert records[1]["name"] == "Bob"
+            assert records[2]["city"] == "Chicago"
+
+    def test_load_xlsx_empty_returns_empty_list(self):
+        """Test empty XLSX (header only) returns empty list."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "age"])
+            wb.save(f.name)
+
+            records = load_excel(f.name)
+            assert records == []
+
+    def test_load_xlsx_completely_empty_returns_empty_list(self):
+        """Test completely empty XLSX returns empty list."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            wb.save(f.name)
+
+            records = load_excel(f.name)
+            assert records == []
+
+
+class TestChunkFileExcel:
+    """Tests for chunk_file with Excel files."""
+
+    def test_chunk_xlsx_produces_reasonable_chunk_count(self):
+        """Test that XLSX with 25 rows and chunk_size=50 produces 1 chunk, not 93."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["id", "name", "email", "status"])
+            for i in range(25):
+                ws.append([i, f"user_{i}", f"user{i}@test.com", "active"])
+            wb.save(f.name)
+
+            # With chunk_size=50 (rows), 25 rows should fit in 1 chunk
+            chunks = chunk_file(f.name, chunk_size=50)
+            assert len(chunks) == 1
+
+            # With chunk_size=10, should get 3 chunks (25/10 = 3)
+            chunks = chunk_file(f.name, chunk_size=10)
+            assert len(chunks) == 3
+
+    def test_chunk_xlsx_content_is_jsonl(self):
+        """Test that XLSX chunks contain JSONL-formatted data."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "value"])
+            ws.append(["Alice", 10])
+            ws.append(["Bob", 20])
+            wb.save(f.name)
+
+            chunks = chunk_file(f.name, chunk_size=50)
+            assert len(chunks) == 1
+            # Each line should be valid JSON
+            for line in chunks[0].split("\n"):
+                data = json.loads(line)
+                assert "name" in data
+                assert "value" in data
+
+    def test_chunk_xlsx_empty_returns_empty(self):
+        """Test empty XLSX returns empty list."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "value"])
+            wb.save(f.name)
+
+            chunks = chunk_file(f.name, chunk_size=50)
+            assert chunks == []
+
+    def test_chunk_xlsx_with_random_sampling(self):
+        """Test XLSX chunking with random sampling."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["id", "status"])
+            for i in range(6):
+                ws.append([i, "active"])
+            wb.save(f.name)
+
+            chunks = chunk_file(f.name, chunk_size=2, sampling_strategy="random")
+
+            # Should still have all records, just shuffled
+            assert len(chunks) == 3
+            all_ids = set()
+            for chunk in chunks:
+                for line in chunk.split("\n"):
+                    data = json.loads(line)
+                    all_ids.add(data["id"])
+            assert all_ids == {0, 1, 2, 3, 4, 5}
+
+
+# =============================================================================
+# ODS Integration Tests
+# =============================================================================
+
+
+class TestLoadOds:
+    """Tests for ODS loading function."""
+
+    def test_raises_import_error_when_odfpy_not_installed(self):
+        """Test ImportError raised when odfpy is not available."""
+        import builtins
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name.startswith("odf"):
+                raise ImportError("No module named 'odf'")
+            return original_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(ImportError) as exc_info:
+                load_ods("/fake/file.ods")
+
+            assert "odfpy is required" in str(exc_info.value)
+            assert "pip install recursive-cleaner[ods]" in str(exc_info.value)
+
+    def test_load_ods_returns_list_of_dicts(self):
+        """Test loading ODS returns list of dicts with correct data."""
+        odf = pytest.importorskip("odf")
+        from odf.opendocument import OpenDocumentSpreadsheet
+        from odf.table import Table, TableCell, TableRow
+        from odf.text import P
+
+        doc = OpenDocumentSpreadsheet()
+        table = Table(name="Sheet1")
+
+        # Header row
+        header_row = TableRow()
+        for h in ["name", "age", "city"]:
+            cell = TableCell()
+            cell.addElement(P(text=h))
+            header_row.addElement(cell)
+        table.addElement(header_row)
+
+        # Data rows
+        for name, age, city in [("Alice", "30", "NYC"), ("Bob", "25", "LA")]:
+            row = TableRow()
+            for val in [name, age, city]:
+                cell = TableCell()
+                cell.addElement(P(text=val))
+                row.addElement(cell)
+            table.addElement(row)
+
+        doc.spreadsheet.addElement(table)
+
+        with tempfile.NamedTemporaryFile(suffix=".ods", delete=False) as f:
+            doc.save(f.name)
+            records = load_ods(f.name)
+
+            assert len(records) == 2
+            assert records[0]["name"] == "Alice"
+            assert records[1]["city"] == "LA"
+
+    def test_chunk_file_ods_produces_structured_chunks(self):
+        """Test that ODS files get chunked as structured data, not text."""
+        odf = pytest.importorskip("odf")
+        from odf.opendocument import OpenDocumentSpreadsheet
+        from odf.table import Table, TableCell, TableRow
+        from odf.text import P
+
+        doc = OpenDocumentSpreadsheet()
+        table = Table(name="Sheet1")
+
+        header_row = TableRow()
+        for h in ["id", "value"]:
+            cell = TableCell()
+            cell.addElement(P(text=h))
+            header_row.addElement(cell)
+        table.addElement(header_row)
+
+        for i in range(25):
+            row = TableRow()
+            for val in [str(i), f"item_{i}"]:
+                cell = TableCell()
+                cell.addElement(P(text=val))
+                row.addElement(cell)
+            table.addElement(row)
+
+        doc.spreadsheet.addElement(table)
+
+        with tempfile.NamedTemporaryFile(suffix=".ods", delete=False) as f:
+            doc.save(f.name)
+
+            # chunk_size=50 rows — 25 rows should be 1 chunk
+            chunks = chunk_file(f.name, chunk_size=50)
+            assert len(chunks) == 1
+
+            # Each line should be valid JSON
+            for line in chunks[0].split("\n"):
+                data = json.loads(line)
+                assert "id" in data
+
+
+# =============================================================================
 # Response Parsing Tests
 # =============================================================================
 
@@ -580,3 +849,68 @@ def bad_func(data):
             parse_response(response)
 
         assert "__main__" in str(exc_info.value)
+
+
+class TestParseTestCases:
+    """Tests for <test_cases> parsing in parse_response."""
+
+    def test_parse_response_includes_test_cases(self):
+        """Test assertions are extracted from response."""
+        response = '''<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs fixing</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>fix_phone</name>
+    <docstring>Fix phone numbers.</docstring>
+    <code>
+```python
+def fix_phone(record: dict) -> dict:
+    record["phone"] = record.get("phone", "").replace("-", "")
+    return record
+```
+    </code>
+    <test_cases>
+      <assertion>fix_phone({"phone": "555-1234"})["phone"] == "5551234"</assertion>
+      <assertion>fix_phone({"phone": "5551234"})["phone"] == "5551234"</assertion>
+    </test_cases>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>'''
+
+        result = parse_response(response)
+        assert "test_cases" in result
+        assert len(result["test_cases"]) == 2
+        assert '== "5551234"' in result["test_cases"][0]
+
+    def test_parse_response_no_test_cases_block(self):
+        """Missing <test_cases> block returns empty list."""
+        result = parse_response(SAMPLE_RESPONSE)
+        assert result["test_cases"] == []
+
+    def test_parse_response_empty_test_cases_block(self):
+        """Empty <test_cases> block returns empty list."""
+        response = '''<cleaning_analysis>
+  <issues_detected></issues_detected>
+  <function_to_generate>
+    <name>noop</name>
+    <docstring>Does nothing.</docstring>
+    <code>
+```python
+def noop(record: dict) -> dict:
+    return record
+```
+    </code>
+    <test_cases>
+    </test_cases>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>'''
+
+        result = parse_response(response)
+        assert result["test_cases"] == []
+
+    def test_parse_clean_response_has_empty_test_cases(self):
+        """Clean response (no function) has empty test_cases."""
+        result = parse_response(CLEAN_RESPONSE)
+        assert result["test_cases"] == []

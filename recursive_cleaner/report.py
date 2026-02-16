@@ -1,7 +1,50 @@
 """Cleaning report generation."""
 
+import copy
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def capture_transformations(
+    code: str,
+    function_name: str,
+    sample_data: list[dict],
+    max_examples: int = 5,
+) -> list[dict]:
+    """
+    Run function on sample records and return before/after pairs.
+
+    Args:
+        code: Python source code of the function
+        function_name: Name of the function to call
+        sample_data: List of sample records to transform
+        max_examples: Maximum examples to capture
+
+    Returns:
+        List of {"before": dict, "after": dict} for records that changed
+    """
+    if not sample_data:
+        return []
+    namespace: dict = {}
+    try:
+        exec(code, namespace)
+    except Exception:
+        return []
+    func = namespace.get(function_name)
+    if not func:
+        return []
+    examples = []
+    for record in sample_data:
+        original = copy.deepcopy(record)
+        try:
+            transformed = func(copy.deepcopy(record))
+            if transformed != original:
+                examples.append({"before": original, "after": transformed})
+                if len(examples) >= max_examples:
+                    break
+        except Exception:
+            continue
+    return examples
 
 
 def generate_report(
@@ -59,6 +102,28 @@ def generate_report(
             lines.append(f"| {i} | `{name}` | {first_line} |")
 
         lines.append("")
+
+        # Sample transformations
+        has_samples = any(func.get("samples") for func in functions)
+        if has_samples:
+            lines.append("### Sample Transformations")
+            lines.append("")
+            for func in functions:
+                samples = func.get("samples", [])
+                if not samples:
+                    continue
+                lines.append(f"**`{func.get('name', 'unknown')}`**")
+                lines.append("")
+                for sample in samples:
+                    before = sample.get("before", {})
+                    after = sample.get("after", {})
+                    all_keys = sorted(set(list(before.keys()) + list(after.keys())))
+                    for key in all_keys:
+                        bval = before.get(key)
+                        aval = after.get(key)
+                        if bval != aval:
+                            lines.append(f"- `{key}`: `{bval!r}` → `{aval!r}`")
+                lines.append("")
 
     # Quality metrics section
     if quality_before:

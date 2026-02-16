@@ -1,5 +1,6 @@
 """Quality metrics for measuring data cleaning effectiveness."""
 
+import copy
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -127,6 +128,51 @@ def compare_quality(before: QualityMetrics, after: QualityMetrics) -> dict:
     return result
 
 
+def check_function_effect(
+    code: str,
+    function_name: str,
+    sample_data: list[dict],
+) -> tuple[bool, str | None]:
+    """
+    Check if a function measurably changes sample data.
+
+    Runs the function on copies of each sample record and compares
+    output to input. If no records change, the function is a no-op.
+
+    Args:
+        code: Python source code of the function
+        function_name: Name of the function to call
+        sample_data: List of sample records to test on
+
+    Returns:
+        (True, None) if function changes data
+        (False, error_message) if function is a no-op
+    """
+    if not sample_data:
+        return True, None
+
+    namespace: dict = {}
+    try:
+        exec(code, namespace)
+    except Exception:
+        return True, None  # Compilation issues handled by other validators
+
+    func = namespace.get(function_name)
+    if func is None:
+        return True, None
+
+    for record in sample_data:
+        original = copy.deepcopy(record)
+        try:
+            result = func(copy.deepcopy(record))
+            if result != original:
+                return True, None  # Function changed something
+        except Exception:
+            return True, None  # Runtime issues handled elsewhere
+
+    return False, "Function produces identical output — no data was modified"
+
+
 def load_structured_data(file_path: str) -> list[dict]:
     """
     Load JSONL/JSON file as list of dicts for measurement.
@@ -139,6 +185,22 @@ def load_structured_data(file_path: str) -> list[dict]:
     """
     path = Path(file_path)
     suffix = path.suffix.lower()
+
+    # Spreadsheet files are binary — handle before read_text()
+    if suffix in {".xlsx", ".xls"}:
+        from .parsers import load_excel
+        try:
+            return load_excel(file_path)
+        except ImportError:
+            return []
+
+    if suffix == ".ods":
+        from .parsers import load_ods
+        try:
+            return load_ods(file_path)
+        except ImportError:
+            return []
+
     content = path.read_text(encoding="utf-8")
 
     if suffix == ".jsonl":

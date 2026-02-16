@@ -2,7 +2,7 @@
 
 import pytest
 from recursive_cleaner import DataCleaner, QualityMetrics, compare_quality, measure_quality
-from recursive_cleaner.metrics import load_structured_data
+from recursive_cleaner.metrics import check_function_effect, load_structured_data
 
 
 class MockLLM:
@@ -332,3 +332,157 @@ def test_cleaner_text_mode_no_metrics(tmp_path):
 
     # Text mode should not populate metrics
     assert cleaner.metrics_before is None
+
+
+# Tests for check_function_effect
+
+
+class TestCheckFunctionEffect:
+    """Tests for no-op detection in generated functions."""
+
+    def test_function_that_changes_data_passes(self):
+        """Function that modifies a field has effect."""
+        code = '''
+def fix_phone(record: dict) -> dict:
+    record["phone"] = record.get("phone", "").replace("-", "")
+    return record
+'''
+        sample = [{"phone": "555-1234"}, {"phone": "555-5678"}]
+        has_effect, error = check_function_effect(code, "fix_phone", sample)
+        assert has_effect is True
+        assert error is None
+
+    def test_noop_function_rejected(self):
+        """Function that returns data unchanged is a no-op."""
+        code = '''
+def noop(record: dict) -> dict:
+    return record
+'''
+        sample = [{"name": "Alice"}, {"name": "Bob"}]
+        has_effect, error = check_function_effect(code, "noop", sample)
+        assert has_effect is False
+        assert "no-op" in error.lower() or "identical" in error.lower()
+
+    def test_conditional_noop_when_no_match(self):
+        """Function that only changes specific values is no-op when none match."""
+        code = '''
+def fix_status(record: dict) -> dict:
+    if record.get("status") == "actve":
+        record["status"] = "active"
+    return record
+'''
+        # Sample has no typos — function won't change anything
+        sample = [{"status": "active"}, {"status": "pending"}]
+        has_effect, error = check_function_effect(code, "fix_status", sample)
+        assert has_effect is False
+
+    def test_conditional_function_with_match(self):
+        """Function that changes matching records has effect."""
+        code = '''
+def fix_status(record: dict) -> dict:
+    if record.get("status") == "actve":
+        record["status"] = "active"
+    return record
+'''
+        sample = [{"status": "actve"}, {"status": "pending"}]
+        has_effect, error = check_function_effect(code, "fix_status", sample)
+        assert has_effect is True
+
+    def test_empty_sample_passes(self):
+        """Empty sample data passes through (can't check)."""
+        code = 'def noop(r): return r'
+        has_effect, error = check_function_effect(code, "noop", [])
+        assert has_effect is True
+
+    def test_function_not_found_passes(self):
+        """Wrong function name passes through."""
+        code = 'def actual(r): return r'
+        has_effect, error = check_function_effect(code, "wrong_name", [{"a": 1}])
+        assert has_effect is True
+
+    def test_compilation_error_passes(self):
+        """Bad code passes through (other validators handle it)."""
+        has_effect, error = check_function_effect("def broken(", "broken", [{"a": 1}])
+        assert has_effect is True
+
+    def test_runtime_error_passes(self):
+        """Function that crashes passes through (other validators handle it)."""
+        code = '''
+def crasher(record: dict) -> dict:
+    return record["nonexistent"]
+'''
+        has_effect, error = check_function_effect(code, "crasher", [{"a": 1}])
+        assert has_effect is True
+
+
+# Integration: metric gate in DataCleaner
+
+RESPONSE_NOOP = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>passthrough</name>
+    <docstring>Does nothing useful.</docstring>
+    <code>
+```python
+def passthrough(record: dict) -> dict:
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+RESPONSE_USEFUL = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>fix_phone</name>
+    <docstring>Remove dashes from phone numbers.</docstring>
+    <code>
+```python
+def fix_phone(record: dict) -> dict:
+    phone = record.get("phone", "")
+    if isinstance(phone, str):
+        record["phone"] = phone.replace("-", "")
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+
+def test_cleaner_rejects_noop_function(tmp_path):
+    """DataCleaner rejects no-op function and retries."""
+    test_file = tmp_path / "test.jsonl"
+    test_file.write_text('{"phone": "555-1234"}\n{"phone": "555-5678"}\n')
+
+    mock_llm = MockLLM([RESPONSE_NOOP, RESPONSE_USEFUL, RESPONSE_CLEAN])
+
+    events = []
+    cleaner = DataCleaner(
+        llm_backend=mock_llm,
+        file_path=str(test_file),
+        chunk_size=10,
+        validate_runtime=True,
+        on_progress=lambda e: events.append(e),
+    )
+    cleaner.run()
+
+    # Should have retried after no-op
+    assert len(mock_llm.calls) >= 2
+    # Retry prompt should mention no-op
+    assert any("no-op" in call.lower() or "identical" in call.lower() for call in mock_llm.calls[1:])
+    # Only the useful function accepted
+    assert len(cleaner.functions) == 1
+    assert cleaner.functions[0]["name"] == "fix_phone"
+    # noop_function event emitted
+    noop_events = [e for e in events if e["type"] == "noop_function"]
+    assert len(noop_events) == 1

@@ -39,7 +39,7 @@ class TestInferSchemaJsonl:
             assert schema["nullable"]["email"] is True
 
     def test_infer_jsonl_samples(self):
-        """Test sample collection (max 3 per field)."""
+        """Test sample collection (max 5 unique per field)."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             for i in range(10):
                 f.write(json.dumps({"id": i, "name": f"item_{i}"}) + "\n")
@@ -47,8 +47,8 @@ class TestInferSchemaJsonl:
 
             schema = infer_schema(f.name)
 
-            assert len(schema["samples"]["id"]) == 3
-            assert schema["samples"]["id"] == [0, 1, 2]
+            assert len(schema["samples"]["id"]) == 5
+            assert schema["samples"]["id"] == [0, 1, 2, 3, 4]
 
     def test_infer_jsonl_mixed_types(self):
         """Test mixed type detection."""
@@ -149,6 +149,58 @@ class TestInferSchemaJson:
             assert schema["fields"] == []
 
 
+class TestInferSchemaExcel:
+    """Tests for Excel schema inference."""
+
+    def test_infer_xlsx_basic(self):
+        """Test basic XLSX schema inference."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "age", "active"])
+            ws.append(["Alice", 30, True])
+            ws.append(["Bob", 25, False])
+            wb.save(f.name)
+
+            schema = infer_schema(f.name)
+
+            assert schema["fields"] == ["name", "age", "active"]
+            assert schema["types"]["name"] == "str"
+            assert schema["types"]["age"] == "int"
+            assert schema["nullable"]["name"] is False
+
+    def test_infer_xlsx_empty_returns_empty(self):
+        """Test empty XLSX returns empty schema."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["name", "age"])
+            wb.save(f.name)
+
+            schema = infer_schema(f.name)
+            assert schema["fields"] == []
+
+    def test_infer_xlsx_does_not_crash_on_binary(self):
+        """Test XLSX schema inference doesn't crash trying read_text on binary."""
+        openpyxl = pytest.importorskip("openpyxl")
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(["id", "value"])
+            ws.append([1, "test"])
+            wb.save(f.name)
+
+            # This would crash with UnicodeDecodeError if we tried read_text()
+            schema = infer_schema(f.name)
+            assert "id" in schema["fields"]
+            assert "value" in schema["fields"]
+
+
 class TestInferSchemaText:
     """Tests for text file schema inference."""
 
@@ -205,8 +257,9 @@ class TestInferSchemaEdgeCases:
 
             schema = infer_schema(f.name, sample_size=5)
 
-            # Should only see first 5 records
-            assert len(schema["samples"]["id"]) == 3  # max 3 samples
+            # Should only see first 5 records, all unique
+            assert len(schema["samples"]["id"]) == 5
+            assert schema["samples"]["id"] == [0, 1, 2, 3, 4]
 
 
 class TestFormatSchemaForPrompt:
@@ -219,29 +272,33 @@ class TestFormatSchemaForPrompt:
             "types": {"name": "str", "age": "int"},
             "samples": {"name": ["Alice", "Bob"], "age": [30, 25]},
             "nullable": {"name": False, "age": False},
+            "null_rate": {"name": 0.0, "age": 0.0},
         }
 
         result = format_schema_for_prompt(schema)
 
-        assert "Fields detected:" in result
+        assert "Field inventory" in result
         assert "- name (str):" in result
         assert "- age (int):" in result
         assert "'Alice'" in result
         assert "30" in result
+        # No null rate shown for 0%
+        assert "None" not in result
 
     def test_format_nullable_field(self):
-        """Test formatting nullable fields."""
+        """Test formatting nullable fields with null rate."""
         schema = {
             "fields": ["email"],
             "types": {"email": "str"},
             "samples": {"email": ["test@example.com"]},
             "nullable": {"email": True},
+            "null_rate": {"email": 0.12},
         }
 
         result = format_schema_for_prompt(schema)
 
-        assert "nullable" in result
-        assert "- email (str, nullable):" in result
+        assert "None (12%)" in result
+        assert "- email (str):" in result
 
     def test_format_empty_schema(self):
         """Test formatting empty schema returns empty string."""
@@ -265,3 +322,67 @@ class TestFormatSchemaForPrompt:
         assert "'active'" in result
         assert "'pending'" in result
         assert "'closed'" in result
+
+    def test_format_without_null_rate_key(self):
+        """Test backwards compatibility when null_rate key is missing."""
+        schema = {
+            "fields": ["name"],
+            "types": {"name": "str"},
+            "samples": {"name": ["Alice"]},
+            "nullable": {"name": False},
+        }
+
+        result = format_schema_for_prompt(schema)
+
+        assert "- name (str): 'Alice'" in result
+
+
+class TestNullRate:
+    """Tests for null rate calculation in schema inference."""
+
+    def test_null_rate_calculated(self):
+        """Null rate is calculated as percentage."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+            for i in range(10):
+                val = None if i < 3 else f"val_{i}"
+                f.write(json.dumps({"field": val}) + "\n")
+            f.flush()
+
+            schema = infer_schema(f.name)
+
+            assert "null_rate" in schema
+            assert abs(schema["null_rate"]["field"] - 0.3) < 0.01
+
+    def test_null_rate_zero_when_no_nulls(self):
+        """Null rate is 0.0 when all values present."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+            f.write('{"name": "Alice"}\n{"name": "Bob"}\n')
+            f.flush()
+
+            schema = infer_schema(f.name)
+
+            assert schema["null_rate"]["name"] == 0.0
+
+    def test_unique_samples_deduplication(self):
+        """Duplicate values are deduplicated in samples."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+            for _ in range(10):
+                f.write('{"status": "active"}\n')
+            f.flush()
+
+            schema = infer_schema(f.name)
+
+            # All values identical — should have 1 unique sample
+            assert len(schema["samples"]["status"]) == 1
+            assert schema["samples"]["status"] == ["active"]
+
+    def test_unique_samples_capped_at_five(self):
+        """Unique samples capped at 5."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+            for i in range(10):
+                f.write(json.dumps({"val": f"unique_{i}"}) + "\n")
+            f.flush()
+
+            schema = infer_schema(f.name)
+
+            assert len(schema["samples"]["val"]) == 5

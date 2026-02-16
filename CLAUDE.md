@@ -4,7 +4,10 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v1.0.2 | **Implemented** | 2025-02-07 |
+| v1.1.0 | **Implemented** | 2026-02-16 |
+| v1.0.4 | Implemented | 2026-02-13 |
+| v1.0.3 | Implemented | 2026-02-11 |
+| v1.0.2 | Implemented | 2025-02-07 |
 | v1.0.1 | Implemented | 2025-02-05 |
 | v1.0.0 | Implemented | 2025-01-30 |
 | v0.9.0 | Implemented | 2025-01-19 |
@@ -18,9 +21,12 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.0.2 complete. 555 tests passing. Refactored 2026-02-07.
+**Current State**: v1.1.0 complete. 620 tests passing.
 
 ### Version History
+- **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cumulative cross-chunk field dedup, adaptive iteration budget per chunk
+- **v1.0.4**: Tier 1 quality gates — inline test-case generation, schema-powered prompting, before/after metric gate, sample transformations in report
+- **v1.0.3**: XLSX/ODS structured parsing fix (was 93 chunks for 25-row file, now 1), benchmark suite with MLX model comparison
 - **v1.0.2**: Documentation completeness, version alignment
 - **v1.0.1**: Return type validation, prompt signature clarity, duplicate field detection
 - **v1.0.0**: Apply mode for applying cleaning functions to data, Excel support, TUI color enhancement
@@ -110,6 +116,7 @@ cleaner.run()
 Large files exceed LLM context windows. Process in chunks:
 - **Text files**: By character count (default 4000)
 - **CSV/JSON/JSONL**: By item count (default 50)
+- **XLSX/XLS/ODS**: Loaded as structured records, chunked by row count (not character count)
 
 ### 2. Docstring Registry (Context Memory)
 Each generated function's docstring is fed back into subsequent prompts. Simple list, most recent N functions, character budget.
@@ -171,35 +178,44 @@ def normalize_phone_numbers(data):
 recursive_cleaner/
     __init__.py          # Public exports (~59 lines)
     apply.py             # Apply cleaning functions to data (~484 lines) [v1.0.0]
-    cleaner.py           # Main DataCleaner class (~729 lines)
+    cleaner.py           # Main DataCleaner class (~794 lines)
     cli.py               # CLI interface with subcommands (~396 lines) [v0.9.0]
     context.py           # Docstring registry with FIFO eviction (~27 lines)
     dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
     errors.py            # 4 exception classes (~17 lines)
     latency.py           # LLM call timing and LatencyTracker (~53 lines) [extracted]
-    metrics.py           # Quality metrics before/after (~163 lines) [v0.4.0]
+    metrics.py           # Quality metrics + no-op detection (~225 lines) [v0.4.0]
     optimizer.py         # Two-pass consolidation with LLM agency (~337 lines) [v0.5.0]
     output.py            # Function file generation (~198 lines)
     parser_generator.py  # LLM-generated parsers for unknown formats [v0.7.0]
-    parsers.py           # Chunk text/csv/json/jsonl with sampling (~448 lines)
-    prompt.py            # LLM prompt templates (~223 lines)
-    report.py            # Markdown report generation (~120 lines) [v0.6.0]
-    response.py          # XML/markdown parsing + agency dataclasses (~293 lines)
-    schema.py            # Schema inference (~117 lines) [v0.2.0]
+    parsers.py           # Chunk text/csv/json/jsonl/xlsx/ods with sampling (~606 lines)
+    prompt.py            # LLM prompt templates (~238 lines)
+    report.py            # Markdown report + sample transformations (~203 lines) [v0.6.0]
+    response.py          # XML/markdown parsing + test case extraction (~310 lines)
+    schema.py            # Schema inference with null rates (~149 lines) [v0.2.0]
     state.py             # Pipeline state persistence (~97 lines) [extracted]
     tui.py               # Rich terminal dashboard (~615 lines) [v0.8.0]
     types.py             # LLMBackend protocol (~11 lines)
-    validation.py        # Runtime validation + safety checks (~242 lines)
+    validation.py        # Runtime validation + safety + test cases (~294 lines)
     vendor/
         __init__.py      # Vendor exports (~4 lines)
         chunker.py       # Vendored sentence-aware chunker (~187 lines) [v0.3.0]
 
 backends/
     __init__.py          # Backend exports
-    mlx_backend.py       # MLX-LM backend for Apple Silicon
+    mlx_backend.py       # MLX-LM backend for Apple Silicon (~188 lines)
     openai_backend.py    # OpenAI-compatible backend (LM Studio, Ollama) [v0.9.0]
 
-tests/                   # 555 tests
+benchmarks/
+    benchmark_data.jsonl     # 100-row test dataset (13 fields, 10+ quality issue categories)
+    benchmark_instructions.txt # Cleaning instructions for benchmark data
+    run_benchmark.py         # Benchmark runner (separates download/load/TTFT/pipeline timing)
+    run_all.sh               # Run all 7 Qwen3 models with HF cache cleanup
+    plot_results.py          # Generate PNG charts from benchmark JSON results
+    README.md                # Setup, model lineup, metrics documentation
+    results/                 # Per-model JSON/MD results, cleaning functions, charts
+
+tests/                   # 620 tests
     test_apply.py        # Apply mode tests [v1.0.0]
     test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
@@ -212,6 +228,7 @@ tests/                   # 555 tests
     test_integration.py  # End-to-end tests
     test_latency.py      # Latency metrics tests [v0.6.0]
     test_metrics.py      # Quality metrics tests [v0.4.0]
+    test_mlx_backend.py  # MLX backend tests [v1.1.0]
     test_openai_backend.py # OpenAI backend tests [v0.9.0]
     test_optimizer.py    # Two-pass optimization tests [v0.5.0]
     test_output.py       # Output generation tests

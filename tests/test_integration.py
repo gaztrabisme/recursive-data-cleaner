@@ -35,6 +35,7 @@ RESPONSE_WITH_FUNCTION = '''
     <code>
 ```python
 def format_phones(data):
+    data["_formatted"] = True
     return data
 ```
     </code>
@@ -85,6 +86,7 @@ RESPONSE_WITH_FUNCTION_2 = '''
     <code>
 ```python
 def normalize_dates(data):
+    data["_normalized"] = True
     return data
 ```
     </code>
@@ -104,6 +106,47 @@ RESPONSE_WITH_FUNCTION_3 = '''
     <code>
 ```python
 def validate_emails(data):
+    data["_validated"] = True
+    return data
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+RESPONSE_WITH_FUNCTION_4 = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Names need trimming</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>trim_names</name>
+    <docstring>Trim whitespace from names.</docstring>
+    <code>
+```python
+def trim_names(data):
+    data["_trimmed"] = True
+    return data
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+RESPONSE_WITH_FUNCTION_5 = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Status needs standardization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>standardize_status</name>
+    <docstring>Standardize status values.</docstring>
+    <code>
+```python
+def standardize_status(data):
+    data["_standardized"] = True
     return data
 ```
     </code>
@@ -258,8 +301,8 @@ class TestMaxIterations:
         test_file = tmp_path / "data.jsonl"
         test_file.write_text('{"data": "test"}\n')
 
-        # Always return needs_more_work
-        responses = [RESPONSE_WITH_FUNCTION] * 20
+        # Always return needs_more_work (distinct functions to avoid duplicate field detection)
+        responses = [RESPONSE_WITH_FUNCTION, RESPONSE_WITH_FUNCTION_2, RESPONSE_WITH_FUNCTION_3] * 7
         mock_llm = MockLLM(responses)
 
         cleaner = DataCleaner(
@@ -286,7 +329,7 @@ class TestMaxIterations:
         test_file = tmp_path / "data.jsonl"
         test_file.write_text('{"data": "test"}\n')
 
-        responses = [RESPONSE_WITH_FUNCTION] * 10
+        responses = [RESPONSE_WITH_FUNCTION, RESPONSE_WITH_FUNCTION_2] * 5
         mock_llm = MockLLM(responses)
 
         cleaner = DataCleaner(
@@ -313,7 +356,7 @@ class TestMaxIterations:
             test_file = tmp_path / f"data_{max_iter}.jsonl"
             test_file.write_text('{"data": "test"}\n')
 
-            responses = [RESPONSE_WITH_FUNCTION] * 10
+            responses = [RESPONSE_WITH_FUNCTION, RESPONSE_WITH_FUNCTION_2, RESPONSE_WITH_FUNCTION_3] * 4
             mock_llm = MockLLM(responses)
 
             cleaner = DataCleaner(
@@ -607,8 +650,11 @@ class TestContextAccumulation:
         test_file = tmp_path / "data.jsonl"
         test_file.write_text('{"data": "test"}\n')
 
-        # Generate many functions to exceed context budget
-        responses = [RESPONSE_WITH_FUNCTION] * 5 + [RESPONSE_CLEAN]
+        # Generate many functions to exceed context budget (distinct to avoid duplicate field detection)
+        responses = [
+            RESPONSE_WITH_FUNCTION, RESPONSE_WITH_FUNCTION_2, RESPONSE_WITH_FUNCTION_3,
+            RESPONSE_WITH_FUNCTION_4, RESPONSE_WITH_FUNCTION_5, RESPONSE_CLEAN,
+        ]
         mock_llm = MockLLM(responses)
 
         cleaner = DataCleaner(

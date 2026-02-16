@@ -1,0 +1,14 @@
+Messy CRM export data that needs comprehensive cleaning:
+
+1. Normalize all dates to ISO 8601 format (YYYY-MM-DD)
+2. Normalize all phone numbers to E.164 format (+1XXXXXXXXXX for US numbers)
+3. Normalize amounts to decimal format without currency symbols (e.g., "1234.56")
+4. Strip HTML tags and decode HTML entities in description field
+5. Fix whitespace issues: trim leading/trailing spaces, collapse double spaces
+6. Normalize category field to Title Case (e.g., "Electronics")
+7. Fix status field typos - valid values are: active, pending, churned
+8. Normalize weight field to kg with consistent format (e.g., "5.20 kg")
+9. Normalize tags to JSON arrays (convert comma-separated and semicolon-separated strings)
+10. Replace empty strings and whitespace-only values with null in notes field
+11. Normalize city names to Title Case
+12. Validate and normalize email addresses to lowercase

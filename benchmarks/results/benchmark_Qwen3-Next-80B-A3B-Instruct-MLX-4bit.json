@@ -1,0 +1,220 @@
+{
+  "model": "lmstudio-community/Qwen3-Next-80B-A3B-Instruct-MLX-4bit",
+  "data_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/benchmark_data.jsonl",
+  "chunk_size": 20,
+  "max_iterations": 5,
+  "download_time_s": 1053.13,
+  "load_time_s": 5.49,
+  "warmup": {
+    "warmup_time_s": 2.081,
+    "warmup_prompt_tokens": 16,
+    "warmup_response_tokens": 1,
+    "warmup_decode_tok_per_s": 0.5
+  },
+  "runs": [
+    {
+      "pipeline_time_s": 545.74,
+      "chunks": 5,
+      "llm_calls": 25,
+      "functions_generated": 6,
+      "function_names": [
+        "normalize_dates",
+        "normalize_amounts",
+        "normalize_phones",
+        "normalize_status",
+        "normalize_weights",
+        "normalize_tags"
+      ],
+      "latency_avg_ms": 21829.1,
+      "latency_min_ms": 17237.8,
+      "latency_max_ms": 29823.3,
+      "latency_total_ms": 545728.2,
+      "token_stats": {
+        "total_prompt_tokens": 83628,
+        "total_response_tokens": 20924,
+        "total_generation_time_s": 545.586,
+        "avg_decode_tok_per_s": 38.4
+      },
+      "per_call_stats": [
+        {
+          "call_num": 1,
+          "prompt_tokens": 3011,
+          "response_tokens": 1148,
+          "generation_time_s": 24.761,
+          "decode_tok_per_s": 46.4
+        },
+        {
+          "call_num": 2,
+          "prompt_tokens": 3041,
+          "response_tokens": 953,
+          "generation_time_s": 21.78,
+          "decode_tok_per_s": 43.8
+        },
+        {
+          "call_num": 3,
+          "prompt_tokens": 3041,
+          "response_tokens": 1234,
+          "generation_time_s": 25.78,
+          "decode_tok_per_s": 47.9
+        },
+        {
+          "call_num": 4,
+          "prompt_tokens": 3041,
+          "response_tokens": 981,
+          "generation_time_s": 22.113,
+          "decode_tok_per_s": 44.4
+        },
+        {
+          "call_num": 5,
+          "prompt_tokens": 3044,
+          "response_tokens": 1000,
+          "generation_time_s": 22.541,
+          "decode_tok_per_s": 44.4
+        },
+        {
+          "call_num": 6,
+          "prompt_tokens": 3057,
+          "response_tokens": 1066,
+          "generation_time_s": 24.15,
+          "decode_tok_per_s": 44.1
+        },
+        {
+          "call_num": 7,
+          "prompt_tokens": 3087,
+          "response_tokens": 932,
+          "generation_time_s": 20.881,
+          "decode_tok_per_s": 44.6
+        },
+        {
+          "call_num": 8,
+          "prompt_tokens": 3136,
+          "response_tokens": 761,
+          "generation_time_s": 17.498,
+          "decode_tok_per_s": 43.5
+        },
+        {
+          "call_num": 9,
+          "prompt_tokens": 3208,
+          "response_tokens": 1075,
+          "generation_time_s": 23.113,
+          "decode_tok_per_s": 46.5
+        },
+        {
+          "call_num": 10,
+          "prompt_tokens": 3241,
+          "response_tokens": 991,
+          "generation_time_s": 21.756,
+          "decode_tok_per_s": 45.6
+        },
+        {
+          "call_num": 11,
+          "prompt_tokens": 3321,
+          "response_tokens": 713,
+          "generation_time_s": 17.526,
+          "decode_tok_per_s": 40.7
+        },
+        {
+          "call_num": 12,
+          "prompt_tokens": 3355,
+          "response_tokens": 737,
+          "generation_time_s": 18.965,
+          "decode_tok_per_s": 38.9
+        },
+        {
+          "call_num": 13,
+          "prompt_tokens": 3354,
+          "response_tokens": 695,
+          "generation_time_s": 21.039,
+          "decode_tok_per_s": 33.0
+        },
+        {
+          "call_num": 14,
+          "prompt_tokens": 3354,
+          "response_tokens": 602,
+          "generation_time_s": 19.043,
+          "decode_tok_per_s": 31.6
+        },
+        {
+          "call_num": 15,
+          "prompt_tokens": 3354,
+          "response_tokens": 693,
+          "generation_time_s": 20.61,
+          "decode_tok_per_s": 33.6
+        },
+        {
+          "call_num": 16,
+          "prompt_tokens": 3336,
+          "response_tokens": 777,
+          "generation_time_s": 22.087,
+          "decode_tok_per_s": 35.2
+        },
+        {
+          "call_num": 17,
+          "prompt_tokens": 3416,
+          "response_tokens": 1051,
+          "generation_time_s": 29.816,
+          "decode_tok_per_s": 35.2
+        },
+        {
+          "call_num": 18,
+          "prompt_tokens": 3556,
+          "response_tokens": 666,
+          "generation_time_s": 22.904,
+          "decode_tok_per_s": 29.1
+        },
+        {
+          "call_num": 19,
+          "prompt_tokens": 3589,
+          "response_tokens": 784,
+          "generation_time_s": 24.333,
+          "decode_tok_per_s": 32.2
+        },
+        {
+          "call_num": 20,
+          "prompt_tokens": 3641,
+          "response_tokens": 583,
+          "generation_time_s": 19.18,
+          "decode_tok_per_s": 30.4
+        },
+        {
+          "call_num": 21,
+          "prompt_tokens": 3664,
+          "response_tokens": 661,
+          "generation_time_s": 21.681,
+          "decode_tok_per_s": 30.5
+        },
+        {
+          "call_num": 22,
+          "prompt_tokens": 3694,
+          "response_tokens": 787,
+          "generation_time_s": 24.545,
+          "decode_tok_per_s": 32.1
+        },
+        {
+          "call_num": 23,
+          "prompt_tokens": 3693,
+          "response_tokens": 739,
+          "generation_time_s": 21.634,
+          "decode_tok_per_s": 34.2
+        },
+        {
+          "call_num": 24,
+          "prompt_tokens": 3697,
+          "response_tokens": 718,
+          "generation_time_s": 20.619,
+          "decode_tok_per_s": 34.8
+        },
+        {
+          "call_num": 25,
+          "prompt_tokens": 3697,
+          "response_tokens": 577,
+          "generation_time_s": 17.233,
+          "decode_tok_per_s": 33.5
+        }
+      ],
+      "output_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/results/cleaning_functions_Qwen3-Next-80B-A3B-Instruct-MLX-4bit.py",
+      "report_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/results/cleaning_report_Qwen3-Next-80B-A3B-Instruct-MLX-4bit.md"
+    }
+  ],
+  "timestamp": "2026-02-11T15:23:02.086277+00:00"
+}

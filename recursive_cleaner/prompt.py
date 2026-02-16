@@ -115,6 +115,11 @@ def function_name(record: dict) -> dict:
     return record
 ```
     </code>
+    <test_cases>
+      <assertion>function_name({{"field": "messy_value"}})["field"] == "clean_value"</assertion>
+      <assertion>function_name({{"field": "already_clean"}})["field"] == "already_clean"</assertion>
+      <assertion>function_name({{"field": None}}) is not None</assertion>
+    </test_cases>
   </function_to_generate>
 
   <chunk_status>clean|needs_more_work</chunk_status>
@@ -128,6 +133,9 @@ RULES:
 - Include imports inside the function or document needed imports in docstring
 - Function must be idempotent (safe to run multiple times)
 - Use ```python markdown blocks for code
+- Include 3-5 test assertions in <test_cases> using actual data from the chunk
+- Each <assertion> is a Python expression that evaluates to True when the function works correctly
+- Test edge cases: messy input, already-clean input, None/missing values
 - Include 2-5 tags in the docstring describing what the function handles
 - Format: "Tags: tag1, tag2, tag3" on its own line at end of docstring
 - Use lowercase single words: domain terms (date, phone, email) and action terms (normalize, validate, fix)'''
@@ -170,6 +178,11 @@ def function_name(text: str) -> str:
     return text
 ```
     </code>
+    <test_cases>
+      <assertion>function_name("messy input") == "clean output"</assertion>
+      <assertion>function_name("already clean") == "already clean"</assertion>
+      <assertion>function_name("") == ""</assertion>
+    </test_cases>
   </function_to_generate>
 
   <chunk_status>clean|needs_more_work</chunk_status>
@@ -181,6 +194,9 @@ RULES:
 - If all issues solved: <chunk_status>clean</chunk_status>, omit <function_to_generate>
 - Function must be idempotent (safe to run multiple times)
 - Use ```python markdown blocks for code
+- Include 3-5 test assertions in <test_cases> using actual data from the chunk
+- Each <assertion> is a Python expression that evaluates to True when the function works correctly
+- Test edge cases: messy input, already-clean input, empty string
 - Include 2-5 tags in the docstring describing what the function handles
 - Format: "Tags: tag1, tag2, tag3" on its own line at end of docstring
 - Use lowercase single words: domain terms (date, phone, email) and action terms (normalize, validate, fix)'''

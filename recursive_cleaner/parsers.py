@@ -24,6 +24,151 @@ MARKITDOWN_EXTENSIONS = {
 }
 
 
+def load_excel(file_path: str) -> list[dict]:
+    """Load Excel file (.xlsx or .xls) as list of dicts.
+
+    Args:
+        file_path: Path to the Excel file
+
+    Returns:
+        List of dictionaries, one per row (first row = headers)
+
+    Raises:
+        ImportError: If openpyxl (for .xlsx) or xlrd (for .xls) is not installed
+    """
+    suffix = Path(file_path).suffix.lower()
+
+    if suffix == ".xls":
+        try:
+            import xlrd
+        except ImportError:
+            raise ImportError(
+                "xlrd is required for .xls files. "
+                "Install with: pip install recursive-cleaner[excel]"
+            )
+
+        workbook = xlrd.open_workbook(file_path)
+        sheet = workbook.sheet_by_index(0)
+
+        if sheet.nrows < 2:
+            return []
+
+        headers = [str(sheet.cell_value(0, col)) for col in range(sheet.ncols)]
+        records = []
+        for row_idx in range(1, sheet.nrows):
+            row_data = {}
+            for col_idx, header in enumerate(headers):
+                row_data[header] = sheet.cell_value(row_idx, col_idx)
+            records.append(row_data)
+        return records
+
+    # Default: .xlsx
+    try:
+        from openpyxl import load_workbook
+    except ImportError:
+        raise ImportError(
+            "openpyxl is required for .xlsx files. "
+            "Install with: pip install recursive-cleaner[excel]"
+        )
+
+    workbook = load_workbook(file_path, read_only=True)
+    sheet = workbook.active
+
+    rows = list(sheet.iter_rows(values_only=True))
+    workbook.close()
+
+    if len(rows) < 2:
+        return []
+
+    headers = [str(h) if h is not None else "" for h in rows[0]]
+    records = []
+    for row in rows[1:]:
+        row_data = {}
+        for col_idx, header in enumerate(headers):
+            value = row[col_idx] if col_idx < len(row) else None
+            row_data[header] = value
+        records.append(row_data)
+
+    return records
+
+
+def load_ods(file_path: str) -> list[dict]:
+    """Load OpenDocument Spreadsheet (.ods) as list of dicts.
+
+    Args:
+        file_path: Path to the ODS file
+
+    Returns:
+        List of dictionaries, one per row (first row = headers)
+
+    Raises:
+        ImportError: If odfpy is not installed
+    """
+    try:
+        from odf.opendocument import load as load_odf
+        from odf.table import Table, TableCell, TableRow
+        from odf.text import P
+    except ImportError:
+        raise ImportError(
+            "odfpy is required for .ods files. "
+            "Install with: pip install recursive-cleaner[ods]"
+        )
+
+    doc = load_odf(file_path)
+    sheets = doc.getElementsByType(Table)
+    if not sheets:
+        return []
+
+    sheet = sheets[0]
+    rows = sheet.getElementsByType(TableRow)
+    if len(rows) < 2:
+        return []
+
+    def cell_text(cell):
+        """Extract text content from an ODS cell."""
+        parts = []
+        for p in cell.getElementsByType(P):
+            # Get all text content from the paragraph
+            text = ""
+            for node in p.childNodes:
+                if hasattr(node, "data"):
+                    text += node.data
+                elif hasattr(node, "__str__"):
+                    text += str(node)
+            parts.append(text)
+        return "\n".join(parts) if parts else ""
+
+    def expand_row(row):
+        """Expand repeated cells in a row."""
+        cells = []
+        for cell in row.getElementsByType(TableCell):
+            repeat = int(cell.getAttribute("numbercolumnsrepeated") or 1)
+            value = cell_text(cell)
+            cells.extend([value] * repeat)
+        return cells
+
+    # First row is headers
+    header_cells = expand_row(rows[0])
+    # Trim trailing empty headers
+    while header_cells and not header_cells[-1]:
+        header_cells.pop()
+    if not header_cells:
+        return []
+
+    records = []
+    for row in rows[1:]:
+        cells = expand_row(row)
+        # Skip fully empty rows
+        if not any(c.strip() for c in cells[:len(header_cells)]):
+            continue
+        row_data = {}
+        for col_idx, header in enumerate(header_cells):
+            row_data[header] = cells[col_idx] if col_idx < len(cells) else ""
+        records.append(row_data)
+
+    return records
+
+
 def load_parquet(file_path: str) -> list[dict]:
     """Load parquet file as list of dicts.
 
@@ -106,6 +251,19 @@ def chunk_file(
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
 
+    # Handle spreadsheet files as structured data (before markitdown which would convert to text)
+    if suffix in {".xlsx", ".xls"}:
+        records = load_excel(file_path)
+        if not records:
+            return []
+        return _chunk_records(records, chunk_size, sampling_strategy, stratify_field)
+
+    if suffix == ".ods":
+        records = load_ods(file_path)
+        if not records:
+            return []
+        return _chunk_records(records, chunk_size, sampling_strategy, stratify_field)
+
     # Handle markitdown formats: preprocess to text, then chunk as text
     if suffix in MARKITDOWN_EXTENSIONS:
         content = preprocess_with_markitdown(file_path)
@@ -154,7 +312,7 @@ def chunk_file(
 
 def _detect_mode(suffix: str) -> Literal["structured", "text"]:
     """Detect mode from file extension."""
-    structured_extensions = {".jsonl", ".csv", ".json", ".parquet"}
+    structured_extensions = {".jsonl", ".csv", ".json", ".parquet", ".xlsx", ".xls", ".ods"}
     if suffix in structured_extensions:
         return "structured"
     return "text"

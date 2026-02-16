@@ -8,14 +8,15 @@ from typing import Callable, Literal
 from .context import build_context
 from .errors import OutputValidationError, ParseError
 from .latency import LatencyTracker, call_llm
-from .metrics import QualityMetrics, compare_quality, load_structured_data, measure_quality
+from .metrics import QualityMetrics, check_function_effect, compare_quality, load_structured_data, measure_quality
 from .parsers import MARKITDOWN_EXTENSIONS, chunk_file
 from .prompt import build_prompt
+from .report import capture_transformations
 from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
 from .state import STATE_VERSION, load_state, load_state_for_resume, save_state
 from .types import LLMBackend
-from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_function
+from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_function, validate_test_cases
 
 
 class DataCleaner:
@@ -290,6 +291,9 @@ class DataCleaner:
     def _detect_mode(self) -> Literal["structured", "text"]:
         """Detect mode from file extension."""
         suffix = Path(self.file_path).suffix.lower()
+        # Spreadsheet files are structured data (not text via markitdown)
+        if suffix in {".xlsx", ".xls", ".ods"}:
+            return "structured"
         # Markitdown formats are processed as text
         if suffix in MARKITDOWN_EXTENSIONS:
             return "text"
@@ -301,7 +305,7 @@ class DataCleaner:
     def _is_known_extension(self) -> bool:
         """Check if file extension is natively supported."""
         suffix = Path(self.file_path).suffix.lower()
-        known = {".jsonl", ".csv", ".json", ".parquet", ".txt"}
+        known = {".jsonl", ".csv", ".json", ".parquet", ".txt", ".xlsx", ".xls", ".ods"}
         return suffix in known or suffix in MARKITDOWN_EXTENSIONS
 
     def _load_with_auto_parser(self) -> list[str]:
@@ -475,8 +479,6 @@ class DataCleaner:
         """Process a single chunk, iterating until clean or max iterations."""
         self._emit("chunk_start", chunk_index=chunk_idx)
         error_feedback = ""
-        # Reset fields covered for new chunk
-        self._fields_covered = set()
 
         # Dry run mode: just detect issues, don't generate functions
         if self.dry_run:
@@ -491,6 +493,8 @@ class DataCleaner:
             )
         else:
             gen_chunk, holdout_chunk = chunk, ""
+
+        fruitless_iterations = 0  # Consecutive iterations with no new function
 
         for iteration in range(self.max_iterations):
             self._emit("iteration", chunk_index=chunk_idx, iteration=iteration)
@@ -581,15 +585,69 @@ class DataCleaner:
                             print(f"  Validation failed: {error_msg}")
                         continue
 
+                # Test case validation: run LLM-provided assertions
+                test_cases = result.get("test_cases", [])
+                if test_cases:
+                    tc_valid, tc_error = validate_test_cases(
+                        result["code"], test_cases, result["name"]
+                    )
+                    if not tc_valid:
+                        error_feedback = (
+                            f"Your test cases revealed a bug in your function: {tc_error}. "
+                            f"Rewrite the function so all test assertions pass."
+                        )
+                        self._emit(
+                            "test_case_failed",
+                            chunk_index=chunk_idx,
+                            function_name=result["name"],
+                            error=tc_error,
+                        )
+                        if not self.tui:
+                            print(f"  Test case failed: {tc_error}")
+                        continue
+
+                # Metric gate: reject no-op functions (structured mode only)
+                # Uses fresh sample data since runtime validation may mutate records
+                if self.validate_runtime and self._effective_mode == "structured":
+                    gate_data = extract_sample_data(gen_chunk, mode="structured")
+                    has_effect, noop_msg = check_function_effect(
+                        result["code"], result["name"], gate_data
+                    )
+                    if not has_effect:
+                        error_feedback = (
+                            f"No-op detected: {noop_msg}. "
+                            f"Generate a function that actually transforms the data."
+                        )
+                        self._emit(
+                            "noop_function",
+                            chunk_index=chunk_idx,
+                            function_name=result["name"],
+                        )
+                        if not self.tui:
+                            print(f"  No-op: {result['name']}")
+                        continue
+
+                # Capture before/after samples for the report
+                samples = []
+                if self._effective_mode == "structured":
+                    report_data = extract_sample_data(
+                        gen_chunk, max_samples=5, mode="structured"
+                    )
+                    samples = capture_transformations(
+                        result["code"], result["name"], report_data
+                    )
+
                 self.functions.append({
                     "name": result["name"],
                     "docstring": result["docstring"],
                     "code": result["code"],
+                    "samples": samples,
                 })
                 # Track fields covered by this function
                 self._fields_covered.update(new_fields)
                 # Track for saturation check
                 self._recent_new_function_count += 1
+                fruitless_iterations = 0  # Reset: this iteration was productive
 
                 # Update TUI with new function
                 if self._tui_renderer:
@@ -604,8 +662,15 @@ class DataCleaner:
                     print(f"  Generated: {result['name']}")
             else:
                 # LLM said needs_more_work but didn't provide code
+                fruitless_iterations += 1
                 if not self.tui:
                     print(f"  Warning: iteration {iteration + 1} produced no function")
+
+            # Adaptive budget: stop if last 2 iterations produced nothing
+            if fruitless_iterations >= 2:
+                if not self.tui:
+                    print(f"  Skipping remaining iterations for chunk {chunk_idx} (no progress)")
+                break
 
         if not self.tui:
             print(f"  Warning: chunk {chunk_idx} hit max iterations ({self.max_iterations})")

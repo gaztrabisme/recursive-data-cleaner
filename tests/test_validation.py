@@ -2,7 +2,7 @@
 
 import pytest
 from recursive_cleaner import DataCleaner, validate_function, extract_sample_data, check_code_safety
-from recursive_cleaner.validation import extract_modified_fields
+from recursive_cleaner.validation import extract_modified_fields, validate_test_cases
 
 
 class MockLLM:
@@ -738,3 +738,293 @@ def fix_status(record: dict) -> dict:
     # The retry prompt should mention "already generated" or "duplicate"
     assert any("phone" in call.lower() and ("already" in call.lower() or "duplicate" in call.lower())
                for call in mock_llm.calls[2:])  # Check prompts after first acceptance
+
+
+def test_cross_chunk_duplicate_field_rejected(tmp_path):
+    """Functions covering already-handled fields are rejected across chunks."""
+    test_file = tmp_path / "test.jsonl"
+    # Two chunks (chunk_size=1 means 1 record per chunk)
+    test_file.write_text('{"phone": "555-1234"}\n{"phone": "555-5678"}\n')
+
+    # Chunk 1: generate phone function, then clean
+    response_phone = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>normalize_phone</name>
+    <docstring>Normalize phone numbers.</docstring>
+    <code>
+```python
+def normalize_phone(record: dict) -> dict:
+    record["phone"] = record["phone"].replace("-", "")
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+    response_clean = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="true">Phone handled</issue>
+  </issues_detected>
+  <chunk_status>clean</chunk_status>
+</cleaning_analysis>
+'''
+    # Chunk 2: try to generate another phone function (should be rejected), then clean
+    response_phone_again = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone needs formatting</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>format_phone</name>
+    <docstring>Format phone numbers.</docstring>
+    <code>
+```python
+def format_phone(record: dict) -> dict:
+    record["phone"] = "+1" + record["phone"]
+    return record
+```
+    </code>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+    mock_llm = MockLLM([response_phone, response_clean, response_phone_again, response_clean])
+    events = []
+
+    cleaner = DataCleaner(
+        llm_backend=mock_llm,
+        file_path=str(test_file),
+        chunk_size=1,
+        validate_runtime=True,
+        on_progress=lambda e: events.append(e),
+    )
+    cleaner.run()
+
+    # Only normalize_phone should be accepted; format_phone rejected cross-chunk
+    assert len(cleaner.functions) == 1
+    assert cleaner.functions[0]["name"] == "normalize_phone"
+
+    # Should have emitted a duplicate_field event
+    dup_events = [e for e in events if e["type"] == "duplicate_field"]
+    assert len(dup_events) >= 1
+    assert "phone" in dup_events[0]["fields"]
+
+
+# Tests for validate_test_cases
+
+
+class TestValidateTestCases:
+    """Tests for LLM-provided test assertion validation."""
+
+    GOOD_CODE = '''
+def normalize_phone(record: dict) -> dict:
+    phone = record.get("phone", "")
+    if isinstance(phone, str):
+        record["phone"] = phone.replace("-", "").replace(" ", "")
+    return record
+'''
+
+    def test_all_assertions_pass(self):
+        """All passing assertions return (True, None)."""
+        test_cases = [
+            'normalize_phone({"phone": "555-1234"})["phone"] == "5551234"',
+            'normalize_phone({"phone": "555 1234"})["phone"] == "5551234"',
+            'normalize_phone({"phone": "5551234"})["phone"] == "5551234"',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is True
+        assert error is None
+
+    def test_assertion_evaluates_to_false(self):
+        """Assertion that evaluates to False is caught."""
+        test_cases = [
+            'normalize_phone({"phone": "555-1234"})["phone"] == "WRONG"',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is False
+        assert "Test 1 failed" in error
+
+    def test_assertion_raises_exception(self):
+        """Assertion that raises an exception is caught."""
+        test_cases = [
+            'normalize_phone({"phone": "555-1234"})["nonexistent"] == "x"',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is False
+        assert "KeyError" in error
+
+    def test_empty_test_cases_passes(self):
+        """Empty test case list returns (True, None)."""
+        valid, error = validate_test_cases(self.GOOD_CODE, [], "normalize_phone")
+        assert valid is True
+        assert error is None
+
+    def test_function_not_found(self):
+        """Wrong function name returns error."""
+        test_cases = ['wrong_name({"a": 1}) is not None']
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "wrong_name")
+        assert valid is False
+        assert "not found" in error
+
+    def test_compilation_failure(self):
+        """Bad code that can't compile returns error."""
+        bad_code = "def broken(data\n    return data"
+        test_cases = ['broken({"a": 1}) is not None']
+        valid, error = validate_test_cases(bad_code, test_cases, "broken")
+        assert valid is False
+        assert "compilation failed" in error.lower() or "SyntaxError" in error
+
+    def test_unsafe_assertion_rejected(self):
+        """Assertions with dangerous code are rejected."""
+        test_cases = [
+            'eval("1+1") == 2',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is False
+        assert "Unsafe" in error or "eval" in error
+
+    def test_unsafe_import_in_assertion(self):
+        """Assertions with dangerous imports are rejected."""
+        test_cases = [
+            '__import__("os").system("echo pwned")',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is False
+        assert "Unsafe" in error or "__import__" in error
+
+    def test_second_assertion_fails(self):
+        """Reports correct test number when later assertion fails."""
+        test_cases = [
+            'normalize_phone({"phone": "555-1234"})["phone"] == "5551234"',
+            'normalize_phone({"phone": "555-1234"})["phone"] == "WRONG"',
+        ]
+        valid, error = validate_test_cases(self.GOOD_CODE, test_cases, "normalize_phone")
+        assert valid is False
+        assert "Test 2 failed" in error
+
+    def test_function_with_imports(self):
+        """Functions that need imports work correctly."""
+        code = '''
+import re
+
+def clean_text(record: dict) -> dict:
+    text = record.get("text", "")
+    record["text"] = re.sub(r"\\s+", " ", text).strip()
+    return record
+'''
+        test_cases = [
+            'clean_text({"text": "hello  world"})["text"] == "hello world"',
+            'clean_text({"text": "  spaced  "})["text"] == "spaced"',
+        ]
+        valid, error = validate_test_cases(code, test_cases, "clean_text")
+        assert valid is True
+        assert error is None
+
+
+# Integration test: test case validation in DataCleaner
+
+RESPONSE_WITH_FAILING_TESTS = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone numbers need normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>normalize_phone</name>
+    <docstring>Normalize phone numbers.</docstring>
+    <code>
+```python
+def normalize_phone(record: dict) -> dict:
+    record["phone"] = record.get("phone", "").lower()
+    return record
+```
+    </code>
+    <test_cases>
+      <assertion>normalize_phone({"phone": "555-1234"})["phone"] == "5551234"</assertion>
+    </test_cases>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+RESPONSE_WITH_PASSING_TESTS = '''
+<cleaning_analysis>
+  <issues_detected>
+    <issue id="1" solved="false">Phone numbers need normalization</issue>
+  </issues_detected>
+  <function_to_generate>
+    <name>normalize_phone</name>
+    <docstring>Normalize phone numbers.</docstring>
+    <code>
+```python
+def normalize_phone(record: dict) -> dict:
+    phone = record.get("phone", "")
+    if isinstance(phone, str):
+        record["phone"] = phone.replace("-", "")
+    return record
+```
+    </code>
+    <test_cases>
+      <assertion>normalize_phone({"phone": "555-1234"})["phone"] == "5551234"</assertion>
+      <assertion>normalize_phone({"phone": "5551234"})["phone"] == "5551234"</assertion>
+    </test_cases>
+  </function_to_generate>
+  <chunk_status>needs_more_work</chunk_status>
+</cleaning_analysis>
+'''
+
+
+def test_cleaner_retries_on_test_case_failure(tmp_path):
+    """DataCleaner retries when LLM-provided test cases fail."""
+    test_file = tmp_path / "test.jsonl"
+    test_file.write_text('{"phone": "555-1234"}\n{"phone": "555-5678"}\n')
+
+    # First: tests fail (lower() != "5551234"), second: tests pass, third: clean
+    mock_llm = MockLLM([RESPONSE_WITH_FAILING_TESTS, RESPONSE_WITH_PASSING_TESTS, RESPONSE_CLEAN])
+
+    events = []
+    cleaner = DataCleaner(
+        llm_backend=mock_llm,
+        file_path=str(test_file),
+        chunk_size=10,
+        validate_runtime=True,
+        on_progress=lambda e: events.append(e),
+    )
+    cleaner.run()
+
+    # Should have retried
+    assert len(mock_llm.calls) >= 2
+    # Retry prompt should mention test case failure
+    assert any("test" in call.lower() and "bug" in call.lower() for call in mock_llm.calls[1:])
+    # Only the working function accepted
+    assert len(cleaner.functions) == 1
+    assert cleaner.functions[0]["name"] == "normalize_phone"
+    # test_case_failed event emitted
+    tc_events = [e for e in events if e["type"] == "test_case_failed"]
+    assert len(tc_events) == 1
+
+
+def test_cleaner_accepts_function_with_passing_tests(tmp_path):
+    """DataCleaner accepts function when all test cases pass."""
+    test_file = tmp_path / "test.jsonl"
+    test_file.write_text('{"phone": "555-1234"}\n')
+
+    mock_llm = MockLLM([RESPONSE_WITH_PASSING_TESTS, RESPONSE_CLEAN])
+
+    cleaner = DataCleaner(
+        llm_backend=mock_llm,
+        file_path=str(test_file),
+        chunk_size=10,
+        validate_runtime=True,
+    )
+    cleaner.run()
+
+    # Function accepted on first try
+    assert len(cleaner.functions) == 1
+    assert cleaner.functions[0]["name"] == "normalize_phone"

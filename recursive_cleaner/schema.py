@@ -23,6 +23,23 @@ def infer_schema(file_path: str, sample_size: int = 10) -> dict:
     if not path.exists():
         return {"fields": [], "types": {}, "samples": {}, "nullable": {}}
 
+    # Spreadsheet files are binary — handle before read_text()
+    if suffix in {".xlsx", ".xls"}:
+        from .parsers import load_excel
+        try:
+            records = load_excel(file_path)
+        except ImportError:
+            return {"fields": [], "types": {}, "samples": {}, "nullable": {}}
+        return _infer_from_records(records[:sample_size])
+
+    if suffix == ".ods":
+        from .parsers import load_ods
+        try:
+            records = load_ods(file_path)
+        except ImportError:
+            return {"fields": [], "types": {}, "samples": {}, "nullable": {}}
+        return _infer_from_records(records[:sample_size])
+
     content = path.read_text(encoding="utf-8")
     if not content.strip():
         return {"fields": [], "types": {}, "samples": {}, "nullable": {}}
@@ -66,21 +83,34 @@ def _infer_json(content: str, sample_size: int) -> dict:
 def _infer_from_records(records: list[dict]) -> dict:
     """Build schema from list of record dicts."""
     if not records:
-        return {"fields": [], "types": {}, "samples": {}, "nullable": {}}
+        return {"fields": [], "types": {}, "samples": {}, "nullable": {}, "null_rate": {}}
 
     fields = list(dict.fromkeys(k for r in records for k in r.keys()))
     types = {}
     samples = {}
     nullable = {}
+    null_rate = {}
 
     for field in fields:
         values = [r.get(field) for r in records if field in r]
-        nullable[field] = any(v is None for v in values)
+        null_count = sum(1 for v in values if v is None)
+        nullable[field] = null_count > 0
+        null_rate[field] = null_count / len(values) if values else 0.0
         non_null = [v for v in values if v is not None]
-        samples[field] = non_null[:3]
+        # Collect unique representative values (up to 5) to show format diversity
+        seen_reprs: set[str] = set()
+        unique_samples: list = []
+        for v in non_null:
+            v_repr = repr(v)
+            if v_repr not in seen_reprs:
+                seen_reprs.add(v_repr)
+                unique_samples.append(v)
+                if len(unique_samples) >= 5:
+                    break
+        samples[field] = unique_samples
         types[field] = _infer_type(non_null)
 
-    return {"fields": fields, "types": types, "samples": samples, "nullable": nullable}
+    return {"fields": fields, "types": types, "samples": samples, "nullable": nullable, "null_rate": null_rate}
 
 
 def _infer_type(values: list) -> str:
@@ -102,16 +132,18 @@ def _infer_type(values: list) -> str:
 
 
 def format_schema_for_prompt(schema: dict) -> str:
-    """Format schema dict as human-readable string for prompt injection."""
+    """Format schema dict as field inventory with distributions for the prompt."""
     if not schema.get("fields"):
         return ""
-    lines = ["Fields detected:"]
+    null_rates = schema.get("null_rate", {})
+    lines = ["Field inventory (sample values from the data):"]
     for field in schema["fields"]:
         ftype = schema["types"].get(field, "unknown")
-        is_nullable = schema["nullable"].get(field, False)
         samples = schema["samples"].get(field, [])
-        type_str = f"{ftype}, nullable" if is_nullable else ftype
+        rate = null_rates.get(field, 0.0)
         sample_strs = [repr(s) if isinstance(s, str) else str(s) for s in samples]
-        sample_part = ", ".join(sample_strs) if sample_strs else "no samples"
-        lines.append(f"- {field} ({type_str}): {sample_part}")
+        parts = ", ".join(sample_strs) if sample_strs else "no samples"
+        if rate > 0:
+            parts += f", None ({rate:.0%})"
+        lines.append(f"- {field} ({ftype}): {parts}")
     return "\n".join(lines)

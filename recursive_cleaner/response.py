@@ -99,6 +99,9 @@ def parse_response(text: str) -> dict:
                     "Functions should be self-contained."
                 )
 
+    # Parse test cases
+    test_cases = _parse_test_cases(func_elem)
+
     # Parse status
     status = (analysis.findtext("chunk_status") or "needs_more_work").strip()
 
@@ -107,8 +110,23 @@ def parse_response(text: str) -> dict:
         "name": name,
         "docstring": docstring,
         "code": code,
+        "test_cases": test_cases,
         "status": status,
     }
+
+
+def _parse_test_cases(func_elem) -> list[str]:
+    """Extract test assertion strings from <test_cases> block."""
+    if func_elem is None:
+        return []
+    tc_block = func_elem.find("test_cases")
+    if tc_block is None:
+        return []
+    return [
+        a.text.strip()
+        for a in tc_block.findall("assertion")
+        if a.text and a.text.strip()
+    ]
 
 
 def _parse_issues(root: ET.Element) -> list[dict]:

@@ -17,7 +17,7 @@ from recursive_cleaner.optimizer import (
     group_by_salience,
 )
 from recursive_cleaner.output import write_cleaning_file
-from recursive_cleaner.parsers import MARKITDOWN_EXTENSIONS, chunk_file, load_parquet, preprocess_with_markitdown
+from recursive_cleaner.parsers import MARKITDOWN_EXTENSIONS, chunk_file, load_excel, load_ods, load_parquet, preprocess_with_markitdown
 from recursive_cleaner.prompt import build_prompt
 from recursive_cleaner.response import extract_python_block, parse_response
 from recursive_cleaner.parser_generator import check_parser_safety, generate_parser
@@ -32,6 +32,8 @@ __all__ = [
     "OutputValidationError",
     "chunk_file",
     "MARKITDOWN_EXTENSIONS",
+    "load_excel",
+    "load_ods",
     "load_parquet",
     "preprocess_with_markitdown",
     "parse_response",

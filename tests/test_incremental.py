@@ -43,6 +43,7 @@ class MockBackendWithFunction:
     <code>
 ```python
 def normalize_phone(data):
+    data["_normalized"] = True
     return data
 ```
     </code>
