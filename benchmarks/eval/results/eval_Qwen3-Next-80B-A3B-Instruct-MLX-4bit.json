@@ -1,0 +1,250 @@
+{
+  "model": "Qwen3-Next-80B-A3B-Instruct-MLX-4bit",
+  "summary": {
+    "total": 76,
+    "passed": 58,
+    "score_pct": 76.3
+  },
+  "by_issue_type": {
+    "phone_format": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "date_format": {
+      "total": 9,
+      "passed": 9,
+      "score_pct": 100.0
+    },
+    "enum_typo": {
+      "total": 8,
+      "passed": 7,
+      "score_pct": 87.5
+    },
+    "category_case": {
+      "total": 8,
+      "passed": 3,
+      "score_pct": 37.5
+    },
+    "html_cleanup": {
+      "total": 7,
+      "passed": 5,
+      "score_pct": 71.4
+    },
+    "whitespace": {
+      "total": 7,
+      "passed": 1,
+      "score_pct": 14.3
+    },
+    "weight_unit": {
+      "total": 7,
+      "passed": 6,
+      "score_pct": 85.7
+    },
+    "tag_format": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "null_empty": {
+      "total": 6,
+      "passed": 3,
+      "score_pct": 50.0
+    },
+    "amount_format": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "email_case": {
+      "total": 4,
+      "passed": 4,
+      "score_pct": 100.0
+    }
+  },
+  "by_field": {
+    "phone": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "date_joined": {
+      "total": 9,
+      "passed": 9,
+      "score_pct": 100.0
+    },
+    "status": {
+      "total": 8,
+      "passed": 7,
+      "score_pct": 87.5
+    },
+    "category": {
+      "total": 8,
+      "passed": 3,
+      "score_pct": 37.5
+    },
+    "description": {
+      "total": 7,
+      "passed": 5,
+      "score_pct": 71.4
+    },
+    "name": {
+      "total": 7,
+      "passed": 1,
+      "score_pct": 14.3
+    },
+    "weight": {
+      "total": 7,
+      "passed": 6,
+      "score_pct": 85.7
+    },
+    "tags": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "notes": {
+      "total": 6,
+      "passed": 3,
+      "score_pct": 50.0
+    },
+    "amount": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "email": {
+      "total": 4,
+      "passed": 4,
+      "score_pct": 100.0
+    }
+  },
+  "failures": [
+    {
+      "record_index": 9,
+      "field": "status",
+      "expected": "active",
+      "actual": null,
+      "issue_type": "enum_typo"
+    },
+    {
+      "record_index": 1,
+      "field": "category",
+      "expected": "Electronics",
+      "actual": "electronics",
+      "issue_type": "category_case"
+    },
+    {
+      "record_index": 2,
+      "field": "category",
+      "expected": "Electronics",
+      "actual": "ELECTRONICS",
+      "issue_type": "category_case"
+    },
+    {
+      "record_index": 3,
+      "field": "category",
+      "expected": "Electronics",
+      "actual": "eLECTRONICS",
+      "issue_type": "category_case"
+    },
+    {
+      "record_index": 5,
+      "field": "category",
+      "expected": "Clothing",
+      "actual": "CLOTHING",
+      "issue_type": "category_case"
+    },
+    {
+      "record_index": 8,
+      "field": "category",
+      "expected": "Home & Garden",
+      "actual": "HOME & GARDEN",
+      "issue_type": "category_case"
+    },
+    {
+      "record_index": 1,
+      "field": "description",
+      "expected": "Purchased & returned item",
+      "actual": "Purchased &amp; returned item",
+      "issue_type": "html_cleanup"
+    },
+    {
+      "record_index": 6,
+      "field": "description",
+      "expected": "Left for competitor & unlikely to return",
+      "actual": "Left for competitor &amp; unlikely to return",
+      "issue_type": "html_cleanup"
+    },
+    {
+      "record_index": 1,
+      "field": "name",
+      "expected": "Bob Smith",
+      "actual": "Bob  Smith",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 2,
+      "field": "name",
+      "expected": "Carol Davis",
+      "actual": " Carol Davis",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 4,
+      "field": "name",
+      "expected": "Eva Martinez",
+      "actual": "Eva Martinez ",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 5,
+      "field": "name",
+      "expected": "Frank Wilson",
+      "actual": "Frank  Wilson",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 7,
+      "field": "name",
+      "expected": "Hannah Brown",
+      "actual": " Hannah Brown ",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 9,
+      "field": "name",
+      "expected": "Julia Chen",
+      "actual": "Julia  Chen",
+      "issue_type": "whitespace"
+    },
+    {
+      "record_index": 4,
+      "field": "weight",
+      "expected": "5.22 kg",
+      "actual": null,
+      "issue_type": "weight_unit"
+    },
+    {
+      "record_index": 1,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
+    },
+    {
+      "record_index": 3,
+      "field": "notes",
+      "expected": null,
+      "actual": "   ",
+      "issue_type": "null_empty"
+    },
+    {
+      "record_index": 6,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
+    }
+  ]
+}

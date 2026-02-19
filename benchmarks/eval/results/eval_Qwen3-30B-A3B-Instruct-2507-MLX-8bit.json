@@ -1,0 +1,166 @@
+{
+  "model": "Qwen3-30B-A3B-Instruct-2507-MLX-8bit",
+  "summary": {
+    "total": 76,
+    "passed": 70,
+    "score_pct": 92.1
+  },
+  "by_issue_type": {
+    "phone_format": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "date_format": {
+      "total": 9,
+      "passed": 9,
+      "score_pct": 100.0
+    },
+    "enum_typo": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "category_case": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "html_cleanup": {
+      "total": 7,
+      "passed": 5,
+      "score_pct": 71.4
+    },
+    "whitespace": {
+      "total": 7,
+      "passed": 7,
+      "score_pct": 100.0
+    },
+    "weight_unit": {
+      "total": 7,
+      "passed": 6,
+      "score_pct": 85.7
+    },
+    "tag_format": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "null_empty": {
+      "total": 6,
+      "passed": 3,
+      "score_pct": 50.0
+    },
+    "amount_format": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "email_case": {
+      "total": 4,
+      "passed": 4,
+      "score_pct": 100.0
+    }
+  },
+  "by_field": {
+    "phone": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "date_joined": {
+      "total": 9,
+      "passed": 9,
+      "score_pct": 100.0
+    },
+    "status": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "category": {
+      "total": 8,
+      "passed": 8,
+      "score_pct": 100.0
+    },
+    "description": {
+      "total": 7,
+      "passed": 5,
+      "score_pct": 71.4
+    },
+    "name": {
+      "total": 7,
+      "passed": 7,
+      "score_pct": 100.0
+    },
+    "weight": {
+      "total": 7,
+      "passed": 6,
+      "score_pct": 85.7
+    },
+    "tags": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "notes": {
+      "total": 6,
+      "passed": 3,
+      "score_pct": 50.0
+    },
+    "amount": {
+      "total": 6,
+      "passed": 6,
+      "score_pct": 100.0
+    },
+    "email": {
+      "total": 4,
+      "passed": 4,
+      "score_pct": 100.0
+    }
+  },
+  "failures": [
+    {
+      "record_index": 1,
+      "field": "description",
+      "expected": "Purchased & returned item",
+      "actual": "Purchased &amp; returned item",
+      "issue_type": "html_cleanup"
+    },
+    {
+      "record_index": 6,
+      "field": "description",
+      "expected": "Left for competitor & unlikely to return",
+      "actual": "Left for competitor &amp; unlikely to return",
+      "issue_type": "html_cleanup"
+    },
+    {
+      "record_index": 4,
+      "field": "weight",
+      "expected": "5.22 kg",
+      "actual": "11.5 lbs.",
+      "issue_type": "weight_unit"
+    },
+    {
+      "record_index": 1,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
+    },
+    {
+      "record_index": 3,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
+    },
+    {
+      "record_index": 6,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{"record_index": 0, "field": "price", "expected": 1199.99, "issue_type": "price_format", "match_mode": "numeric_close", "input_value": "$1199.99"}
+{"record_index": 1, "field": "price", "expected": 1299.99, "issue_type": "price_format", "match_mode": "numeric_close", "input_value": 1299.99}
+{"record_index": 2, "field": "price", "expected": 349.99, "issue_type": "price_format", "match_mode": "numeric_close", "input_value": "349.99"}
+{"record_index": 3, "field": "price", "expected": 159.0, "issue_type": "price_format", "match_mode": "numeric_close", "input_value": "$159"}
+{"record_index": 5, "field": "price", "expected": 449.95, "issue_type": "price_format", "match_mode": "numeric_close", "input_value": "$449.95"}
+{"record_index": 0, "field": "created_at", "expected": "2024-01-15", "issue_type": "date_format", "input_value": "2024-01-15"}
+{"record_index": 1, "field": "created_at", "expected": "2024-01-20", "issue_type": "date_format", "input_value": "01/20/2024"}
+{"record_index": 3, "field": "created_at", "expected": "2024-01-05", "issue_type": "date_format", "input_value": "January 5, 2024"}
+{"record_index": 8, "field": "created_at", "expected": "2023-11-15", "issue_type": "date_format", "input_value": "November 15, 2023"}
+{"record_index": 0, "field": "category", "expected": "Electronics", "issue_type": "category_spelling", "input_value": "Electronics"}
+{"record_index": 1, "field": "category", "expected": "Electronics", "issue_type": "category_spelling", "input_value": "Electronicss"}
+{"record_index": 2, "field": "category", "expected": "Electronics", "issue_type": "category_spelling", "input_value": "elctronics"}
+{"record_index": 7, "field": "category", "expected": "Electronics", "issue_type": "category_spelling", "input_value": "ELECTRONICS"}
+{"record_index": 3, "field": "category", "expected": "Footwear", "issue_type": "category_spelling", "input_value": "Footwear"}
+{"record_index": 0, "field": "weight", "expected": 0.221, "issue_type": "weight_unit", "match_mode": "numeric_close", "input_value": "0.221 kg"}
+{"record_index": 1, "field": "weight", "expected": 0.233, "issue_type": "weight_unit", "match_mode": "numeric_close", "input_value": "233g"}
+{"record_index": 5, "field": "weight", "expected": 5.352, "issue_type": "weight_unit", "match_mode": "numeric_close", "input_value": "11.8 lbs"}
+{"record_index": 9, "field": "weight", "expected": 0.31, "issue_type": "weight_unit", "match_mode": "numeric_close", "input_value": "310g"}
+{"record_index": 0, "field": "stock_quantity", "expected": 150, "issue_type": "stock_quantity", "input_value": 150}
+{"record_index": 1, "field": "stock_quantity", "expected": 85, "issue_type": "stock_quantity", "match_mode": "numeric_close", "input_value": "85"}
+{"record_index": 9, "field": "stock_quantity", "expected": 0, "issue_type": "stock_quantity", "match_mode": "numeric_close", "input_value": -5}
+{"record_index": 0, "field": "brand", "expected": "Apple", "issue_type": "brand_case", "input_value": "Apple"}
+{"record_index": 1, "field": "brand", "expected": "Samsung", "issue_type": "brand_case", "input_value": "SAMSUNG"}
+{"record_index": 2, "field": "brand", "expected": "Sony", "issue_type": "brand_case", "input_value": "sony"}
+{"record_index": 5, "field": "brand", "expected": "Kitchenaid", "issue_type": "brand_case", "input_value": "kitchenaid"}
+{"record_index": 0, "field": "description", "expected": "A17 Pro chip", "issue_type": "html_cleanup", "match_mode": "contains", "input_value": "Latest iPhone with A17 Pro chip<br>Titanium design&amp;premium feel"}
+{"record_index": 1, "field": "description", "expected": "included", "issue_type": "html_cleanup", "match_mode": "contains", "input_value": "Flagship Android phone with S Pen<b>included</b>"}
+{"record_index": 5, "field": "description", "expected": "Professional", "issue_type": "html_cleanup", "match_mode": "contains", "input_value": "<b>Professional</b> 5-quart stand mixer<br>10 speeds&amp;powerful motor"}
+{"record_index": 0, "field": "name", "expected": "Apple iPhone 15 Pro Max", "issue_type": "whitespace", "input_value": "Apple iPhone 15 Pro Max"}
+{"record_index": 1, "field": "name", "expected": "Samsung Galaxy S24 Ultra", "issue_type": "whitespace", "input_value": "Samsung Galaxy S24 Ultra  "}
+{"record_index": 2, "field": "name", "expected": "Sony WH-1000XM5 Headphones", "issue_type": "whitespace", "input_value": " Sony WH-1000XM5 Headphones"}
+{"record_index": 0, "field": "tags", "expected": ["smartphone", "apple", "premium"], "issue_type": "tag_format", "input_value": ["smartphone", "apple", "premium"]}
+{"record_index": 1, "field": "tags", "expected": ["smartphone", "samsung", "android", "premium"], "issue_type": "tag_format", "input_value": "smartphone,samsung,android,premium"}
+{"record_index": 4, "field": "tags", "expected": ["jeans", "denim", "classic", "mens"], "issue_type": "tag_format", "input_value": "jeans,denim,classic,mens"}
+{"record_index": 2, "field": "tags", "expected": ["headphones", "wireless", "noise-cancelling"], "issue_type": "tag_format", "input_value": ["headphones", "wireless", "noise-cancelling", "headphones"]}
+{"record_index": 0, "field": "sku", "expected": "SKU-IP15PM", "issue_type": "sku_format", "input_value": "SKU-IP15PM"}
+{"record_index": 1, "field": "sku", "expected": "SKU-SGS24U", "issue_type": "sku_format", "input_value": "sku-sgs24u"}
+{"record_index": 2, "field": "sku", "expected": "SKU-SNY WH1000XM5", "issue_type": "sku_format", "input_value": "SNY WH1000XM5"}
+{"record_index": 6, "field": "sku", "expected": "SKU-DYS V15DET", "issue_type": "sku_format", "input_value": "DYS V15DET"}

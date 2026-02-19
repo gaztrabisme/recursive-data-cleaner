@@ -1,0 +1,41 @@
+{"record_index": 0, "field": "first_name", "expected": "John", "issue_type": "name_format", "input_value": "JOHN"}
+{"record_index": 1, "field": "first_name", "expected": "Mary", "issue_type": "name_format", "input_value": "mary"}
+{"record_index": 2, "field": "first_name", "expected": "Robert", "issue_type": "name_format", "input_value": "Dr. Robert"}
+{"record_index": 4, "field": "first_name", "expected": "Michael", "issue_type": "name_format", "input_value": "  Michael  "}
+{"record_index": 0, "field": "last_name", "expected": "Smith", "issue_type": "name_format", "input_value": "SMITH"}
+{"record_index": 1, "field": "last_name", "expected": "Johnson", "issue_type": "name_format", "input_value": "johnson"}
+{"record_index": 0, "field": "date_of_birth", "expected": "1985-03-15", "issue_type": "date_format", "input_value": "1985-03-15"}
+{"record_index": 1, "field": "date_of_birth", "expected": "1978-03-22", "issue_type": "date_format", "input_value": "03/22/1978"}
+{"record_index": 4, "field": "date_of_birth", "expected": "1965-12-01", "issue_type": "date_format", "input_value": "December 1, 1965"}
+{"record_index": 1, "field": "last_visit", "expected": "2024-01-10", "issue_type": "date_format", "input_value": "January 10, 2024"}
+{"record_index": 4, "field": "last_visit", "expected": "2024-03-05", "issue_type": "date_format", "input_value": "March 5, 2024"}
+{"record_index": 0, "field": "gender", "expected": "M", "issue_type": "gender", "input_value": "M"}
+{"record_index": 1, "field": "gender", "expected": "F", "issue_type": "gender", "input_value": "Female"}
+{"record_index": 2, "field": "gender", "expected": "M", "issue_type": "gender", "input_value": "male"}
+{"record_index": 4, "field": "gender", "expected": "M", "issue_type": "gender", "input_value": "MALE"}
+{"record_index": 5, "field": "gender", "expected": "F", "issue_type": "gender", "input_value": "f"}
+{"record_index": 0, "field": "phone", "expected": "(555) 123-4567", "issue_type": "phone_format", "input_value": "(555) 123-4567"}
+{"record_index": 1, "field": "phone", "expected": "(555) 234-5678", "issue_type": "phone_format", "input_value": "555-234-5678"}
+{"record_index": 2, "field": "phone", "expected": "(555) 345-6789", "issue_type": "phone_format", "input_value": "5553456789"}
+{"record_index": 4, "field": "phone", "expected": "(555) 567-8901", "issue_type": "phone_format", "input_value": "555.567.8901"}
+{"record_index": 0, "field": "email", "expected": "john.smith@email.com", "issue_type": "email_case", "input_value": "John.Smith@Email.com"}
+{"record_index": 1, "field": "email", "expected": "mary.johnson@gmail.com", "issue_type": "email_case", "input_value": "MARY.JOHNSON@GMAIL.COM"}
+{"record_index": 2, "field": "email", "expected": "robwilliams@yahoo.com", "issue_type": "email_case", "input_value": "RobWilliams@Yahoo.COM"}
+{"record_index": 0, "field": "state", "expected": "CA", "issue_type": "state", "input_value": "CA"}
+{"record_index": 1, "field": "state", "expected": "CA", "issue_type": "state", "input_value": "California"}
+{"record_index": 2, "field": "state", "expected": "CA", "issue_type": "state", "input_value": "calif"}
+{"record_index": 4, "field": "state", "expected": "CA", "issue_type": "state", "input_value": "Calif."}
+{"record_index": 6, "field": "state", "expected": "CA", "issue_type": "state", "input_value": "california"}
+{"record_index": 0, "field": "zip_code", "expected": "90210", "issue_type": "zip_code", "input_value": "90210"}
+{"record_index": 2, "field": "zip_code", "expected": "95814", "issue_type": "zip_code", "input_value": 95814}
+{"record_index": 3, "field": "zip_code", "expected": "92101", "issue_type": "zip_code", "input_value": "92101-1234"}
+{"record_index": 0, "field": "blood_type", "expected": "A+", "issue_type": "blood_type", "input_value": "A+"}
+{"record_index": 1, "field": "blood_type", "expected": "O+", "issue_type": "blood_type", "input_value": "O positive"}
+{"record_index": 5, "field": "blood_type", "expected": "O-", "issue_type": "blood_type", "input_value": "O NEG"}
+{"record_index": 9, "field": "blood_type", "expected": "A-", "issue_type": "blood_type", "input_value": "A negative"}
+{"record_index": 0, "field": "allergies", "expected": ["Penicillin", "Peanuts"], "issue_type": "list_format", "input_value": ["Penicillin", "Peanuts"]}
+{"record_index": 3, "field": "allergies", "expected": [], "issue_type": "list_format", "input_value": []}
+{"record_index": 1, "field": "medications", "expected": ["Atorvastatin", "Omeprazole"], "issue_type": "list_format", "input_value": "Atorvastatin; Omeprazole"}
+{"record_index": 0, "field": "insurance_provider", "expected": "Blue Cross Blue Shield", "issue_type": "insurance_provider", "input_value": "Blue Cross"}
+{"record_index": 1, "field": "insurance_provider", "expected": "Blue Cross Blue Shield", "issue_type": "insurance_provider", "input_value": "BlueCross"}
+{"record_index": 2, "field": "insurance_provider", "expected": "Blue Cross Blue Shield", "issue_type": "insurance_provider", "input_value": "BCBS"}

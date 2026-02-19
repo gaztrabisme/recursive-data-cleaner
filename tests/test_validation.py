@@ -638,12 +638,12 @@ def process(record: dict) -> dict:
 # Integration test: duplicate field detection in DataCleaner
 
 
-def test_cleaner_rejects_duplicate_field_with_feedback(tmp_path):
-    """Cleaner rejects functions that modify already-covered fields."""
+def test_cleaner_allows_supplementary_function_for_same_field(tmp_path):
+    """Supplementary functions for already-covered fields pass through validation."""
     test_file = tmp_path / "test.jsonl"
     test_file.write_text('{"phone": "555-1234", "status": "active"}\n')
 
-    # First response: phone function (should be accepted)
+    # First response: phone function (accepted)
     response_phone = '''
 <cleaning_analysis>
   <issues_detected>
@@ -664,7 +664,7 @@ def normalize_phone(record: dict) -> dict:
 </cleaning_analysis>
 '''
 
-    # Second response: another phone function (should be rejected as duplicate)
+    # Second response: supplementary phone function (allowed — different operation)
     response_phone_again = '''
 <cleaning_analysis>
   <issues_detected>
@@ -685,7 +685,7 @@ def fix_phone_format(record: dict) -> dict:
 </cleaning_analysis>
 '''
 
-    # Third response: status function (should be accepted - different field)
+    # Third response: status function (accepted — different field)
     response_status = '''
 <cleaning_analysis>
   <issues_detected>
@@ -727,21 +727,16 @@ def fix_status(record: dict) -> dict:
     )
     cleaner.run()
 
-    # Should have 2 functions: normalize_phone and fix_status
-    # fix_phone_format should have been rejected as duplicate
-    assert len(cleaner.functions) == 2
+    # All 3 functions accepted: supplementary phone function allowed through
+    assert len(cleaner.functions) == 3
     function_names = [f["name"] for f in cleaner.functions]
     assert "normalize_phone" in function_names
+    assert "fix_phone_format" in function_names
     assert "fix_status" in function_names
-    assert "fix_phone_format" not in function_names
-
-    # The retry prompt should mention "already generated" or "duplicate"
-    assert any("phone" in call.lower() and ("already" in call.lower() or "duplicate" in call.lower())
-               for call in mock_llm.calls[2:])  # Check prompts after first acceptance
 
 
-def test_cross_chunk_duplicate_field_rejected(tmp_path):
-    """Functions covering already-handled fields are rejected across chunks."""
+def test_cross_chunk_supplementary_function_allowed(tmp_path):
+    """Supplementary functions for already-handled fields are allowed across chunks."""
     test_file = tmp_path / "test.jsonl"
     # Two chunks (chunk_size=1 means 1 record per chunk)
     test_file.write_text('{"phone": "555-1234"}\n{"phone": "555-5678"}\n')
@@ -774,7 +769,7 @@ def normalize_phone(record: dict) -> dict:
   <chunk_status>clean</chunk_status>
 </cleaning_analysis>
 '''
-    # Chunk 2: try to generate another phone function (should be rejected), then clean
+    # Chunk 2: supplementary phone function (allowed through — different operation)
     response_phone_again = '''
 <cleaning_analysis>
   <issues_detected>
@@ -807,11 +802,13 @@ def format_phone(record: dict) -> dict:
     )
     cleaner.run()
 
-    # Only normalize_phone should be accepted; format_phone rejected cross-chunk
-    assert len(cleaner.functions) == 1
-    assert cleaner.functions[0]["name"] == "normalize_phone"
+    # Both functions accepted: supplementary phone function allowed cross-chunk
+    assert len(cleaner.functions) == 2
+    function_names = [f["name"] for f in cleaner.functions]
+    assert "normalize_phone" in function_names
+    assert "format_phone" in function_names
 
-    # Should have emitted a duplicate_field event
+    # Should still emit a duplicate_field event (observability)
     dup_events = [e for e in events if e["type"] == "duplicate_field"]
     assert len(dup_events) >= 1
     assert "phone" in dup_events[0]["fields"]

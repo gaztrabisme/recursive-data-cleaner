@@ -1,0 +1,41 @@
+{"record_index": 0, "field": "amount", "expected": 1234.56, "issue_type": "amount_format", "match_mode": "numeric_close", "input_value": "1,234.56"}
+{"record_index": 1, "field": "amount", "expected": 89.99, "issue_type": "amount_format", "match_mode": "numeric_close", "input_value": "$89.99"}
+{"record_index": 3, "field": "amount", "expected": 156.78, "issue_type": "amount_format", "match_mode": "numeric_close", "input_value": 156.78}
+{"record_index": 4, "field": "amount", "expected": -50.0, "issue_type": "amount_format", "match_mode": "numeric_close", "input_value": "-$50.00"}
+{"record_index": 0, "field": "transaction_date", "expected": "2024-01-15", "issue_type": "date_format", "input_value": "2024-01-15"}
+{"record_index": 1, "field": "transaction_date", "expected": "2024-01-15", "issue_type": "date_format", "input_value": "01/15/2024"}
+{"record_index": 2, "field": "transaction_date", "expected": "2024-01-15", "issue_type": "date_format", "input_value": "15-Jan-2024"}
+{"record_index": 3, "field": "transaction_date", "expected": "2024-01-16", "issue_type": "date_format", "input_value": "20240116"}
+{"record_index": 0, "field": "transaction_time", "expected": "14:30:00", "issue_type": "time_format", "input_value": "14:30:00"}
+{"record_index": 1, "field": "transaction_time", "expected": "14:30:00", "issue_type": "time_format", "input_value": "2:30 PM"}
+{"record_index": 2, "field": "transaction_time", "expected": "09:15:00", "issue_type": "time_format", "input_value": "09:15"}
+{"record_index": 3, "field": "transaction_time", "expected": "14:30:00", "issue_type": "time_format", "input_value": "143000"}
+{"record_index": 0, "field": "currency", "expected": "USD", "issue_type": "currency", "input_value": "USD"}
+{"record_index": 1, "field": "currency", "expected": "USD", "issue_type": "currency", "input_value": "usd"}
+{"record_index": 2, "field": "currency", "expected": "USD", "issue_type": "currency", "input_value": "$"}
+{"record_index": 3, "field": "currency", "expected": "USD", "issue_type": "currency", "input_value": "US Dollar"}
+{"record_index": 0, "field": "transaction_type", "expected": "DEBIT", "issue_type": "transaction_type", "input_value": "DEBIT"}
+{"record_index": 1, "field": "transaction_type", "expected": "DEBIT", "issue_type": "transaction_type", "input_value": "debit"}
+{"record_index": 3, "field": "transaction_type", "expected": "DEBIT", "issue_type": "transaction_type", "input_value": "DB"}
+{"record_index": 4, "field": "transaction_type", "expected": "CREDIT", "issue_type": "transaction_type", "input_value": "CREDIT"}
+{"record_index": 0, "field": "status", "expected": "completed", "issue_type": "status", "input_value": "completed"}
+{"record_index": 1, "field": "status", "expected": "completed", "issue_type": "status", "input_value": "COMPLETED"}
+{"record_index": 3, "field": "status", "expected": "completed", "issue_type": "status", "input_value": "success"}
+{"record_index": 6, "field": "status", "expected": "completed", "issue_type": "status", "input_value": "approved"}
+{"record_index": 0, "field": "account_number", "expected": "****9012", "issue_type": "account_mask", "input_value": "4532 1234 5678 9012"}
+{"record_index": 1, "field": "account_number", "expected": "****5678", "issue_type": "account_mask", "input_value": "****5678"}
+{"record_index": 2, "field": "account_number", "expected": "****9876", "issue_type": "account_mask", "input_value": "4532876543219876"}
+{"record_index": 3, "field": "account_number", "expected": "****7654", "issue_type": "account_mask", "input_value": "9876 5432 1098 7654"}
+{"record_index": 0, "field": "country_code", "expected": "US", "issue_type": "country_code", "input_value": "US"}
+{"record_index": 1, "field": "country_code", "expected": "US", "issue_type": "country_code", "input_value": "USA"}
+{"record_index": 2, "field": "country_code", "expected": "US", "issue_type": "country_code", "input_value": "United States"}
+{"record_index": 3, "field": "country_code", "expected": "US", "issue_type": "country_code", "input_value": "840"}
+{"record_index": 0, "field": "fee", "expected": 0.0, "issue_type": "fee", "match_mode": "numeric_close", "input_value": "0"}
+{"record_index": 1, "field": "fee", "expected": 0.0, "issue_type": "fee", "match_mode": "numeric_close", "input_value": "$0.00"}
+{"record_index": 2, "field": "fee", "expected": 0.0, "issue_type": "fee", "match_mode": "numeric_close", "input_value": "N/A"}
+{"record_index": 5, "field": "fee", "expected": 2.5, "issue_type": "fee", "match_mode": "numeric_close", "input_value": "2.50"}
+{"record_index": 2, "field": "merchant_name", "expected": "Best Buy", "issue_type": "merchant_name", "input_value": "  BEST BUY  "}
+{"record_index": 3, "field": "merchant_name", "expected": "Walmart", "issue_type": "merchant_name", "input_value": "walmart"}
+{"record_index": 16, "field": "merchant_name", "expected": "Costco Wholesale", "issue_type": "merchant_name", "input_value": "costco wholesale"}
+{"record_index": 1, "field": "reference_number", "expected": "REF-2024011502", "issue_type": "reference_number", "input_value": "2024011502"}
+{"record_index": 0, "field": "reference_number", "expected": "REF-2024011501", "issue_type": "reference_number", "input_value": "REF-2024011501"}

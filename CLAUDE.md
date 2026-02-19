@@ -21,10 +21,10 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.1.0 complete + #8, #9 done. 666 tests passing.
+**Current State**: v1.1.0 complete + #8, #9, #11 done. 698 tests passing.
 
 ### Version History
-- **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cumulative cross-chunk field dedup, adaptive iteration budget per chunk
+- **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cross-chunk field dedup (soft warn, allows supplementary functions), adaptive iteration budget per chunk, no-op gate uses full chunk samples
 - **v1.0.4**: Tier 1 quality gates — inline test-case generation, schema-powered prompting, before/after metric gate, sample transformations in report
 - **v1.0.3**: XLSX/ODS structured parsing fix (was 93 chunks for 25-row file, now 1), benchmark suite with MLX model comparison
 - **v1.0.2**: Documentation completeness, version alignment
@@ -214,8 +214,12 @@ benchmarks/
     plot_results.py          # Generate PNG charts from benchmark JSON results
     README.md                # Setup, model lineup, metrics documentation
     results/                 # Per-model JSON/MD results, cleaning functions, charts
+    eval/
+        run_eval.py          # Golden assertion eval harness (~220 lines) [v1.2.0]
+        golden/              # Per-dataset golden assertion JSONL files
+        results/             # Per-model eval JSON/MD + comparison table
 
-tests/                   # 620 tests
+tests/                   # 698 tests
     test_apply.py        # Apply mode tests [v1.0.0]
     test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
@@ -239,6 +243,7 @@ tests/                   # 620 tests
     test_schema.py       # Schema inference tests
     test_text_mode.py    # Text mode tests [v0.3.0]
     test_tui.py          # Terminal UI tests [v0.8.0]
+    test_eval.py         # Eval harness tests [v1.2.0]
     test_validation.py   # Runtime validation + safety tests
     test_vendor_chunker.py  # Vendored chunker tests [v0.3.0]
 
@@ -452,7 +457,7 @@ That's it. No langchain, no frameworks, no abstractions.
 | Invalid Python | Retry with syntax error in prompt (max 3) |
 | `__main__` imports | Reject during parsing, retry with error feedback |
 | Duplicate functions | Skip duplicates, keep first occurrence |
-| Duplicate field coverage | Reject, ask LLM to pick different field |
+| Duplicate field coverage | Soft warn, allow supplementary functions through remaining gates |
 | Invalid combined output | Fall back to writing only valid functions |
 | Chunk never "clean" | Skip after 5 iterations, log warning |
 | Empty chunk | Skip without LLM call |

@@ -555,19 +555,26 @@ class DataCleaner:
                         print(f"  Safety check failed: {safety_error}")
                     continue
 
-                # Check for duplicate field coverage
+                # Check for duplicate field coverage — warn but allow supplementary functions
                 new_fields = extract_modified_fields(result["code"])
                 overlap = new_fields & self._fields_covered
                 if overlap:
                     field_list = ", ".join(sorted(overlap))
-                    error_feedback = f"You already generated a function for field(s): {field_list}. This issue is solved. Move on to the next unsolved issue."
+                    # Soft warning: tell the LLM the field is covered, but don't block
+                    # This allows supplementary functions (e.g., entity decoding after tag stripping)
+                    error_feedback = (
+                        f"Field(s) {field_list} already have a cleaning function. "
+                        f"If your function handles a DIFFERENT sub-issue on that field "
+                        f"(e.g., entity decoding vs tag stripping), that's fine — continue. "
+                        f"If it's the same operation, move to the next unsolved issue."
+                    )
                     self._emit(
                         "duplicate_field",
                         chunk_index=chunk_idx,
                         function_name=result["name"],
                         fields=list(overlap),
                     )
-                    continue
+                    # Don't continue — let it pass through remaining validation gates
 
                 # Runtime validation if enabled
                 if self.validate_runtime:
@@ -622,7 +629,7 @@ class DataCleaner:
                 # Metric gate: reject no-op functions (structured mode only)
                 # Uses fresh sample data since runtime validation may mutate records
                 if self.validate_runtime and self._effective_mode == "structured":
-                    gate_data = extract_sample_data(gen_chunk, mode="structured")
+                    gate_data = extract_sample_data(gen_chunk, max_samples=50, mode="structured")
                     has_effect, noop_msg = check_function_effect(
                         result["code"], result["name"], gate_data
                     )
@@ -661,6 +668,7 @@ class DataCleaner:
                 # Track for saturation check
                 self._recent_new_function_count += 1
                 fruitless_iterations = 0  # Reset: this iteration was productive
+                error_feedback = ""  # Clear any stale feedback (e.g., from soft dedup warning)
 
                 # Update TUI with new function
                 if self._tui_renderer:
