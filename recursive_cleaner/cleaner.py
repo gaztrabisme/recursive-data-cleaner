@@ -503,7 +503,7 @@ class DataCleaner:
             if self._tui_renderer:
                 self._tui_renderer.update_chunk(chunk_idx, iteration, self.max_iterations)
 
-            context = build_context(self.functions, self.context_budget)
+            context = build_context(self.functions, self.context_budget, chunk=gen_chunk)
             prompt = build_prompt(
                 self.instructions,
                 context,
@@ -678,7 +678,7 @@ class DataCleaner:
 
     def _process_chunk_dry_run(self, chunk: str, chunk_idx: int) -> None:
         """Process chunk in dry run mode - detect issues only."""
-        context = build_context(self.functions, self.context_budget)
+        context = build_context(self.functions, self.context_budget, chunk=chunk)
         prompt = build_prompt(
             self.instructions,
             context,

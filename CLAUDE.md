@@ -21,7 +21,7 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.1.0 complete. 620 tests passing.
+**Current State**: v1.1.0 complete + #9 done. 658 tests passing.
 
 ### Version History
 - **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cumulative cross-chunk field dedup, adaptive iteration budget per chunk
@@ -180,7 +180,7 @@ recursive_cleaner/
     apply.py             # Apply cleaning functions to data (~484 lines) [v1.0.0]
     cleaner.py           # Main DataCleaner class (~794 lines)
     cli.py               # CLI interface with subcommands (~396 lines) [v0.9.0]
-    context.py           # Docstring registry with FIFO eviction (~27 lines)
+    context.py           # Docstring registry with relevance filtering (~69 lines)
     dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
     errors.py            # 4 exception classes (~17 lines)
     latency.py           # LLM call timing and LatencyTracker (~53 lines) [extracted]

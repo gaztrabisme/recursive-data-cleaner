@@ -73,10 +73,8 @@ Ensure generated functions work together and the quality gates hold on diverse d
 
 After all functions are generated, run them in sequence on sample data. Verify output is still valid (no crashes, types preserved). Catches: function A outputs `"75.00 kg"`, function B tries to parse it as a number. One extra pass, no LLM calls.
 
-### 9. Relevance-filtered context window
-> ~40 lines | `context.py`
-
-Currently FIFO (most recent N functions). Better: include functions whose docstrings mention fields present in the current chunk. Still FIFO within budget, just relevance-filtered. Helps chunk 4 see the date normalizer from chunk 1 instead of irrelevant functions from chunk 3.
+### ~~9. Relevance-filtered context window~~ ✓
+> Done. Added optional `chunk` param to `build_context()`. Scores functions by word overlap between docstring/name and chunk text. Selects by relevance, displays in generation order. Falls back to FIFO when no chunk provided (backward compatible).
 
 ### 10. Parallel chunk processing
 > ~60 lines | `cleaner.py`
