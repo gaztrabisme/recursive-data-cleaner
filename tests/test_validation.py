@@ -1,7 +1,7 @@
 """Tests for runtime validation of generated functions."""
 
 import pytest
-from recursive_cleaner import DataCleaner, validate_function, extract_sample_data, check_code_safety
+from recursive_cleaner import DataCleaner, validate_function, extract_sample_data, check_code_safety, validate_composition
 from recursive_cleaner.validation import extract_modified_fields, validate_test_cases
 
 
@@ -1028,3 +1028,113 @@ def test_cleaner_accepts_function_with_passing_tests(tmp_path):
     # Function accepted on first try
     assert len(cleaner.functions) == 1
     assert cleaner.functions[0]["name"] == "normalize_phone"
+
+
+# --- Composition testing ---
+
+
+class TestValidateComposition:
+    """Tests for validate_composition function."""
+
+    def test_compatible_functions_pass(self):
+        """Functions that compose cleanly return success."""
+        functions = [
+            {
+                "name": "normalize_status",
+                "code": 'def normalize_status(record):\n    record["status"] = record.get("status", "").lower()\n    return record',
+            },
+            {
+                "name": "normalize_name",
+                "code": 'def normalize_name(record):\n    record["name"] = record.get("name", "").strip()\n    return record',
+            },
+        ]
+        sample = [{"name": " Alice ", "status": "ACTIVE"}, {"name": "Bob", "status": "Pending"}]
+        ok, error = validate_composition(functions, sample, mode="structured")
+        assert ok is True
+        assert error is None
+
+    def test_type_mismatch_caught(self):
+        """Catches when function A returns string instead of dict."""
+        functions = [
+            {
+                "name": "break_output",
+                "code": 'def break_output(record):\n    return record.get("name", "")',
+            },
+            {
+                "name": "needs_dict",
+                "code": 'def needs_dict(record):\n    record["x"] = 1\n    return record',
+            },
+        ]
+        sample = [{"name": "Alice"}]
+        ok, error = validate_composition(functions, sample, mode="structured")
+        assert ok is False
+        assert "expected dict" in error
+        assert "break_output" in error
+
+    def test_runtime_error_caught(self):
+        """Catches when function B crashes on output of function A."""
+        stringify_code = (
+            "def stringify_weight(record):\n"
+            "    record['weight'] = str(record.get('weight', 0)) + ' kg'\n"
+            "    return record"
+        )
+        double_code = (
+            "def double_weight(record):\n"
+            "    record['weight'] = float(record['weight']) * 2\n"
+            "    return record"
+        )
+        functions = [
+            {"name": "stringify_weight", "code": stringify_code},
+            {"name": "double_weight", "code": double_code},
+        ]
+        sample = [{"weight": 75}]
+        ok, error = validate_composition(functions, sample, mode="structured")
+        assert ok is False
+        assert "double_weight" in error
+        assert "ValueError" in error
+
+    def test_text_mode_composition(self):
+        """Functions compose correctly in text mode."""
+        functions = [
+            {
+                "name": "uppercase_text",
+                "code": "def uppercase_text(text):\n    return text.upper()",
+            },
+            {
+                "name": "strip_text",
+                "code": "def strip_text(text):\n    return text.strip()",
+            },
+        ]
+        ok, error = validate_composition(functions, "  hello world  ", mode="text")
+        assert ok is True
+        assert error is None
+
+    def test_text_mode_type_mismatch(self):
+        """Catches text mode function returning non-string."""
+        functions = [
+            {
+                "name": "break_text",
+                "code": "def break_text(text):\n    return len(text)",
+            },
+        ]
+        ok, error = validate_composition(functions, "hello", mode="text")
+        assert ok is False
+        assert "expected str" in error
+
+    def test_empty_functions_pass(self):
+        """Empty function list returns success."""
+        ok, error = validate_composition([], [{"a": 1}])
+        assert ok is True
+
+    def test_empty_data_pass(self):
+        """Empty data returns success."""
+        functions = [{"name": "f", "code": "def f(r):\n    return r"}]
+        ok, error = validate_composition(functions, [])
+        assert ok is True
+
+    def test_compilation_failure(self):
+        """Catches syntax errors in function code."""
+        functions = [{"name": "bad", "code": "def bad(record):\n    return record["}]
+        ok, error = validate_composition(functions, [{"a": 1}])
+        assert ok is False
+        assert "Compilation failed" in error

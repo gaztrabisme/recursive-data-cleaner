@@ -68,10 +68,8 @@ Efficiency        Robustness  Distribution-aware  Trained model
 
 Ensure generated functions work together and the quality gates hold on diverse data. Prepares the foundation for v2.0.
 
-### 8. Composition testing
-> ~50 lines | `validation.py`
-
-After all functions are generated, run them in sequence on sample data. Verify output is still valid (no crashes, types preserved). Catches: function A outputs `"75.00 kg"`, function B tries to parse it as a number. One extra pass, no LLM calls.
+### ~~8. Composition testing~~ ✓
+> Done. Added `validate_composition()` in `validation.py`. Runs all functions in sequence on sample data after optimization, before output. Catches type mismatches and runtime errors between composed functions. Emits `composition_failed` event on failure.
 
 ### ~~9. Relevance-filtered context window~~ ✓
 > Done. Added optional `chunk` param to `build_context()`. Scores functions by word overlap between docstring/name and chunk text. Selects by relevance, displays in generation order. Falls back to FIFO when no chunk provided (backward compatible).
@@ -159,7 +157,7 @@ Train a small dedicated model using pure RL (GRPO) with the existing validation 
 - [x] Inline test-case generation (#1) — reward signal for function correctness
 - [x] Schema-powered prompting (#2) — ensures full field coverage in prompts
 - [x] Before/after metric gate (#3) — reward signal for actual improvement
-- [ ] Composition testing (#8) — reward signal for robustness
+- [x] Composition testing (#8) — reward signal for robustness
 - [ ] Golden test extraction (#14) — evaluation set for RL iterations
 - [ ] Distribution stats pass (#12) — richer training prompts
 - [ ] DataCleanBench (#16) — standardized evaluation framework

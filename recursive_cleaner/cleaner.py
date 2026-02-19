@@ -16,7 +16,7 @@ from .response import parse_response
 from .schema import format_schema_for_prompt, infer_schema
 from .state import STATE_VERSION, load_state, load_state_for_resume, save_state
 from .types import LLMBackend
-from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_function, validate_test_cases
+from .validation import check_code_safety, extract_modified_fields, extract_sample_data, split_holdout, validate_composition, validate_function, validate_test_cases
 
 
 class DataCleaner:
@@ -450,6 +450,19 @@ class DataCleaner:
         # Two-pass optimization (if enabled and enough functions)
         if self.optimize and len(self.functions) >= self.optimize_threshold:
             self._optimize_functions()
+
+        # Composition test: verify functions work together in sequence
+        if self.functions:
+            sample = extract_sample_data(
+                chunks[0], max_samples=5, mode=self._effective_mode
+            )
+            comp_ok, comp_error = validate_composition(
+                self.functions, sample, mode=self._effective_mode
+            )
+            if not comp_ok:
+                self._emit("composition_failed", error=comp_error)
+                if not self.tui:
+                    print(f"  Warning: composition test failed: {comp_error}")
 
         self._write_output()
         self._write_report()

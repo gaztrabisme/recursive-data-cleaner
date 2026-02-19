@@ -22,7 +22,7 @@ from recursive_cleaner.prompt import build_prompt
 from recursive_cleaner.response import extract_python_block, parse_response
 from recursive_cleaner.parser_generator import check_parser_safety, generate_parser
 from recursive_cleaner.tui import HAS_RICH, PHASES, SPARK_BLOCKS, TUIRenderer
-from recursive_cleaner.validation import check_code_safety, extract_modified_fields, extract_sample_data, validate_function
+from recursive_cleaner.validation import check_code_safety, extract_modified_fields, extract_sample_data, validate_composition, validate_function
 
 __all__ = [
     "apply_cleaning",
@@ -46,6 +46,7 @@ __all__ = [
     "extract_sample_data",
     "check_code_safety",
     "extract_modified_fields",
+    "validate_composition",
     "resolve_dependencies",
     "QualityMetrics",
     "measure_quality",

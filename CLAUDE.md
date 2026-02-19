@@ -21,7 +21,7 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.1.0 complete + #9 done. 658 tests passing.
+**Current State**: v1.1.0 complete + #8, #9 done. 666 tests passing.
 
 ### Version History
 - **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cumulative cross-chunk field dedup, adaptive iteration budget per chunk
@@ -196,7 +196,7 @@ recursive_cleaner/
     state.py             # Pipeline state persistence (~97 lines) [extracted]
     tui.py               # Rich terminal dashboard (~615 lines) [v0.8.0]
     types.py             # LLMBackend protocol (~11 lines)
-    validation.py        # Runtime validation + safety + test cases (~294 lines)
+    validation.py        # Runtime validation + safety + test cases + composition (~353 lines)
     vendor/
         __init__.py      # Vendor exports (~4 lines)
         chunker.py       # Vendored sentence-aware chunker (~187 lines) [v0.3.0]

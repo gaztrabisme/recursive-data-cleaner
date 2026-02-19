@@ -258,6 +258,65 @@ def validate_test_cases(
     return True, None
 
 
+def validate_composition(
+    functions: list[dict],
+    sample_data: list[dict] | str,
+    mode: Literal["structured", "text"] = "structured",
+) -> tuple[bool, str | None]:
+    """
+    Run all functions in sequence on sample data to verify they compose.
+
+    Catches: function A outputs "75.00 kg", function B tries to parse as number.
+
+    Args:
+        functions: List of dicts with 'name' and 'code' keys
+        sample_data: List of records (structured) or text string (text mode)
+        mode: "structured" or "text"
+
+    Returns:
+        (True, None) if all functions compose without error
+        (False, error_message) if composition breaks
+    """
+    if not functions or not sample_data:
+        return True, None
+
+    # Compile all functions into shared namespace
+    namespace: dict = {}
+    for f in functions:
+        try:
+            exec(f["code"], namespace)
+        except Exception as e:
+            return False, f"Compilation failed for {f['name']}: {type(e).__name__}: {e}"
+
+    if mode == "text":
+        result = sample_data
+        for f in functions:
+            func = namespace.get(f["name"])
+            if func is None:
+                continue
+            try:
+                result = func(result)
+                if not isinstance(result, str):
+                    return False, f"After {f['name']}: expected str, got {type(result).__name__}"
+            except Exception as e:
+                return False, f"{f['name']} failed on composed output: {type(e).__name__}: {e}"
+    else:
+        for i, record in enumerate(sample_data):
+            result = copy.deepcopy(record)
+            for f in functions:
+                func = namespace.get(f["name"])
+                if func is None:
+                    continue
+                try:
+                    result = func(result)
+                    if not isinstance(result, dict):
+                        return False, f"After {f['name']} on record {i}: expected dict, got {type(result).__name__}"
+                except Exception as e:
+                    return False, f"{f['name']} failed on record {i} after prior transforms: {type(e).__name__}: {e}"
+
+    return True, None
+
+
 def extract_modified_fields(code: str) -> set[str]:
     """
     Extract field names that are modified via record["field"] = ... pattern.
