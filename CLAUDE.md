@@ -21,7 +21,7 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.1.0 complete + #8, #9, #11 done. 698 tests passing.
+**Current State**: v1.2.0-dev (pipeline tuning validated). 698 tests passing. Best eval: 94.7% (30B-A3B), 89.5% (Coder-Next).
 
 ### Version History
 - **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cross-chunk field dedup (soft warn, allows supplementary functions), adaptive iteration budget per chunk, no-op gate uses full chunk samples
@@ -211,6 +211,7 @@ benchmarks/
     benchmark_instructions.txt # Cleaning instructions for benchmark data
     run_benchmark.py         # Benchmark runner (separates download/load/TTFT/pipeline timing)
     run_all.sh               # Run all 7 Qwen3 models with HF cache cleanup
+    run_lmstudio.py          # Benchmark via LM Studio (OpenAI-compatible backend)
     plot_results.py          # Generate PNG charts from benchmark JSON results
     README.md                # Setup, model lineup, metrics documentation
     results/                 # Per-model JSON/MD results, cleaning functions, charts
@@ -334,7 +335,7 @@ def extract_python_block(text: str) -> str:
 ```python
 class DataCleaner:
     def __init__(self, llm_backend, file_path, chunk_size=50,
-                 instructions="", max_iterations=5, context_budget=8000):
+                 instructions="", max_iterations=8, context_budget=8000):
         self.backend = llm_backend
         self.file_path = file_path
         self.chunk_size = chunk_size

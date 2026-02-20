@@ -203,7 +203,7 @@ Optional:
   --base-url URL            API URL for OpenAI-compatible servers
   --api-key KEY             API key (or use OPENAI_API_KEY env var)
   --chunk-size N            Items per chunk (default: 50)
-  --max-iterations N        Max iterations per chunk (default: 5)
+  --max-iterations N        Max iterations per chunk (default: 8)
   --mode {auto,structured,text}  Processing mode (default: auto)
   -o, --output PATH         Output file (default: cleaning_functions.py)
   --report PATH             Report file (empty to disable, default: cleaning_report.md)
@@ -227,7 +227,7 @@ Optional:
   --base-url URL            API URL for OpenAI-compatible servers
   --api-key KEY             API key (or use OPENAI_API_KEY env var)
   --chunk-size N            Items per chunk (default: 50)
-  --max-iterations N        Max iterations per chunk (default: 5)
+  --max-iterations N        Max iterations per chunk (default: 8)
   --mode {auto,structured,text}  Processing mode (default: auto)
   --tui                     Enable Rich dashboard
 ```
@@ -268,7 +268,7 @@ cleaner = DataCleaner(
 
     # Chunking & mode
     chunk_size=50,              # Items per chunk (or chars for text mode)
-    max_iterations=5,           # Max LLM iterations per chunk before moving on
+    max_iterations=8,           # Max LLM iterations per chunk before moving on
     context_budget=8000,        # Max chars for docstring registry fed into prompts
     mode="auto",                # "auto" detects from extension; "structured" for records, "text" for prose
     chunk_overlap=200,          # Chars of overlap between text chunks to avoid splitting context
@@ -469,15 +469,26 @@ pytest tests/ -v
 
 ## Benchmarks
 
-Eval harness with golden assertions measures cleaning function correctness across 7 Qwen3 models on a 100-record CRM dataset:
+Eval harness with golden assertions measures cleaning function correctness on a 100-record CRM dataset (76 assertions, 11 issue types).
+
+**v1.2.0-dev pipeline** (no-op gate fix, soft dedup, prompt hints, max_iterations=8):
+
+| Model | Score | Functions | Calls | Time |
+|-------|-------|-----------|-------|------|
+| Qwen3-30B-A3B (MLX 8-bit) | **94.7%** | 9 | 36 | 25.5 min |
+| Qwen3-Coder-Next (LM Studio 6-bit) | **89.5%** | 8 | 40 | 45.3 min |
+
+**v1.0.3 baseline** (7 models):
 
 | Model | Score | Functions | Avg Call |
 |-------|-------|-----------|----------|
-| Qwen3-30B-A3B (8-bit) | **92.1%** | 9 | 24s |
+| Qwen3-30B-A3B (8-bit) | 92.1% | 9 | 24s |
 | Qwen3-Coder-30B-A3B (8-bit) | 86.8% | 8 | 17s |
 | Qwen3-4B (8-bit) | 76.3% | 6 | 31s |
 | Qwen3-Next-80B-A3B (4-bit) | 76.3% | 6 | 22s |
 | Qwen3-8B (8-bit) | 73.7% | 7 | 93s |
+
+Pipeline improvements helped weaker models disproportionately: Coder-Next jumped from 56.6% to 89.5% (+33pp). See `docs/dev/006-eda-model-comparison/analysis.md` for the full two-model EDA.
 
 ```bash
 # Run eval on existing cleaning functions
@@ -485,6 +496,11 @@ python benchmarks/eval/run_eval.py \
     --functions-dir benchmarks/results/ \
     --data benchmarks/benchmark_data.jsonl \
     --golden benchmarks/eval/golden/benchmark_golden.jsonl
+
+# Benchmark via LM Studio (OpenAI-compatible)
+python benchmarks/run_lmstudio.py \
+    --model qwen/qwen3-coder-next \
+    --max-iterations 8
 ```
 
 ## Version History
