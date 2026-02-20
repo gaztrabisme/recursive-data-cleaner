@@ -1,0 +1,23 @@
+{
+  "model": "qwen/qwen3-coder-next",
+  "backend": "openai",
+  "base_url": "http://localhost:1234/v1",
+  "data_path": "/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/benchmark_data.jsonl",
+  "chunk_size": 20,
+  "max_iterations": 8,
+  "pipeline_time_s": 2715.48,
+  "llm_calls": 40,
+  "functions_generated": 8,
+  "function_names": [
+    "normalize_dates_iso8601",
+    "normalize_phone_e164_us",
+    "normalize_amount_decimal",
+    "normalize_status_canonical",
+    "normalize_weight_kg",
+    "normalize_tags_json_array",
+    "normalize_notes_null_empty",
+    "normalize_name_clean_whitespace_title"
+  ],
+  "latency_avg_ms": 67884.2,
+  "timestamp": "2026-02-20T08:44:45.587687+00:00"
+}

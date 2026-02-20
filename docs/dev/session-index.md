@@ -7,3 +7,4 @@
 | 003 | 2026-02-19 | Build | Composition testing (#8) | Complete |
 | 004 | 2026-02-19 | Build | Eval harness + golden assertions (#11) | Complete |
 | 005 | 2026-02-20 | Assess | EDA on eval results + pipeline tuning (#11) | Complete |
+| 006 | 2026-02-20 | Analyze | Two-model EDA: 30B-A3B vs Coder-Next on v1.2.0-dev | Complete |
