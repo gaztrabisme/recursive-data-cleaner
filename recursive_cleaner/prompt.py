@@ -209,6 +209,7 @@ def build_prompt(
     context: str,
     chunk: str,
     schema: str = "",
+    distributions: str = "",
     mode: Literal["structured", "text"] = "structured",
 ) -> str:
     """
@@ -219,6 +220,7 @@ def build_prompt(
         context: Existing function docstrings
         chunk: Data chunk to analyze
         schema: Data schema (only used for structured mode)
+        distributions: Field value distributions (only used for structured mode)
         mode: "structured" for JSON/CSV data, "text" for prose
 
     Returns:
@@ -232,6 +234,8 @@ def build_prompt(
         )
     else:
         schema_section = f"\n=== DATA SCHEMA ===\n{schema}\n\n" if schema else "\n"
+        if distributions:
+            schema_section += f"=== FIELD VALUE DISTRIBUTIONS ===\n{distributions}\n\n"
         return STRUCTURED_PROMPT_TEMPLATE.format(
             instructions=instructions,
             context=context,

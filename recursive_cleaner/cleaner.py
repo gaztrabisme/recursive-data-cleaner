@@ -89,6 +89,7 @@ class DataCleaner:
         self._last_check_function_count = 0
         self._total_chunks: int = 0  # Set during run()
         self._schema_str: str = ""  # Formatted schema for prompts
+        self._distributions_str: str = ""  # Formatted field value distributions for prompts
         self._last_completed_chunk: int = -1  # -1 means no chunks completed yet
         self._effective_mode: Literal["structured", "text"] = "structured"  # Resolved at run()
         # Quality metrics (populated when track_metrics=True)
@@ -371,16 +372,21 @@ class DataCleaner:
         # Try to load existing state
         resumed = self._load_state()
 
-        # Infer schema only for structured mode
+        # Infer schema and compute distributions only for structured mode
         if self._effective_mode == "structured":
             schema = infer_schema(self.file_path, self.schema_sample_size)
             self._schema_str = format_schema_for_prompt(schema)
+            # Compute global field value distributions
+            from .stats import compute_field_stats, format_stats_for_prompt
+            stats = compute_field_stats(self.file_path)
+            self._distributions_str = format_stats_for_prompt(stats)
             # Measure initial quality metrics if tracking enabled
             if self.track_metrics:
                 data = load_structured_data(self.file_path)
                 self.metrics_before = measure_quality(data)
         else:
             self._schema_str = ""  # No schema for text mode
+            self._distributions_str = ""  # No distributions for text mode
 
         self._total_chunks = len(chunks)
 
@@ -522,6 +528,7 @@ class DataCleaner:
                 context,
                 gen_chunk,
                 self._schema_str,
+                distributions=self._distributions_str,
                 mode=self._effective_mode,
             )
 
@@ -705,6 +712,7 @@ class DataCleaner:
             context,
             chunk,
             self._schema_str,
+            distributions=self._distributions_str,
             mode=self._effective_mode,
         )
 
