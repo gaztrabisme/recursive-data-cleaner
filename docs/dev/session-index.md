@@ -8,4 +8,5 @@
 | 004 | 2026-02-19 | Build | Eval harness + golden assertions (#11) | Complete |
 | 005 | 2026-02-20 | Assess | EDA on eval results + pipeline tuning (#11) | Complete |
 | 006 | 2026-02-20 | Analyze | Two-model EDA: 30B-A3B vs Coder-Next on v1.2.0-dev | Complete |
-| 007 | 2026-02-20 | Design | v2.0 distribution-aware cleaning | In Progress |
+| 007 | 2026-02-20 | Design | v2.0 distribution-aware cleaning | Complete |
+| 008 | 2026-02-20 | Build | v2.0 global field stats + prompt injection | Complete |

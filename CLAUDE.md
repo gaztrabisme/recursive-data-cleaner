@@ -4,7 +4,8 @@
 
 | Version | Status | Date |
 |---------|--------|------|
-| v1.1.0 | **Implemented** | 2026-02-16 |
+| v2.0.0 | **Implemented** | 2026-02-20 |
+| v1.1.0 | Implemented | 2026-02-16 |
 | v1.0.4 | Implemented | 2026-02-13 |
 | v1.0.3 | Implemented | 2026-02-11 |
 | v1.0.2 | Implemented | 2025-02-07 |
@@ -21,9 +22,10 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v1.2.0-dev (pipeline tuning validated). 698 tests passing. Best eval: 94.7% (30B-A3B), 89.5% (Coder-Next).
+**Current State**: v2.0.0 (distribution-aware cleaning). 714 tests passing. Best eval: 94.7% (30B-A3B), 89.5% (Coder-Next).
 
 ### Version History
+- **v2.0.0**: Distribution-aware cleaning — global field stats pre-pass (`stats.py`), per-field value frequency tables injected into prompts, cardinality-based reporting (full counts for ≤50 unique, summary for high cardinality)
 - **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cross-chunk field dedup (soft warn, allows supplementary functions), adaptive iteration budget per chunk, no-op gate uses full chunk samples
 - **v1.0.4**: Tier 1 quality gates — inline test-case generation, schema-powered prompting, before/after metric gate, sample transformations in report
 - **v1.0.3**: XLSX/ODS structured parsing fix (was 93 chunks for 25-row file, now 1), benchmark suite with MLX model comparison
@@ -178,7 +180,7 @@ def normalize_phone_numbers(data):
 recursive_cleaner/
     __init__.py          # Public exports (~59 lines)
     apply.py             # Apply cleaning functions to data (~484 lines) [v1.0.0]
-    cleaner.py           # Main DataCleaner class (~794 lines)
+    cleaner.py           # Main DataCleaner class (~823 lines)
     cli.py               # CLI interface with subcommands (~396 lines) [v0.9.0]
     context.py           # Docstring registry with relevance filtering (~69 lines)
     dependencies.py      # Topological sort for function ordering (~59 lines) [v0.4.0]
@@ -189,10 +191,11 @@ recursive_cleaner/
     output.py            # Function file generation (~198 lines)
     parser_generator.py  # LLM-generated parsers for unknown formats [v0.7.0]
     parsers.py           # Chunk text/csv/json/jsonl/xlsx/ods with sampling (~606 lines)
-    prompt.py            # LLM prompt templates (~238 lines)
+    prompt.py            # LLM prompt templates (~244 lines)
     report.py            # Markdown report + sample transformations (~203 lines) [v0.6.0]
     response.py          # XML/markdown parsing + test case extraction (~310 lines)
     schema.py            # Schema inference with null rates (~149 lines) [v0.2.0]
+    stats.py             # Global field value distributions (~85 lines) [v2.0.0]
     state.py             # Pipeline state persistence (~97 lines) [extracted]
     tui.py               # Rich terminal dashboard (~615 lines) [v0.8.0]
     types.py             # LLMBackend protocol (~11 lines)
@@ -220,7 +223,7 @@ benchmarks/
         golden/              # Per-dataset golden assertion JSONL files
         results/             # Per-model eval JSON/MD + comparison table
 
-tests/                   # 698 tests
+tests/                   # 714 tests
     test_apply.py        # Apply mode tests [v1.0.0]
     test_callbacks.py    # Progress callback tests
     test_cleaner.py      # DataCleaner tests
@@ -245,6 +248,7 @@ tests/                   # 698 tests
     test_text_mode.py    # Text mode tests [v0.3.0]
     test_tui.py          # Terminal UI tests [v0.8.0]
     test_eval.py         # Eval harness tests [v1.2.0]
+    test_stats.py        # Distribution stats tests [v2.0.0]
     test_validation.py   # Runtime validation + safety tests
     test_vendor_chunker.py  # Vendored chunker tests [v0.3.0]
 

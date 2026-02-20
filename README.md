@@ -130,6 +130,12 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Cross-Chunk Field Dedup**: Tracks which fields already have cleaning functions
 - **Adaptive Iteration Budget**: Skips chunks after 2 consecutive fruitless iterations
 
+### Distribution-Aware Cleaning (v2.0.0)
+- **Global Stats Pre-Pass**: Scans full dataset before chunking to compute per-field value frequencies
+- **Cardinality-Based Reporting**: Low cardinality fields (≤50 unique) get full value counts; high cardinality fields get summary only
+- **Prompt Injection**: Value distributions injected into every prompt so LLM can determine canonical forms and identify typos/variants
+- **Zero New Dependencies**: Uses stdlib `Counter`, reuses existing `load_structured_data()`
+
 ### Eval Harness (v1.2.0)
 - **Golden Assertions**: Curated per-record, per-field expected values for correctness measurement
 - **Match Modes**: Exact, numeric close (tolerance 0.01), and contains matching
