@@ -87,10 +87,13 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Early Termination**: Stop when LLM detects pattern saturation
 - **LLM Agency**: Model decides chunk cleanliness and saturation
 
-### Validation (v0.5.1+, v1.0.1)
+### Quality Gates (v0.5.1+, v1.0.1, v1.0.4)
 - **Dangerous Code Detection**: AST-based detection of exec, eval, subprocess, network calls
 - **Return Type Validation**: Ensures generated functions return the correct type (`dict` for structured, `str` for text)
-- **Duplicate Field Detection**: Prevents multiple functions from modifying the same field, asks LLM to target a different issue instead
+- **Duplicate Field Awareness**: Warns when targeting already-covered fields, allows supplementary functions through remaining validation gates
+- **Inline Test Cases**: LLM generates test assertions alongside code; functions must pass their own tests
+- **Schema-Powered Prompting**: Field inventory with sample values and null rates fed into prompts
+- **No-Op Detection**: Rejects functions that don't actually modify any data
 
 ### Observability (v0.6.0)
 - **Latency Metrics**: Track min/max/avg/total LLM call times
@@ -121,6 +124,17 @@ cleaner.run()  # Generates cleaning_functions.py
 - **Text Formats**: PDF, Word, HTML, etc. output as Markdown
 - **Streaming**: Memory-efficient line-by-line processing for JSONL/CSV
 - **Colored TUI**: Enhanced transmission log with syntax-highlighted XML parsing
+
+### Pipeline Efficiency (v1.1.0)
+- **Thinking Suppression**: `enable_thinking=False` for MLX backend (Qwen3 models)
+- **Cross-Chunk Field Dedup**: Tracks which fields already have cleaning functions
+- **Adaptive Iteration Budget**: Skips chunks after 2 consecutive fruitless iterations
+
+### Eval Harness (v1.2.0)
+- **Golden Assertions**: Curated per-record, per-field expected values for correctness measurement
+- **Match Modes**: Exact, numeric close (tolerance 0.01), and contains matching
+- **Multi-Model Comparison**: Evaluate and rank all models in one run
+- **Per-Issue-Type Scoring**: Heatmap of model performance across issue categories
 
 ## Command Line Interface
 
@@ -441,7 +455,7 @@ backends/
 pytest tests/ -v
 ```
 
-555 tests covering all features. Test datasets in `test_cases/`:
+698 tests covering all features. Test datasets in `test_cases/`:
 - E-commerce product catalogs
 - Healthcare patient records
 - Financial transaction data
@@ -453,10 +467,33 @@ pytest tests/ -v
 - **Retry over recover**: On error, retry with error in prompt
 - **Wu wei**: Let the LLM make decisions about data it understands
 
+## Benchmarks
+
+Eval harness with golden assertions measures cleaning function correctness across 7 Qwen3 models on a 100-record CRM dataset:
+
+| Model | Score | Functions | Avg Call |
+|-------|-------|-----------|----------|
+| Qwen3-30B-A3B (8-bit) | **92.1%** | 9 | 24s |
+| Qwen3-Coder-30B-A3B (8-bit) | 86.8% | 8 | 17s |
+| Qwen3-4B (8-bit) | 76.3% | 6 | 31s |
+| Qwen3-Next-80B-A3B (4-bit) | 76.3% | 6 | 22s |
+| Qwen3-8B (8-bit) | 73.7% | 7 | 93s |
+
+```bash
+# Run eval on existing cleaning functions
+python benchmarks/eval/run_eval.py \
+    --functions-dir benchmarks/results/ \
+    --data benchmarks/benchmark_data.jsonl \
+    --golden benchmarks/eval/golden/benchmark_golden.jsonl
+```
+
 ## Version History
 
 | Version | Features |
 |---------|----------|
+| v1.1.0 | Pipeline efficiency: thinking suppression, cross-chunk field dedup, adaptive iteration budget |
+| v1.0.4 | Quality gates: inline test cases, schema-powered prompting, no-op detection |
+| v1.0.3 | XLSX/ODS parsing fix, benchmark suite with MLX model comparison |
 | v1.0.2 | Documentation completeness, version alignment |
 | v1.0.1 | Return type validation, prompt signature clarity, duplicate field detection |
 | v1.0.0 | Apply mode for cleaning data, Excel support (.xlsx/.xls), enhanced TUI colors |

@@ -132,6 +132,8 @@ RULES:
 - If all issues solved: <chunk_status>clean</chunk_status>, omit <function_to_generate>
 - Include imports inside the function or document needed imports in docstring
 - Function must be idempotent (safe to run multiple times)
+- Prefer standard library functions where available (e.g., html.unescape() for HTML entities, json.loads() for JSON parsing)
+- Handle ALL format variants for the target field, including trailing punctuation (e.g., "lbs." not just "lbs")
 - Use ```python markdown blocks for code
 - Include 3-5 test assertions in <test_cases> using actual data from the chunk
 - Each <assertion> is a Python expression that evaluates to True when the function works correctly

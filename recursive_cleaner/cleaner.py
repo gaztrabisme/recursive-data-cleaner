@@ -34,7 +34,7 @@ class DataCleaner:
         file_path: str,
         chunk_size: int = 50,
         instructions: str = "",
-        max_iterations: int = 5,
+        max_iterations: int = 8,
         context_budget: int = 8000,
         on_progress: Callable[[dict], None] | None = None,
         validate_runtime: bool = True,

@@ -2,8 +2,8 @@
   "model": "Qwen3-30B-A3B-Instruct-2507-MLX-8bit",
   "summary": {
     "total": 76,
-    "passed": 70,
-    "score_pct": 92.1
+    "passed": 72,
+    "score_pct": 94.7
   },
   "by_issue_type": {
     "phone_format": {
@@ -18,8 +18,8 @@
     },
     "enum_typo": {
       "total": 8,
-      "passed": 8,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 87.5
     },
     "category_case": {
       "total": 8,
@@ -48,8 +48,8 @@
     },
     "null_empty": {
       "total": 6,
-      "passed": 3,
-      "score_pct": 50.0
+      "passed": 6,
+      "score_pct": 100.0
     },
     "amount_format": {
       "total": 6,
@@ -75,8 +75,8 @@
     },
     "status": {
       "total": 8,
-      "passed": 8,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 87.5
     },
     "category": {
       "total": 8,
@@ -105,8 +105,8 @@
     },
     "notes": {
       "total": 6,
-      "passed": 3,
-      "score_pct": 50.0
+      "passed": 6,
+      "score_pct": 100.0
     },
     "amount": {
       "total": 6,
@@ -120,6 +120,13 @@
     }
   },
   "failures": [
+    {
+      "record_index": 9,
+      "field": "status",
+      "expected": "active",
+      "actual": "acitve",
+      "issue_type": "enum_typo"
+    },
     {
       "record_index": 1,
       "field": "description",
@@ -138,29 +145,8 @@
       "record_index": 4,
       "field": "weight",
       "expected": "5.22 kg",
-      "actual": "11.5 lbs.",
+      "actual": null,
       "issue_type": "weight_unit"
-    },
-    {
-      "record_index": 1,
-      "field": "notes",
-      "expected": null,
-      "actual": "",
-      "issue_type": "null_empty"
-    },
-    {
-      "record_index": 3,
-      "field": "notes",
-      "expected": null,
-      "actual": "",
-      "issue_type": "null_empty"
-    },
-    {
-      "record_index": 6,
-      "field": "notes",
-      "expected": null,
-      "actual": "",
-      "issue_type": "null_empty"
     }
   ]
 }
