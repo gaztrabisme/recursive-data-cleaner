@@ -189,8 +189,8 @@ class TestFormatStatsForPrompt:
         assert "'active': 48 (75%)" in result
         assert "'pending': 16 (25%)" in result
 
-    def test_high_cardinality_formatted(self):
-        """High-cardinality field shows summary only."""
+    def test_high_cardinality_omitted(self):
+        """High-cardinality field omitted from prompt (no actionable info)."""
         stats = {
             "name": {
                 "type": "high_cardinality",
@@ -201,7 +201,7 @@ class TestFormatStatsForPrompt:
 
         result = format_stats_for_prompt(stats)
 
-        assert "name: 98 unique values (high cardinality)" in result
+        assert "name" not in result
 
     def test_null_count_shown(self):
         """Null count shown when non-zero."""
@@ -252,4 +252,4 @@ class TestFormatStatsForPrompt:
         result = format_stats_for_prompt(stats)
 
         assert "status (48 values):" in result
-        assert "name: 98 unique values (high cardinality)" in result
+        assert "name" not in result

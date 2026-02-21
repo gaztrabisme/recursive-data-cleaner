@@ -79,7 +79,6 @@ def format_stats_for_prompt(stats: dict) -> str:
             for value, count in info["value_counts"]:
                 pct = count / info["total"] * 100
                 lines.append(f"  {value!r}: {count} ({pct:.0f}%)")
-        else:
-            lines.append(f"\n{field}: {info['unique']} unique values (high cardinality)")
+        # High-cardinality fields omitted — no actionable info for the LLM
 
     return "\n".join(lines)
