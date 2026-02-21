@@ -1,5 +1,5 @@
 {
-  "model": "qwen-qwen3-coder-next",
+  "model": "qwen-qwen3-vl-30b",
   "summary": {
     "total": 76,
     "passed": 64,
@@ -13,8 +13,8 @@
     },
     "date_format": {
       "total": 9,
-      "passed": 9,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 77.8
     },
     "enum_typo": {
       "total": 8,
@@ -43,13 +43,13 @@
     },
     "tag_format": {
       "total": 6,
-      "passed": 1,
-      "score_pct": 16.7
+      "passed": 6,
+      "score_pct": 100.0
     },
     "null_empty": {
       "total": 6,
-      "passed": 6,
-      "score_pct": 100.0
+      "passed": 3,
+      "score_pct": 50.0
     },
     "amount_format": {
       "total": 6,
@@ -70,8 +70,8 @@
     },
     "date_joined": {
       "total": 9,
-      "passed": 9,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 77.8
     },
     "status": {
       "total": 8,
@@ -100,13 +100,13 @@
     },
     "tags": {
       "total": 6,
-      "passed": 1,
-      "score_pct": 16.7
+      "passed": 6,
+      "score_pct": 100.0
     },
     "notes": {
       "total": 6,
-      "passed": 6,
-      "score_pct": 100.0
+      "passed": 3,
+      "score_pct": 50.0
     },
     "amount": {
       "total": 6,
@@ -120,6 +120,20 @@
     }
   },
   "failures": [
+    {
+      "record_index": 3,
+      "field": "date_joined",
+      "expected": "2024-01-15",
+      "actual": "1705276800",
+      "issue_type": "date_format"
+    },
+    {
+      "record_index": 8,
+      "field": "date_joined",
+      "expected": "2024-03-22",
+      "actual": "1711065600",
+      "issue_type": "date_format"
+    },
     {
       "record_index": 1,
       "field": "category",
@@ -171,54 +185,24 @@
     },
     {
       "record_index": 1,
-      "field": "tags",
-      "expected": [
-        "electronics",
-        "sale"
-      ],
-      "actual": "electronics, sale",
-      "issue_type": "tag_format"
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
     },
     {
-      "record_index": 2,
-      "field": "tags",
-      "expected": [
-        "electronics",
-        "sale"
-      ],
-      "actual": "electronics;sale",
-      "issue_type": "tag_format"
+      "record_index": 3,
+      "field": "notes",
+      "expected": null,
+      "actual": "   ",
+      "issue_type": "null_empty"
     },
     {
-      "record_index": 5,
-      "field": "tags",
-      "expected": [
-        "clothing",
-        "corporate"
-      ],
-      "actual": "clothing, corporate",
-      "issue_type": "tag_format"
-    },
-    {
-      "record_index": 7,
-      "field": "tags",
-      "expected": [
-        "home",
-        "garden"
-      ],
-      "actual": "home, garden",
-      "issue_type": "tag_format"
-    },
-    {
-      "record_index": 8,
-      "field": "tags",
-      "expected": [
-        "home",
-        "garden",
-        "bulk"
-      ],
-      "actual": "home;garden;bulk",
-      "issue_type": "tag_format"
+      "record_index": 6,
+      "field": "notes",
+      "expected": null,
+      "actual": "",
+      "issue_type": "null_empty"
     }
   ]
 }

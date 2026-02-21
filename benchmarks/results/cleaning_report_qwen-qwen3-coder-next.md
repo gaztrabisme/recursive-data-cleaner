@@ -4,74 +4,69 @@
 
 - **File**: `/Users/GaryT/Documents/Work/AI/Recursive-Data-Cleaner/benchmarks/benchmark_data.jsonl`
 - **Chunks processed**: 5
-- **Functions generated**: 8
-- **Total LLM time**: 2715369ms
+- **Functions generated**: 7
+- **Total LLM time**: 2955318ms
 - **LLM calls**: 40
 
 ## Functions Generated
 
 | # | Name | Description |
 |---|------|-------------|
-| 1 | `normalize_dates_iso8601` | Converts various date formats to ISO 8601 (YYYY-MM-DD). Handles: |
-| 2 | `normalize_phone_e164_us` | Normalizes US phone numbers to E.164 format (+1XXXXXXXXXX). Handles: |
-| 3 | `normalize_amount_decimal` | Normalizes amount strings to a clean decimal string without currency symbols, commas, or unit suffixes (e.g., "USD", " dollars"). |
-| 4 | `normalize_status_canonical` | Normalizes status values to canonical lowercase forms: 'active', 'pending', or 'churned'. |
-| 5 | `normalize_weight_kg` | Normalizes weight values to a consistent "X.XX kg" format (2 decimal places), converting from lbs, g, or plain numeric values assumed to be kg. |
-| 6 | `normalize_tags_json_array` | Normalizes the 'tags' field to a JSON array of lowercase strings. Handles: |
-| 7 | `normalize_notes_null_empty` | Normalizes the 'notes' field by replacing empty strings, whitespace-only strings, and None with `null` (Python `None`). |
-| 8 | `normalize_name_clean_whitespace_title` | Normalizes the 'name' field by trimming leading/trailing whitespace, collapsing multiple spaces into one, and converting to Title Case (capitalizing each word). Handles: |
+| 1 | `normalize_status` | Normalize status field to one of three valid values: 'active', 'pending', or 'churned'. |
+| 2 | `normalize_date_joined` | Normalize date_joined to ISO 8601 format (YYYY-MM-DD). Handles: |
+| 3 | `normalize_phone` | Normalize phone numbers to E.164 format (e.g., '+14155551234'). Handles: |
+| 4 | `normalize_amount` | Normalize amount strings to decimal format (e.g., "1234.56"). Handles: |
+| 5 | `normalize_weight_to_kg` | Normalize weight field to consistent "X.XX kg" format (two decimal places). Handles: |
+| 6 | `normalize_notes_to_null_or_trim` | Normalize the notes field: replace empty strings or whitespace-only values with `None`, and trim leading/trailing whitespace from others. Idempotent: already-clean or null values are preserved. |
+| 7 | `normalize_name` | Normalize the name field: strip leading/trailing whitespace, collapse internal multiple spaces to single space, and convert to Title Case (e.g., "alice  johnson" → "Alice Johnson"). Handles None, non-string inputs (preserved), and already-clean names idempotently. |
 
 ### Sample Transformations
 
-**`normalize_dates_iso8601`**
+**`normalize_status`**
 
-- `date_joined`: `'01/15/2024'` → `'2024-01-15'`
-- `date_joined`: `'15.01.2024'` → `'2024-01-15'`
-- `date_joined`: `'1705276800'` → `'2024-01-15'`
-- `date_joined`: `'January 15, 2024'` → `'2024-01-15'`
-
-**`normalize_phone_e164_us`**
-
-- `phone`: `'(415) 555-1234'` → `'+14155551234'`
-- `phone`: `'4155551234'` → `'+14155551234'`
-- `phone`: `'415-555-1234'` → `'+14155551234'`
-
-**`normalize_amount_decimal`**
-
-- `amount`: `'$567.89'` → `'567.89'`
-- `amount`: `'$567'` → `'567.00'`
-- `amount`: `'567 USD'` → `'567.00'`
-- `amount`: `'56789'` → `'56789.00'`
-
-**`normalize_status_canonical`**
-
-- `status`: `'Active'` → `'active'`
 - `status`: `'actve'` → `'active'`
+- `status`: `'Active'` → `'active'`
 - `status`: `'ACTIVE'` → `'active'`
 
-**`normalize_weight_kg`**
+**`normalize_date_joined`**
 
-- `weight`: `'4.7 kg'` → `'4.70 kg'`
-- `weight`: `'10.4 lbs'` → `'4.72 kg'`
-- `weight`: `'4700 g'` → `'4.70 kg'`
-- `weight`: `'4.7kg'` → `'4.70 kg'`
-- `weight`: `'1.8 lbs.'` → `'0.82 kg'`
+- `date_joined`: `'06/18/2024'` → `'2024-06-18'`
+- `date_joined`: `'18.06.2024'` → `'2024-06-18'`
+- `date_joined`: `'1718668800'` → `'2024-06-18'`
+- `date_joined`: `'June 18, 2024'` → `'2024-06-18'`
 
-**`normalize_tags_json_array`**
+**`normalize_phone`**
 
-- `tags`: `'electronics, approval'` → `['electronics', 'approval']`
-- `tags`: `'electronics;rush'` → `['electronics', 'rush']`
+- `phone`: `'(510) 555-7777'` → `'+15105557777'`
+- `phone`: `'5105557777'` → `'+15105557777'`
+- `phone`: `'510-555-7777'` → `'+15105557777'`
+- `phone`: `'+44 20 7946 2233'` → `'+442079462233'`
 
-**`normalize_notes_null_empty`**
+**`normalize_amount`**
+
+- `amount`: `'$1,450.00'` → `'1450.00'`
+- `amount`: `'$1450'` → `'1450.00'`
+- `amount`: `'1,450 USD'` → `'1450.00'`
+- `amount`: `'145000'` → `'145000.00'`
+
+**`normalize_weight_to_kg`**
+
+- `weight`: `'6.0 kg'` → `'6.00 kg'`
+- `weight`: `'13.2 lbs'` → `'5.99 kg'`
+- `weight`: `'6000 g'` → `'6.00 kg'`
+- `weight`: `'6.0kg'` → `'6.00 kg'`
+- `weight`: `'5.5 lbs.'` → `'2.49 kg'`
+
+**`normalize_notes_to_null_or_trim`**
 
 - `notes`: `''` → `None`
 
-**`normalize_name_clean_whitespace_title`**
+**`normalize_name`**
 
-- `name`: `'Nathan  Oliver'` → `'Nathan Oliver'`
-- `name`: `' Peter Quinn '` → `'Peter Quinn'`
-- `name`: `'Rachel Stone '` → `'Rachel Stone'`
+- `name`: `'Lena  Kowalski'` → `'Lena Kowalski'`
+- `name`: `'Marcus Lane '` → `'Marcus Lane'`
+- `name`: `' Nina Moss '` → `'Nina Moss'`
 
 ---
 
-*Generated by Recursive Data Cleaner at 2026-02-20 08:44:45 UTC*
+*Generated by Recursive Data Cleaner at 2026-02-21 09:39:41 UTC*

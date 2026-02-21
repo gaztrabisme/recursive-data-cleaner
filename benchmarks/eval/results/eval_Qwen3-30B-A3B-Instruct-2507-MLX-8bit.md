@@ -1,6 +1,6 @@
 # Eval Report: Qwen3-30B-A3B-Instruct-2507-MLX-8bit
 
-**Score: 72/76 (94.7%)**
+**Score: 73/76 (96.1%)**
 
 ## By Issue Type
 
@@ -10,12 +10,12 @@
 | category_case | 8 | 8 | 100.0% |
 | date_format | 9 | 9 | 100.0% |
 | email_case | 4 | 4 | 100.0% |
-| enum_typo | 7 | 8 | 87.5% |
+| enum_typo | 8 | 8 | 100.0% |
 | html_cleanup | 5 | 7 | 71.4% |
 | null_empty | 6 | 6 | 100.0% |
-| phone_format | 8 | 8 | 100.0% |
+| phone_format | 7 | 8 | 87.5% |
 | tag_format | 6 | 6 | 100.0% |
-| weight_unit | 6 | 7 | 85.7% |
+| weight_unit | 7 | 7 | 100.0% |
 | whitespace | 7 | 7 | 100.0% |
 
 ## By Field
@@ -29,14 +29,13 @@
 | email | 4 | 4 | 100.0% |
 | name | 7 | 7 | 100.0% |
 | notes | 6 | 6 | 100.0% |
-| phone | 8 | 8 | 100.0% |
-| status | 7 | 8 | 87.5% |
+| phone | 7 | 8 | 87.5% |
+| status | 8 | 8 | 100.0% |
 | tags | 6 | 6 | 100.0% |
-| weight | 6 | 7 | 85.7% |
+| weight | 7 | 7 | 100.0% |
 
 ## Failures
 
-- **Record 9.status** (enum_typo): expected `active`, got `acitve`
+- **Record 4.phone** (phone_format): expected `+442079460958`, got `+44 20 7946 0958`
 - **Record 1.description** (html_cleanup): expected `Purchased & returned item`, got `Purchased &amp; returned item`
 - **Record 6.description** (html_cleanup): expected `Left for competitor & unlikely to return`, got `Left for competitor &amp; unlikely to return`
-- **Record 4.weight** (weight_unit): expected `5.22 kg`, got `None`

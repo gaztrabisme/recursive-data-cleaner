@@ -10,3 +10,4 @@
 | 006 | 2026-02-20 | Analyze | Two-model EDA: 30B-A3B vs Coder-Next on v1.2.0-dev | Complete |
 | 007 | 2026-02-20 | Design | v2.0 distribution-aware cleaning | Complete |
 | 008 | 2026-02-20 | Build | v2.0 global field stats + prompt injection | Complete |
+| 009 | 2026-02-21 | Analyze | v2.0 eval: 3-model comparison + prompt bloat fix | Complete |

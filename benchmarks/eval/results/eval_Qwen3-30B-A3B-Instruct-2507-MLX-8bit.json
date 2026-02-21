@@ -2,14 +2,14 @@
   "model": "Qwen3-30B-A3B-Instruct-2507-MLX-8bit",
   "summary": {
     "total": 76,
-    "passed": 72,
-    "score_pct": 94.7
+    "passed": 73,
+    "score_pct": 96.1
   },
   "by_issue_type": {
     "phone_format": {
       "total": 8,
-      "passed": 8,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 87.5
     },
     "date_format": {
       "total": 9,
@@ -18,8 +18,8 @@
     },
     "enum_typo": {
       "total": 8,
-      "passed": 7,
-      "score_pct": 87.5
+      "passed": 8,
+      "score_pct": 100.0
     },
     "category_case": {
       "total": 8,
@@ -38,8 +38,8 @@
     },
     "weight_unit": {
       "total": 7,
-      "passed": 6,
-      "score_pct": 85.7
+      "passed": 7,
+      "score_pct": 100.0
     },
     "tag_format": {
       "total": 6,
@@ -65,8 +65,8 @@
   "by_field": {
     "phone": {
       "total": 8,
-      "passed": 8,
-      "score_pct": 100.0
+      "passed": 7,
+      "score_pct": 87.5
     },
     "date_joined": {
       "total": 9,
@@ -75,8 +75,8 @@
     },
     "status": {
       "total": 8,
-      "passed": 7,
-      "score_pct": 87.5
+      "passed": 8,
+      "score_pct": 100.0
     },
     "category": {
       "total": 8,
@@ -95,8 +95,8 @@
     },
     "weight": {
       "total": 7,
-      "passed": 6,
-      "score_pct": 85.7
+      "passed": 7,
+      "score_pct": 100.0
     },
     "tags": {
       "total": 6,
@@ -121,11 +121,11 @@
   },
   "failures": [
     {
-      "record_index": 9,
-      "field": "status",
-      "expected": "active",
-      "actual": "acitve",
-      "issue_type": "enum_typo"
+      "record_index": 4,
+      "field": "phone",
+      "expected": "+442079460958",
+      "actual": "+44 20 7946 0958",
+      "issue_type": "phone_format"
     },
     {
       "record_index": 1,
@@ -140,13 +140,6 @@
       "expected": "Left for competitor & unlikely to return",
       "actual": "Left for competitor &amp; unlikely to return",
       "issue_type": "html_cleanup"
-    },
-    {
-      "record_index": 4,
-      "field": "weight",
-      "expected": "5.22 kg",
-      "actual": null,
-      "issue_type": "weight_unit"
     }
   ]
 }
