@@ -22,10 +22,10 @@
 | v0.2.0 | Implemented | 2025-01-14 |
 | v0.1.0 | Implemented | 2025-01-14 |
 
-**Current State**: v2.0.0 (distribution-aware cleaning). 714 tests passing. Best eval: 94.7% (30B-A3B), 89.5% (Coder-Next).
+**Current State**: v2.0.0 (distribution-aware cleaning). 714 tests passing. Best eval: 96.1% (30B-A3B), 84.2% (Coder-Next), 84.2% (VL-30B).
 
 ### Version History
-- **v2.0.0**: Distribution-aware cleaning — global field stats pre-pass (`stats.py`), per-field value frequency tables injected into prompts, cardinality-based reporting (full counts for ≤50 unique, summary for high cardinality)
+- **v2.0.0**: Distribution-aware cleaning — global field stats pre-pass (`stats.py`), per-field value frequency tables injected into prompts, high-cardinality fields omitted from prompt (pure signal). Best eval: 96.1% (30B-A3B, +1.4pp from v1.2.0)
 - **v1.1.0**: Pipeline efficiency — `enable_thinking` param for MLX backend, cross-chunk field dedup (soft warn, allows supplementary functions), adaptive iteration budget per chunk, no-op gate uses full chunk samples
 - **v1.0.4**: Tier 1 quality gates — inline test-case generation, schema-powered prompting, before/after metric gate, sample transformations in report
 - **v1.0.3**: XLSX/ODS structured parsing fix (was 93 chunks for 25-row file, now 1), benchmark suite with MLX model comparison

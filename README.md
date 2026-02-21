@@ -477,12 +477,20 @@ pytest tests/ -v
 
 Eval harness with golden assertions measures cleaning function correctness on a 100-record CRM dataset (76 assertions, 11 issue types).
 
+**v2.0.0 pipeline** (distribution-aware cleaning, compact field stats):
+
+| Model | Score | Functions | Calls | Time |
+|-------|-------|-----------|-------|------|
+| Qwen3-30B-A3B (MLX 8-bit) | **96.1%** | 9 | ~36 | ~25 min |
+| Qwen3-Coder-Next (LM Studio 6-bit) | 84.2% | 7 | 40 | 49.3 min |
+| Qwen3-VL-30B (LM Studio 8-bit) | 84.2% | 7 | 40 | 44.6 min |
+
 **v1.2.0-dev pipeline** (no-op gate fix, soft dedup, prompt hints, max_iterations=8):
 
 | Model | Score | Functions | Calls | Time |
 |-------|-------|-----------|-------|------|
-| Qwen3-30B-A3B (MLX 8-bit) | **94.7%** | 9 | 36 | 25.5 min |
-| Qwen3-Coder-Next (LM Studio 6-bit) | **89.5%** | 8 | 40 | 45.3 min |
+| Qwen3-30B-A3B (MLX 8-bit) | 94.7% | 9 | 36 | 25.5 min |
+| Qwen3-Coder-Next (LM Studio 6-bit) | 89.5% | 8 | 40 | 45.3 min |
 
 **v1.0.3 baseline** (7 models):
 
@@ -494,7 +502,7 @@ Eval harness with golden assertions measures cleaning function correctness on a 
 | Qwen3-Next-80B-A3B (4-bit) | 76.3% | 6 | 22s |
 | Qwen3-8B (8-bit) | 73.7% | 7 | 93s |
 
-Pipeline improvements helped weaker models disproportionately: Coder-Next jumped from 56.6% to 89.5% (+33pp). See `docs/dev/006-eda-model-comparison/analysis.md` for the full two-model EDA.
+v2.0 distributions helped the strong model (+1.4pp for 30B-A3B) but hurt context-limited models. Compact distributions fix omits high-cardinality filler — not yet re-tested on Coder-Next. See `docs/dev/009-v2-eval/analysis.md` for the full three-model analysis.
 
 ```bash
 # Run eval on existing cleaning functions
