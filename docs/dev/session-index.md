@@ -11,3 +11,4 @@
 | 007 | 2026-02-20 | Design | v2.0 distribution-aware cleaning | Complete |
 | 008 | 2026-02-20 | Build | v2.0 global field stats + prompt injection | Complete |
 | 009 | 2026-02-21 | Analyze | v2.0 eval: 3-model comparison + prompt bloat fix | Complete |
+| 010 | 2026-02-22 | Design | Phase 2 RL: reward functions for data cleaning | Discussion |
